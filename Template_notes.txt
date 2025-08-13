@@ -1,0 +1,8 @@
+C:\OpenGLtemplate\include
+
+C:\OpenGLtemplate\lib
+
+glfw3.lib
+glew32.lib
+soil2-debug.lib
+opengl32.lib
