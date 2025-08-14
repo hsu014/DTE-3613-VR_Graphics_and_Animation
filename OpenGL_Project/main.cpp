@@ -22,10 +22,13 @@ const double ROTATION_SPEED = 2;
 const char* vertexShaderSource = R"(
     #version 330 core
     layout(location = 0) in vec3 in_position;
+    layout (location = 1) in vec3 in_color;
+    out vec3 ourColor;
     uniform mat4 uModelView;
     uniform mat4 uProjection;
     void main() {
         gl_Position = uProjection * uModelView * vec4(in_position, 1.0);
+        ourColor = in_color;
     }
 )";
 
@@ -33,9 +36,9 @@ const char* vertexShaderSource = R"(
 const char* fragmentShaderSource = R"(
     #version 330 core
     out vec4 frag_color;
-    uniform vec4 ourColor;
+    in vec3 ourColor;
     void main() {
-        frag_color = ourColor; //vec4(1.0, 0.0, 0.0, 1.0); // Red color
+        frag_color = vec4(ourColor, 1.0f);
     }
 )";
 
@@ -88,18 +91,21 @@ int main()
     RenderInfo renderInfo{};
 
     renderInfo.camera = {
-        glm::vec3(0.0f, 0.0f, 1.0f),
+        glm::vec3(0.0f, -1.0f, 3.0f),
         glm::vec3(0.0f, 0.0f, -1.0f),
         glm::vec3(0.0f, 1.0f, 0.0f)
     };
 
-    // renderInfo.view = getViewMatrix(renderInfo);
     renderInfo.model = glm::mat4(1.0f);
     renderInfo.projection = getProjectionMatrix();
+
+    // renderInfo.model = glm::scale(renderInfo.model, glm::vec3(2.0, 2.0, 2.0));
 
     // Get dt
     renderInfo.time.prev = glfwGetTime();
     renderInfo.time.dt = 0;
+
+    glEnable(GL_DEPTH_TEST);
 
     // Compile and link shaders
     GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
@@ -115,10 +121,87 @@ int main()
     glAttachShader(shaderProgram, fragmentShader);
     glLinkProgram(shaderProgram);
 
+    float h = -2;
     float vertices[] = {
-        -0.5f, -0.5f, 0.0f, // left  
-         0.5f, -0.5f, 0.0f, // right 
-         0.0f,  0.5f, 0.0f  // top   
+
+        // Pyramid:
+        // Side 1
+        -1.0f, 0.0f, -1.0f,   0.0f, 0.0f, 1.0f,
+         1.0f, 0.0f, -1.0f,   0.0f, 1.0f, 0.0f,
+         0.0f, h,     0.0f,   1.0f, 0.0f, 0.0f,
+
+        // Side 2
+         1.0f, 0.0f, -1.0f,   0.0f, 1.0f, 0.0f,
+         1.0f, 0.0f,  1.0f,   0.0f, 0.0f, 1.0f,
+         0.0f, h,     0.0f,   1.0f, 0.0f, 0.0f,
+
+        // Side 3
+         1.0f, 0.0f, 1.0f,    0.0f, 0.0f, 1.0f,
+        -1.0f, 0.0f, 1.0f,    0.0f, 1.0f, 0.0f,
+         0.0f, h,    0.0f,    1.0f, 0.0f, 0.0f,
+
+        // Side 4 
+        -1.0f, 0.0f,  1.0f,   0.0f, 1.0f, 0.0f,
+        -1.0f, 0.0f, -1.0f,   0.0f, 0.0f, 1.0f,
+         0.0f, h,     0.0f,   1.0f, 0.0f, 0.0f,
+
+        // Bottom    
+        -1.0f, 0.0f, -1.0f,   0.0f, 0.0f, 1.0f,
+         1.0f, 0.0f,  1.0f,   0.0f, 0.0f, 1.0f,
+        -1.0f, 0.0f,  1.0f,   0.0f, 1.0f, 0.0f,
+        -1.0f, 0.0f, -1.0f,   0.0f, 0.0f, 1.0f,
+         1.0f, 0.0f, -1.0f,   0.0f, 1.0f, 0.0f,
+         1.0f, 0.0f,  1.0f,   0.0f, 0.0f, 1.0f,
+
+
+        // Box:
+        // Front face
+        -1.0f, 0.5f,  1.0f,   1.0f, 0.0f, 0.0f,
+        -1.0f, 0.5f, -1.0f,   1.0f, 0.4f, 0.0f,
+        -1.0f, 2.5f, -1.0f,   1.0f, 0.7f, 0.0f,
+        -1.0f, 2.5f, -1.0f,   1.0f, 0.7f, 0.0f,
+        -1.0f, 2.5f,  1.0f,   1.0f, 0.4f, 0.0f,
+        -1.0f, 0.5f,  1.0f,   1.0f, 0.0f, 0.0f,
+        
+        // Back face
+         1.0f, 0.5f, -1.0f,   1.0f, 0.0f, 0.0f,
+         1.0f, 0.5f,  1.0f,   1.0f, 0.4f, 0.0f,
+         1.0f, 2.5f,  1.0f,   1.0f, 0.7f, 0.0f,
+         1.0f, 2.5f,  1.0f,   1.0f, 0.7f, 0.0f,
+         1.0f, 2.5f, -1.0f,   1.0f, 0.4f, 0.0f,
+         1.0f, 0.5f, -1.0f,   1.0f, 0.0f, 0.0f,
+        
+        // Right face
+         1.0f, 0.5f,  1.0f,   1.0f, 0.4f, 0.0f,
+        -1.0f, 0.5f,  1.0f,   1.0f, 0.0f, 0.0f,
+        -1.0f, 2.5f,  1.0f,   1.0f, 0.4f, 0.0f,
+        -1.0f, 2.5f,  1.0f,   1.0f, 0.4f, 0.0f,
+         1.0f, 2.5f,  1.0f,   1.0f, 0.7f, 0.0f,
+         1.0f, 0.5f,  1.0f,   1.0f, 0.4f, 0.0f,
+
+        // Left face
+        -1.0f, 0.5f,  -1.0f,  1.0f, 0.4f, 0.0f,
+         1.0f, 0.5f,  -1.0f,  1.0f, 0.0f, 0.0f,
+         1.0f, 2.5f,  -1.0f,  1.0f, 0.4f, 0.0f,
+         1.0f, 2.5f,  -1.0f,  1.0f, 0.4f, 0.0f,
+        -1.0f, 2.5f,  -1.0f,  1.0f, 0.7f, 0.0f,
+        -1.0f, 0.5f,  -1.0f,  1.0f, 0.4f, 0.0f,
+
+        // Top face
+        -1.0f, 2.5f,  1.0f,   1.0f, 0.4f, 0.0f,
+        -1.0f, 2.5f, -1.0f,   1.0f, 0.7f, 0.0f,
+         1.0f, 2.5f,  -1.0f,  1.0f, 0.4f, 0.0f,
+         1.0f, 2.5f,  -1.0f,  1.0f, 0.4f, 0.0f,
+         1.0f, 2.5f,  1.0f,   1.0f, 0.7f, 0.0f,
+        -1.0f, 2.5f,  1.0f,   1.0f, 0.4f, 0.0f,
+
+        // Bottom face
+         1.0f, 0.5f, -1.0f,   1.0f, 0.0f, 0.0f,
+         1.0f, 0.5f,  1.0f,   1.0f, 0.4f, 0.0f,
+        -1.0f, 0.5f,  1.0f,   1.0f, 0.0f, 0.0f,
+        -1.0f, 0.5f,  1.0f,   1.0f, 0.0f, 0.0f,
+        -1.0f, 0.5f, -1.0f,   1.0f, 0.4f, 0.0f,
+         1.0f, 0.5f, -1.0f,   1.0f, 0.0f, 0.0f,
     };
 
     unsigned int VBO, VAO;
@@ -129,8 +212,12 @@ int main()
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    // position attribute
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
+    // color attribute
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
 
 
     while (!glfwWindowShouldClose(window))
@@ -142,10 +229,9 @@ int main()
         processInput(window, renderInfo);
 
         glClearColor(0.2f, 0.0f, 0.3f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         glUseProgram(shaderProgram);
-        //glBindVertexArray(VAO);
 
         // vertex shader matrices
         renderInfo.view = getViewMatrix(renderInfo);
@@ -156,12 +242,8 @@ int main()
         glUniformMatrix4fv(modelViewMatrixLocation, 1, GL_FALSE, glm::value_ptr(modelView));
         glUniformMatrix4fv(projectionMatrixLocation, 1, GL_FALSE, glm::value_ptr(renderInfo.projection));
 
-        // fragment shader uniform color
-        float redValue = static_cast<float>(sin(renderInfo.time.current) / 2.0 + 0.5);
-        GLuint vertexColorLocation = glGetUniformLocation(shaderProgram, "ourColor");
-        glUniform4f(vertexColorLocation, redValue, 0.0f, 0.0f, 1.0f);
 
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+        glDrawArrays(GL_TRIANGLES, 0, sizeof(vertices) / 2 );
 
         glfwSwapBuffers(window);
         glfwPollEvents();
