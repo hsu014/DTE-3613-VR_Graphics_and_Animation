@@ -426,3 +426,7 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+
+# Other files
+C2E_AncillaryFiles/
