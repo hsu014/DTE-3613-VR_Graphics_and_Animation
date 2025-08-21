@@ -20,13 +20,16 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\shape.cpp" />
     <ClCompile Include="src\Utils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="src\fragmentShader.glsl" />
+    <None Include="src\fragmentShaderRed.glsl" />
     <None Include="src\vertexShader.glsl" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\shape.h" />
     <ClInclude Include="src\Utils.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

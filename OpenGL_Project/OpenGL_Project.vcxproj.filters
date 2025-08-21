@@ -21,17 +21,26 @@
     <ClCompile Include="src\Utils.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\shape.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="src\vertexShader.glsl">
-      <Filter>Source Files</Filter>
+    <None Include="src\fragmentShaderRed.glsl">
+      <Filter>Resource Files</Filter>
     </None>
     <None Include="src\fragmentShader.glsl">
-      <Filter>Source Files</Filter>
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="src\vertexShader.glsl">
+      <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Utils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\shape.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
