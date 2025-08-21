@@ -5,12 +5,21 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include "Utils.h"
+#include "shape.h"
 
 struct RenderInfo;
-void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window, RenderInfo& ri);
+void initRenderInfo(RenderInfo& ri);
+void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+
 static glm::mat4 getProjectionMatrix();
 glm::mat4 getViewMatrix(RenderInfo& ri);
+void prepareShader(GLuint shaderProgram, glm::mat4 modelViewMatrix, glm::mat4 projectionMatrix);
+void animate(GLFWwindow* window, RenderInfo& ri);
+void draw(RenderInfo& ri);
+void draw2(RenderInfo& ri);
+void draw3(RenderInfo& ri);
+void draw4(RenderInfo& ri);
 
 // settings 
 const unsigned int SCR_WIDTH = 1600;
@@ -19,30 +28,6 @@ const double CAMERA_SPEED = 2.5;
 const double ROTATION_SPEED = 2;
 
 Utils util = Utils();
-
-//// Vertex shader source code
-//const char* vertexShaderSource = R"(
-//    #version 330 core
-//    layout(location = 0) in vec3 in_position;
-//    layout (location = 1) in vec3 in_color;
-//    out vec3 ourColor;
-//    uniform mat4 uModelView;
-//    uniform mat4 uProjection;
-//    void main() {
-//        gl_Position = uProjection * uModelView * vec4(in_position, 1.0);
-//        ourColor = in_color;
-//    }
-//)";
-//
-//// Fragment shader source code
-//const char* fragmentShaderSource = R"(
-//    #version 330 core
-//    out vec4 frag_color;
-//    in vec3 ourColor;
-//    void main() {
-//        frag_color = vec4(ourColor, 1.0f);
-//    }
-//)";
 
 struct Camera {
     glm::vec3 cameraPos;
@@ -56,12 +41,26 @@ struct Time {
     double dt;
 };
 
+struct ShaderProgram {
+    GLuint base;
+    GLuint red;
+};
+
+struct Shapes {
+    Shape* test;
+    Shape* box;
+    Shape* pyramid;
+};
+
 struct RenderInfo {
     Camera camera;
     Time time;
-    glm::mat4 view;
-    glm::mat4 model;
-    glm::mat4 projection;
+    ShaderProgram shaderProgram;
+    glm::mat4 rotationMatrix;
+    glm::mat4 viewMatrix;
+    glm::mat4 projectionMatrix;
+    Shapes shape;
+    
 };
 
 
@@ -90,178 +89,26 @@ int main()
         return -1;
     }
 
-    RenderInfo renderInfo{};
-
-    renderInfo.camera = {
-        glm::vec3(0.0f, 1.0f, -10.0f),
-        glm::vec3(0.0f, 0.0f, 1.0f),
-        glm::vec3(0.0f, 1.0f, 0.0f)
-    };
-
-    renderInfo.model = glm::mat4(1.0f);
-    renderInfo.projection = getProjectionMatrix();
-    // renderInfo.model = glm::scale(renderInfo.model, glm::vec3(2.0, 2.0, 2.0));
-
-    // Get dt
-    renderInfo.time.prev = glfwGetTime();
-    renderInfo.time.dt = 0;
-
+    RenderInfo ri{};
+    initRenderInfo(ri);
+    
     glEnable(GL_DEPTH_TEST);
 
     // Compile and link shaders
-    /*GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertexShader, 1, &vertexShaderSource, nullptr);
-    glCompileShader(vertexShader);
+    ri.shaderProgram.base = Utils::createShaderProgram("src/vertexShader.glsl", "src/fragmentShader.glsl");
+    ri.shaderProgram.red = Utils::createShaderProgram("src/vertexShader.glsl", "src/fragmentShaderRed.glsl");
 
-    GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShader, 1, &fragmentShaderSource, nullptr);
-    glCompileShader(fragmentShader);
+    animate(window, ri);
 
-    GLuint shaderProgram = glCreateProgram();
-    glAttachShader(shaderProgram, vertexShader);
-    glAttachShader(shaderProgram, fragmentShader);
-    glLinkProgram(shaderProgram);*/
-
-    GLuint shaderProgram = Utils::createShaderProgram("src/vertexShader.glsl", "src/fragmentShader.glsl");
-
-    float h = -2;
-    float vertices[] = {
-
-        // Pyramid:
-        // Side 1
-        -1.0f, 0.0f, -1.0f,   0.0f, 0.0f, 1.0f,
-         1.0f, 0.0f, -1.0f,   0.0f, 1.0f, 0.0f,
-         0.0f, h,     0.0f,   1.0f, 0.0f, 0.0f,
-
-        // Side 2
-         1.0f, 0.0f, -1.0f,   0.0f, 1.0f, 0.0f,
-         1.0f, 0.0f,  1.0f,   0.0f, 0.0f, 1.0f,
-         0.0f, h,     0.0f,   1.0f, 0.0f, 0.0f,
-
-        // Side 3
-         1.0f, 0.0f, 1.0f,    0.0f, 0.0f, 1.0f,
-        -1.0f, 0.0f, 1.0f,    0.0f, 1.0f, 0.0f,
-         0.0f, h,    0.0f,    1.0f, 0.0f, 0.0f,
-
-        // Side 4 
-        -1.0f, 0.0f,  1.0f,   0.0f, 1.0f, 0.0f,
-        -1.0f, 0.0f, -1.0f,   0.0f, 0.0f, 1.0f,
-         0.0f, h,     0.0f,   1.0f, 0.0f, 0.0f,
-
-        // Bottom    
-        -1.0f, 0.0f, -1.0f,   0.0f, 0.0f, 1.0f,
-         1.0f, 0.0f,  1.0f,   0.0f, 0.0f, 1.0f,
-        -1.0f, 0.0f,  1.0f,   0.0f, 1.0f, 0.0f,
-        -1.0f, 0.0f, -1.0f,   0.0f, 0.0f, 1.0f,
-         1.0f, 0.0f, -1.0f,   0.0f, 1.0f, 0.0f,
-         1.0f, 0.0f,  1.0f,   0.0f, 0.0f, 1.0f,
-
-
-        // Box:
-        // Front face
-        -1.0f, 0.5f,  1.0f,   1.0f, 0.0f, 0.0f,
-        -1.0f, 0.5f, -1.0f,   1.0f, 0.4f, 0.0f,
-        -1.0f, 2.5f, -1.0f,   1.0f, 0.7f, 0.0f,
-        -1.0f, 2.5f, -1.0f,   1.0f, 0.7f, 0.0f,
-        -1.0f, 2.5f,  1.0f,   1.0f, 0.4f, 0.0f,
-        -1.0f, 0.5f,  1.0f,   1.0f, 0.0f, 0.0f,
-        
-        // Back face
-         1.0f, 0.5f, -1.0f,   1.0f, 0.0f, 0.0f,
-         1.0f, 0.5f,  1.0f,   1.0f, 0.4f, 0.0f,
-         1.0f, 2.5f,  1.0f,   1.0f, 0.7f, 0.0f,
-         1.0f, 2.5f,  1.0f,   1.0f, 0.7f, 0.0f,
-         1.0f, 2.5f, -1.0f,   1.0f, 0.4f, 0.0f,
-         1.0f, 0.5f, -1.0f,   1.0f, 0.0f, 0.0f,
-        
-        // Right face
-         1.0f, 0.5f,  1.0f,   1.0f, 0.4f, 0.0f,
-        -1.0f, 0.5f,  1.0f,   1.0f, 0.0f, 0.0f,
-        -1.0f, 2.5f,  1.0f,   1.0f, 0.4f, 0.0f,
-        -1.0f, 2.5f,  1.0f,   1.0f, 0.4f, 0.0f,
-         1.0f, 2.5f,  1.0f,   1.0f, 0.7f, 0.0f,
-         1.0f, 0.5f,  1.0f,   1.0f, 0.4f, 0.0f,
-
-        // Left face
-        -1.0f, 0.5f,  -1.0f,  1.0f, 0.4f, 0.0f,
-         1.0f, 0.5f,  -1.0f,  1.0f, 0.0f, 0.0f,
-         1.0f, 2.5f,  -1.0f,  1.0f, 0.4f, 0.0f,
-         1.0f, 2.5f,  -1.0f,  1.0f, 0.4f, 0.0f,
-        -1.0f, 2.5f,  -1.0f,  1.0f, 0.7f, 0.0f,
-        -1.0f, 0.5f,  -1.0f,  1.0f, 0.4f, 0.0f,
-
-        // Top face
-        -1.0f, 2.5f,  1.0f,   1.0f, 0.4f, 0.0f,
-        -1.0f, 2.5f, -1.0f,   1.0f, 0.7f, 0.0f,
-         1.0f, 2.5f,  -1.0f,  1.0f, 0.4f, 0.0f,
-         1.0f, 2.5f,  -1.0f,  1.0f, 0.4f, 0.0f,
-         1.0f, 2.5f,  1.0f,   1.0f, 0.7f, 0.0f,
-        -1.0f, 2.5f,  1.0f,   1.0f, 0.4f, 0.0f,
-
-        // Bottom face
-         1.0f, 0.5f, -1.0f,   1.0f, 0.0f, 0.0f,
-         1.0f, 0.5f,  1.0f,   1.0f, 0.4f, 0.0f,
-        -1.0f, 0.5f,  1.0f,   1.0f, 0.0f, 0.0f,
-        -1.0f, 0.5f,  1.0f,   1.0f, 0.0f, 0.0f,
-        -1.0f, 0.5f, -1.0f,   1.0f, 0.4f, 0.0f,
-         1.0f, 0.5f, -1.0f,   1.0f, 0.0f, 0.0f,
-    };
-
-    unsigned int VBO, VAO;
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-
-    glBindVertexArray(VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-    // position attribute
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-    // color attribute
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
-
-
-    while (!glfwWindowShouldClose(window))
-    {
-        renderInfo.time.current = glfwGetTime();
-        renderInfo.time.dt = renderInfo.time.current - renderInfo.time.prev;
-        renderInfo.time.prev = renderInfo.time.current;
-
-        processInput(window, renderInfo);
-
-        glClearColor(0.2f, 0.0f, 0.3f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        glUseProgram(shaderProgram);
-
-        // vertex shader matrices
-        renderInfo.view = getViewMatrix(renderInfo);
-        glm::mat4 modelView = renderInfo.view * renderInfo.model;
-
-        GLuint modelViewMatrixLocation = glGetUniformLocation(shaderProgram, "uModelView");
-        GLuint projectionMatrixLocation = glGetUniformLocation(shaderProgram, "uProjection");
-        glUniformMatrix4fv(modelViewMatrixLocation, 1, GL_FALSE, glm::value_ptr(modelView));
-        glUniformMatrix4fv(projectionMatrixLocation, 1, GL_FALSE, glm::value_ptr(renderInfo.projection));
-
-
-        glDrawArrays(GL_TRIANGLES, 0, sizeof(vertices) / 2 );
-
-        glfwSwapBuffers(window);
-        glfwPollEvents();
-    }
-
-    glDeleteProgram(shaderProgram);
-    //glDeleteShader(vertexShader);
-    //glDeleteShader(fragmentShader);
-    glDeleteVertexArrays(1, &VAO);
-    glDeleteBuffers(1, &VBO);
+    //Delete used resources
+    glDeleteProgram(ri.shaderProgram.base);
+    glDeleteProgram(ri.shaderProgram.red);
 
     glfwTerminate();
 
     return 0;
 }
+
 
 void processInput(GLFWwindow* window, RenderInfo& ri)
 {
@@ -300,18 +147,36 @@ void processInput(GLFWwindow* window, RenderInfo& ri)
     // Rotate model
     if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS)
     {
-        ri.model = glm::rotate(ri.model, rotateAmount, glm::vec3(0.0f, 1.0f, 0.0f));
+        ri.rotationMatrix = glm::rotate(ri.rotationMatrix, rotateAmount, glm::vec3(0.0f, 1.0f, 0.0f));
     }
     if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS)
     {
-        ri.model = glm::rotate(ri.model, -rotateAmount, glm::vec3(0.0f, 1.0f, 0.0f));
+        ri.rotationMatrix = glm::rotate(ri.rotationMatrix, -rotateAmount, glm::vec3(0.0f, 1.0f, 0.0f));
     }
 }
+
+
+void initRenderInfo(RenderInfo& ri)
+{
+    ri.camera.cameraPos = glm::vec3(0.0f, 1.0f, -10.0f);
+    ri.camera.cameraFront = glm::vec3(0.0f, 0.0f, 1.0f);
+    ri.camera.cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+    ri.rotationMatrix = glm::mat4(1.0f);
+    ri.projectionMatrix = getProjectionMatrix();
+    ri.time.prev = glfwGetTime();
+    ri.time.dt = 0;
+
+    ri.shape.test = new TestShape();
+    ri.shape.box = new Box();
+    ri.shape.pyramid = new Pyramid();
+}
+
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
     glViewport(0, 0, width, height);
 }
+
 
 static glm::mat4 getProjectionMatrix()
 {
@@ -323,7 +188,116 @@ static glm::mat4 getProjectionMatrix()
     return glm::perspective(glm::radians(fov), aspect, near, far);
 }
 
+
 glm::mat4 getViewMatrix(RenderInfo& ri)
 {
     return glm::lookAt(ri.camera.cameraPos, ri.camera.cameraPos + ri.camera.cameraFront, ri.camera.cameraUp);
+}
+
+
+void prepareShader(GLuint shaderProgram, glm::mat4 modelViewMatrix, glm::mat4 projectionMatrix)
+{
+    glUseProgram(shaderProgram);
+    GLuint modelViewMatrixLocation = glGetUniformLocation(shaderProgram, "uModelView");
+    GLuint projectionMatrixLocation = glGetUniformLocation(shaderProgram, "uProjection");
+    glUniformMatrix4fv(modelViewMatrixLocation, 1, GL_FALSE, glm::value_ptr(modelViewMatrix));
+    glUniformMatrix4fv(projectionMatrixLocation, 1, GL_FALSE, glm::value_ptr(projectionMatrix));
+}
+
+
+void animate(GLFWwindow* window, RenderInfo& ri)
+{
+    while (!glfwWindowShouldClose(window))
+    {
+        ri.time.current = glfwGetTime();
+        ri.time.dt = ri.time.current - ri.time.prev;
+        ri.time.prev = ri.time.current;
+
+        processInput(window, ri);
+        ri.viewMatrix = getViewMatrix(ri);
+
+        glClearColor(0.2f, 0.0f, 0.3f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        draw(ri);
+        draw2(ri);
+        /*draw3(ri);
+        draw4(ri);*/
+
+        glfwSwapBuffers(window);
+        glfwPollEvents();
+    }
+
+}
+
+
+void draw(RenderInfo& ri)
+{
+    //M=I*T*O*R*S, der O=R*T
+    glm::mat4 modelMatrix = glm::mat4(1.0f);
+
+    // Translate
+    modelMatrix = glm::translate(modelMatrix, glm::vec3(2.0f, 1.0f, 0.0f));
+
+    // Rotate
+    modelMatrix *= ri.rotationMatrix;
+
+    glm::mat4 modelViewMatrix = ri.viewMatrix * modelMatrix;
+
+    prepareShader(ri.shaderProgram.base, modelViewMatrix, ri.projectionMatrix);
+    ri.shape.box->draw();
+}
+
+
+void draw2(RenderInfo& ri)
+{
+    //M=I*T*O*R*S, der O=R*T
+    glm::mat4 modelMatrix = glm::mat4(1.0f);
+
+    // Translate
+    modelMatrix = glm::translate(modelMatrix, glm::vec3(-2.0f, 1.0f, 0.0f));
+
+    // Rotate
+    modelMatrix *= ri.rotationMatrix;
+
+    glm::mat4 modelViewMatrix = ri.viewMatrix * modelMatrix;
+
+    prepareShader(ri.shaderProgram.base, modelViewMatrix, ri.projectionMatrix);
+    ri.shape.pyramid->draw();
+}
+
+
+void draw3(RenderInfo& ri)
+{
+    //M=I*T*O*R*S, der O=R*T
+    glm::mat4 modelMatrix = glm::mat4(1.0f);
+
+    // Translate
+    modelMatrix = glm::translate(modelMatrix, glm::vec3(2.0f, -2.0f, 0.0f));
+
+    // Rotate
+    modelMatrix *= ri.rotationMatrix;
+
+    glm::mat4 modelViewMatrix = ri.viewMatrix * modelMatrix;
+
+    prepareShader(ri.shaderProgram.red, modelViewMatrix, ri.projectionMatrix);
+    ri.shape.box->draw(); 
+}
+
+
+void draw4(RenderInfo& ri) 
+{
+    //M=I*T*O*R*S, der O=R*T
+    glm::mat4 modelMatrix = glm::mat4(1.0f);
+
+    // Translate
+    modelMatrix = glm::translate(modelMatrix, glm::vec3(-2.0f, -2.0f, 0.0f));
+
+    // Rotate
+    modelMatrix *= ri.rotationMatrix;
+
+    glm::mat4 modelViewMatrix = ri.viewMatrix * modelMatrix;
+
+    prepareShader(ri.shaderProgram.red, modelViewMatrix, ri.projectionMatrix);
+    ri.shape.pyramid->draw();
 }
