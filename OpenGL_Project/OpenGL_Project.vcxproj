@@ -26,11 +26,20 @@
   <ItemGroup>
     <None Include="src\fragmentShader.glsl" />
     <None Include="src\fragmentShaderRed.glsl" />
+    <None Include="src\fragmentShaderTexture.glsl" />
     <None Include="src\vertexShader.glsl" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\shape.h" />
     <ClInclude Include="src\Utils.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="src\Textures\Heightmaps\heightmap_3.png" />
+    <Image Include="src\Textures\Heightmaps\heightmap_1.png" />
+    <Image Include="src\Textures\Heightmaps\heightmap_2.png" />
+    <Image Include="src\Textures\Heightmaps\heightmap_4.png" />
+    <Image Include="src\Textures\Heightmaps\mc_chicken.jpeg" />
+    <Image Include="src\Textures\mc_chicken.jpeg" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>

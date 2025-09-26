@@ -13,6 +13,12 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Resource Files\Textures">
+      <UniqueIdentifier>{2acf2e82-8af6-4766-9cb5-9004757e43fa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\Textures\Heightmaps">
+      <UniqueIdentifier>{3499ff5d-a5ca-4484-b5d2-e287cf3a26f3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp">
@@ -35,6 +41,9 @@
     <None Include="src\vertexShader.glsl">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="src\fragmentShaderTexture.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Utils.h">
@@ -43,5 +52,25 @@
     <ClInclude Include="src\shape.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="src\Textures\Heightmaps\heightmap_1.png">
+      <Filter>Resource Files\Textures\Heightmaps</Filter>
+    </Image>
+    <Image Include="src\Textures\Heightmaps\heightmap_2.png">
+      <Filter>Resource Files\Textures\Heightmaps</Filter>
+    </Image>
+    <Image Include="src\Textures\Heightmaps\heightmap_3.png">
+      <Filter>Resource Files\Textures\Heightmaps</Filter>
+    </Image>
+    <Image Include="src\Textures\Heightmaps\heightmap_4.png">
+      <Filter>Resource Files\Textures\Heightmaps</Filter>
+    </Image>
+    <Image Include="src\Textures\mc_chicken.jpeg">
+      <Filter>Resource Files\Textures</Filter>
+    </Image>
+    <Image Include="src\Textures\Heightmaps\mc_chicken.jpeg">
+      <Filter>Resource Files\Textures\Heightmaps</Filter>
+    </Image>
   </ItemGroup>
 </Project>

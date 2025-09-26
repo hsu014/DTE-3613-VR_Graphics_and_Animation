@@ -8,8 +8,12 @@
 #include <fstream>
 #include <cmath>
 #include <vector>
+
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/gtc/matrix_transform.hpp> // glm::translate, glm::rotate, glm::scale, glm::perspective
+//#include <glm/gtx/euler_angles.hpp>
+
 
 class Utils
 {
@@ -26,6 +30,7 @@ public:
 	static GLuint createShaderProgram(const char *vp, const char *fp);
 	static GLuint loadTexture(const char *texImagePath);
 	static GLuint loadCubeMap(const char *mapDir);
+	static std::vector<std::vector<float>> loadHeightMap(const char* texImagePath);
 
 	static float* goldAmbient();
 	static float* goldDiffuse();

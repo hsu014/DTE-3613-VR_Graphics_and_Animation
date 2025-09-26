@@ -1,16 +1,18 @@
 #define GLM_ENABLE_EXPERIMENTAL
 
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
-#include <SOIL2/soil2.h>
-#include <string>
-#include <iostream>
-#include <fstream>
-#include <cmath>
-#include <glm/glm.hpp>
-#include <glm/gtc/type_ptr.hpp> // glm::value_ptr
-#include <glm/gtc/matrix_transform.hpp> // glm::translate, glm::rotate, glm::scale, glm::perspective
+//#include <GL/glew.h>
+//#include <GLFW/glfw3.h>
+//#include <SOIL2/soil2.h>
+//#include <string>
+//#include <iostream>
+//#include <fstream>
+//#include <cmath>
+
+//#include <glm/glm.hpp>
+//#include <glm/gtc/type_ptr.hpp> // glm::value_ptr
+//#include <glm/gtc/matrix_transform.hpp> // glm::translate, glm::rotate, glm::scale, glm::perspective
 #include <glm/gtx/euler_angles.hpp>
+
 #include "Utils.h"
 using namespace std;
 
@@ -170,6 +172,36 @@ GLuint Utils::loadTexture(const char *texImagePath)
 	}
 	// ----- end of mipmap/anisotropic section
 	return textureRef;
+}
+
+std::vector<std::vector<float>> Utils::loadHeightMap(const char* texImagePath)
+{
+	int width, height, channels;
+
+	// Load image as 1-channel grayscale
+	unsigned char* data = SOIL_load_image(texImagePath, &width, &height, &channels, SOIL_LOAD_L);
+
+	if (!data) {
+		std::cerr << "Failed to load heightmap: " << texImagePath << std::endl;
+		return {};
+	}
+
+	std::vector<std::vector<float>> heightmap(width, std::vector<float>(height));
+
+	// SOIL2 loads from top-left corner, row-major order
+	for (int y = 0; y < height; ++y) {
+		for (int x = 0; x < width; ++x) {
+			int index = y * width + x;
+			float value = static_cast<float>(data[index]) / 255.0f;
+			// Some trickery to orient correctly
+			heightmap[width-1-x][height-1-y] = value;
+		}
+	}
+	// Free the image data from memory
+	SOIL_free_image_data(data);
+
+	return heightmap;
+
 }
 
 // GOLD material - ambient, diffuse, specular, and shininess
