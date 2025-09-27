@@ -44,6 +44,12 @@
     <None Include="src\fragmentShaderTexture.glsl">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="src\vertexShaderPhong.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="src\fragmentShaderPhong.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Utils.h">

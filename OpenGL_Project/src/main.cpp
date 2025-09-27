@@ -9,14 +9,25 @@
 #include "shape.h"
 
 struct RenderInfo;
+struct Light;
+struct MaterialType;
+struct Material;
 void processInput(GLFWwindow* window, RenderInfo& ri);
 void initRenderInfo(RenderInfo& ri);
+void createLights(RenderInfo& ri);
+void createMaterials(RenderInfo& ri);
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void updateCameraFront(RenderInfo& ri);
 
+void shaderSetVec3(GLuint shaderProgram, const char* name, glm::vec3& value);
+void shaderSetVec4(GLuint shaderProgram, const char* name, glm::vec4& value);
+void shaderSetMat4(GLuint shaderProgram, const char* name, glm::mat4& value);
+void shaderSetFloat(GLuint shaderProgram, const char* name, float value);
+
 static glm::mat4 getProjectionMatrix();
 glm::mat4 getViewMatrix(RenderInfo& ri);
-void prepareShader(GLuint shaderProgram, glm::mat4 modelViewMatrix, glm::mat4 projectionMatrix);
+void prepareShaderBasic(GLuint shaderProgram, glm::mat4 modelViewMatrix, RenderInfo& ri);
+void prepareShaderPhong(GLuint shaderProgram, glm::mat4 modelMatrix, RenderInfo& ri, MaterialType& mat);
 void animate(GLFWwindow* window, RenderInfo& ri);
 void draw(RenderInfo& ri);
 void draw2(RenderInfo& ri);
@@ -25,13 +36,11 @@ void draw4(RenderInfo& ri);
 void drawPlane(RenderInfo& ri);
 void drawSphere(RenderInfo& ri);
 
-//float PI = glm::pi<float>();
-// 
 // settings 
-const unsigned int SCR_WIDTH = 1600;
-const unsigned int SCR_HEIGHT = 1200;
-//const unsigned int SCR_WIDTH = 1100;
-//const unsigned int SCR_HEIGHT = 800;
+//const unsigned int SCR_WIDTH = 1600;
+//const unsigned int SCR_HEIGHT = 1200;
+const unsigned int SCR_WIDTH = 1100;
+const unsigned int SCR_HEIGHT = 800;
 
 unsigned int CUR_WIDTH = SCR_WIDTH;
 unsigned int CUR_HEIGHT = SCR_HEIGHT;
@@ -60,10 +69,55 @@ struct ShaderProgram {
     GLuint base;
     GLuint red;
     GLuint texture;
+    GLuint phong;
+};
+
+struct AmbientLight {
+    glm::vec4 color;
+};
+
+struct DirectionalLight {
+    glm::vec3 direction;
+
+    glm::vec4 ambient;
+    glm::vec4 diffuse;
+    glm::vec4 specular;
+};
+
+struct PointLight {
+    glm::vec3 position;
+
+    glm::vec4 ambient;
+    glm::vec4 diffuse;
+    glm::vec4 specular;
+    
+    float constant;
+    float linear;
+    float quadratic;
+};
+
+struct Light {
+    AmbientLight ambient;
+    std::vector<DirectionalLight> directional;
+    std::vector<PointLight> point;
+};
+
+struct MaterialType {
+    glm::vec4 ambient;
+    glm::vec4 diffuse;
+    glm::vec4 specular;
+    float shininess;
+};
+
+struct Material {
+    MaterialType gold;
+    MaterialType silver;
 };
 
 struct RenderInfo {
     Camera camera;
+    Light light;
+    Material material;
     Time time;
     ShaderProgram shaderProgram;
     glm::mat4 rotationMatrix;
@@ -75,22 +129,6 @@ struct RenderInfo {
     
 };
 
-/* Light
-Ambient
-    color: r, g ,b
-
-Directional
-    direction vec3
-    color: r, g ,b
-
-PointLight
-    position vec3
-    intensity
-    color: r, g ,b
-
-SpotLight?
-
-*/
 
 
 int main()
@@ -127,6 +165,7 @@ int main()
     ri.shaderProgram.base = Utils::createShaderProgram("src/vertexShader.glsl", "src/fragmentShader.glsl");
     ri.shaderProgram.red = Utils::createShaderProgram("src/vertexShader.glsl", "src/fragmentShaderRed.glsl");
     ri.shaderProgram.texture = Utils::createShaderProgram("src/vertexShader.glsl", "src/fragmentShaderTexture.glsl");
+    ri.shaderProgram.phong = Utils::createShaderProgram("src/vertexShaderPhong.glsl", "src/fragmentShaderPhong.glsl");
 
     animate(window, ri);
 
@@ -134,6 +173,7 @@ int main()
     glDeleteProgram(ri.shaderProgram.base);
     glDeleteProgram(ri.shaderProgram.red);
     glDeleteProgram(ri.shaderProgram.texture);
+    glDeleteProgram(ri.shaderProgram.phong);
 
     glfwTerminate();
 
@@ -223,12 +263,16 @@ void initRenderInfo(RenderInfo& ri)
     ri.camera.cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
     ri.camera.yaw = 90.0f;
     ri.camera.pitch = 0.0f;
+    updateCameraFront(ri);
+
     ri.rotationMatrix = glm::mat4(1.0f);
     ri.projectionMatrix = getProjectionMatrix();
     ri.time.prev = glfwGetTime();
     ri.time.dt = 0;
 
-    updateCameraFront(ri);
+    createLights(ri);
+
+    createMaterials(ri);
 
     // Textures
     ri.texture["heightmap_1"] = Utils::loadTexture("src/Textures/Heightmaps/heightmap_1.png");
@@ -250,7 +294,7 @@ void initRenderInfo(RenderInfo& ri)
         std::make_shared<std::vector<std::vector<float>>>(Utils::loadHeightMap("src/Textures/Heightmaps/mc_chicken.jpeg"));
 
 
-    // Shapes
+    // Create shapes
     ri.shape["test"] = new TestShape();
     ri.shape["box"] = new Box();
     ri.shape["pyramid"] = new Pyramid();
@@ -263,6 +307,56 @@ void initRenderInfo(RenderInfo& ri)
 }
 
 
+void createLights(RenderInfo& ri)
+{
+    // Ambient
+    //AmbientLight ambient{};
+    ri.light.ambient.color = glm::vec4(0.2f, 0.2f, 0.2f, 1.0f);
+
+    // Directional
+    DirectionalLight dirLight{};
+    dirLight.direction = glm::vec3(1.0f, -5.0f, -1.0f);
+
+    dirLight.ambient = glm::vec4(0.05f, 0.05f, 0.05f, 1.0f);
+    dirLight.diffuse = glm::vec4(0.4f, 0.4f, 0.4f, 1.0f);
+    dirLight.specular = glm::vec4(0.5f, 0.5f, 0.5f, 1.0f);
+    
+    ri.light.directional.push_back(dirLight);
+
+    // Point
+    PointLight pointLight{};
+    pointLight.position = glm::vec3(-1.0f, 2.0f, 0.0f);
+
+    pointLight.ambient = glm::vec4(0.05f, 0.05f, 0.05f, 1.0f);
+    pointLight.diffuse = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+    pointLight.specular = glm::vec4(0.5f, 0.5f, 0.5f, 1.0f);
+
+    pointLight.constant = 1.0f;
+    pointLight.linear = 0.09f;
+    pointLight.quadratic = 0.032f;
+
+    ri.light.point.push_back(pointLight);
+}
+
+
+void createMaterials(RenderInfo& ri)
+{
+    ri.material.gold = {
+    glm::vec4(0.2473f, 0.1995f, 0.0745f, 1),
+    glm::vec4(0.7516f, 0.6065f, 0.2265f, 1),
+    glm::vec4(0.6283f, 0.5559f, 0.3661f, 1),
+    51.2f
+    };
+
+    ri.material.silver = {
+    glm::vec4(0.1923f, 0.1923f, 0.1923f, 1),
+    glm::vec4(0.5075f, 0.5075f, 0.5075f, 1),
+    glm::vec4(0.5083f, 0.5083f, 0.5083f, 1),
+    51.2f
+    };
+}
+
+
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
     
@@ -270,6 +364,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
     CUR_WIDTH = width;
     CUR_HEIGHT = height;
 }
+
 
 void updateCameraFront(RenderInfo& ri)
 {
@@ -279,6 +374,31 @@ void updateCameraFront(RenderInfo& ri)
     front.z = sin(glm::radians(ri.camera.yaw)) * cos(glm::radians(ri.camera.pitch));
     ri.camera.cameraFront = glm::normalize(front);
 }
+
+
+void shaderSetVec3(GLuint shaderProgram, const char* name, glm::vec3& value)
+{
+    glUniform3fv(glGetUniformLocation(shaderProgram, name), 1, &value[0]);
+}
+
+
+void shaderSetVec4(GLuint shaderProgram, const char* name, glm::vec4& value)
+{
+    glUniform4fv(glGetUniformLocation(shaderProgram, name), 1, &value[0]);
+}
+
+
+void shaderSetMat4(GLuint shaderProgram, const char* name, glm::mat4& value)
+{
+    glUniformMatrix4fv(glGetUniformLocation(shaderProgram, name), 1, GL_FALSE, &value[0][0]);
+}
+
+
+void shaderSetFloat(GLuint shaderProgram, const char* name, float value)
+{
+    glUniform1f(glGetUniformLocation(shaderProgram, name), value);
+}
+
 
 static glm::mat4 getProjectionMatrix()
 {
@@ -297,13 +417,53 @@ glm::mat4 getViewMatrix(RenderInfo& ri)
 }
 
 
-void prepareShader(GLuint shaderProgram, glm::mat4 modelViewMatrix, glm::mat4 projectionMatrix)
+void prepareShaderBasic(GLuint shaderProgram, glm::mat4 modelViewMatrix, RenderInfo& ri)
 {
     glUseProgram(shaderProgram);
-    GLuint modelViewMatrixLocation = glGetUniformLocation(shaderProgram, "uModelView");
-    GLuint projectionMatrixLocation = glGetUniformLocation(shaderProgram, "uProjection");
-    glUniformMatrix4fv(modelViewMatrixLocation, 1, GL_FALSE, glm::value_ptr(modelViewMatrix));
-    glUniformMatrix4fv(projectionMatrixLocation, 1, GL_FALSE, glm::value_ptr(projectionMatrix));
+    shaderSetMat4(shaderProgram, "uModelView", modelViewMatrix);
+    shaderSetMat4(shaderProgram, "uProjection", ri.projectionMatrix);
+}
+
+
+void prepareShaderPhong(GLuint shaderProgram, glm::mat4 modelMatrix, RenderInfo& ri, MaterialType& mat)
+{
+    glm::mat4 normalMatrix = glm::transpose(glm::inverse(modelMatrix));
+    glm::mat4 modelViewMatrix = ri.viewMatrix * modelMatrix;
+    
+    // Bind lighting and material info to Phong shader
+    glUseProgram(shaderProgram);
+    shaderSetMat4(shaderProgram, "uModel", modelMatrix);
+    shaderSetMat4(shaderProgram, "uModelView", modelViewMatrix);
+    shaderSetMat4(shaderProgram, "uProjection", ri.projectionMatrix);
+    shaderSetMat4(shaderProgram, "uNormal", normalMatrix);
+    shaderSetVec3(shaderProgram, "viewPos", ri.camera.cameraPos);
+
+    // Ambient
+    shaderSetVec4(shaderProgram, "ambientLight", ri.light.ambient.color);
+
+    // Directional
+    DirectionalLight dirLight = ri.light.directional[0];
+    shaderSetVec3(shaderProgram, "dirLight.direction", dirLight.direction);
+    shaderSetVec4(shaderProgram, "dirLight.ambient", dirLight.ambient);
+    shaderSetVec4(shaderProgram, "dirLight.diffuse", dirLight.diffuse);
+    shaderSetVec4(shaderProgram, "dirLight.specular", dirLight.specular);
+
+    // Point
+    PointLight pointLight = ri.light.point[0];
+    shaderSetVec3(shaderProgram, "pointLight.position", pointLight.position);
+    shaderSetVec4(shaderProgram, "pointLight.ambient", pointLight.ambient);
+    shaderSetVec4(shaderProgram, "pointLight.diffuse", pointLight.diffuse);
+    shaderSetVec4(shaderProgram, "pointLight.specular", pointLight.specular);
+    shaderSetFloat(shaderProgram, "pointLight.constant", pointLight.constant);
+    shaderSetFloat(shaderProgram, "pointLight.linear", pointLight.linear);
+    shaderSetFloat(shaderProgram, "pointLight.quadratic", pointLight.quadratic);
+
+    // Material
+    shaderSetVec4(shaderProgram, "material.ambient", mat.ambient);
+    shaderSetVec4(shaderProgram, "material.diffuse", mat.diffuse);
+    shaderSetVec4(shaderProgram, "material.specular", mat.specular);
+    shaderSetFloat(shaderProgram, "material.shininess", mat.shininess);
+
 }
 
 
@@ -350,7 +510,7 @@ void draw(RenderInfo& ri)
 
     glm::mat4 modelViewMatrix = ri.viewMatrix * modelMatrix;
 
-    prepareShader(ri.shaderProgram.base, modelViewMatrix, ri.projectionMatrix);
+    prepareShaderBasic(ri.shaderProgram.base, modelViewMatrix, ri);
     ri.shape["box"]->draw();
 }
 
@@ -368,7 +528,7 @@ void draw2(RenderInfo& ri)
 
     glm::mat4 modelViewMatrix = ri.viewMatrix * modelMatrix;
 
-    prepareShader(ri.shaderProgram.base, modelViewMatrix, ri.projectionMatrix);
+    prepareShaderBasic(ri.shaderProgram.base, modelViewMatrix, ri);
     ri.shape["pyramid"]->draw();
 }
 
@@ -386,7 +546,7 @@ void draw3(RenderInfo& ri)
 
     glm::mat4 modelViewMatrix = ri.viewMatrix * modelMatrix;
 
-    prepareShader(ri.shaderProgram.red, modelViewMatrix, ri.projectionMatrix);
+    prepareShaderBasic(ri.shaderProgram.red, modelViewMatrix, ri);
     ri.shape["box"]->draw();
 }
 
@@ -404,7 +564,7 @@ void draw4(RenderInfo& ri)
 
     glm::mat4 modelViewMatrix = ri.viewMatrix * modelMatrix;
 
-    prepareShader(ri.shaderProgram.red, modelViewMatrix, ri.projectionMatrix);
+    prepareShaderBasic(ri.shaderProgram.red, modelViewMatrix, ri);
     ri.shape["pyramid"]->draw();
 }
 
@@ -426,9 +586,10 @@ void drawPlane(RenderInfo& ri)
 
     glm::mat4 modelViewMatrix = ri.viewMatrix * modelMatrix;
 
-    prepareShader(ri.shaderProgram.texture, modelViewMatrix, ri.projectionMatrix);
+    prepareShaderBasic(ri.shaderProgram.texture, modelViewMatrix, ri);
     ri.shape["plane"]->draw();
 }
+
 
 void drawSphere(RenderInfo& ri)
 {
@@ -436,7 +597,7 @@ void drawSphere(RenderInfo& ri)
     glm::mat4 modelMatrix = glm::mat4(1.0f);
 
     // Translate
-    modelMatrix = glm::translate(modelMatrix, glm::vec3(0.0f, 1.0f, 0.0f));
+    modelMatrix = glm::translate(modelMatrix, glm::vec3(2.0f, 1.0f, 0.0f));
 
     // Rotate
     modelMatrix *= ri.rotationMatrix;
@@ -446,6 +607,7 @@ void drawSphere(RenderInfo& ri)
 
     glm::mat4 modelViewMatrix = ri.viewMatrix * modelMatrix;
 
-    prepareShader(ri.shaderProgram.base, modelViewMatrix, ri.projectionMatrix);
+    prepareShaderPhong(ri.shaderProgram.phong, modelMatrix, ri, ri.material.gold);
+
     ri.shape["sphere"]->draw();
 }

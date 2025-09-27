@@ -25,9 +25,11 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="src\fragmentShader.glsl" />
+    <None Include="src\fragmentShaderPhong.glsl" />
     <None Include="src\fragmentShaderRed.glsl" />
     <None Include="src\fragmentShaderTexture.glsl" />
     <None Include="src\vertexShader.glsl" />
+    <None Include="src\vertexShaderPhong.glsl" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\shape.h" />
