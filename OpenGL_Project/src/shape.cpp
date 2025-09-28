@@ -462,7 +462,7 @@ void Sphere::fillBuffers()
     float x, y, z, xy;                              // vertex position
     float nx, ny, nz, lengthInv = 1.0f / radius;    // normal
     float u, v;                                     // texCoord
-    float cr = 0.0f, cg = 0.0f, cb = 1.0f;          // color
+    float cr = 1.0f, cg = 1.0f, cb = 1.0f;          // color
 
     float sectorStep = 2 * PI / mSectors;
     float stackStep = PI / mStacks;
@@ -594,7 +594,7 @@ void Sphere::fillBuffers()
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
 
         // set texture filtering parameters
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
         glActiveTexture(GL_TEXTURE0);

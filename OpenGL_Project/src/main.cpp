@@ -23,6 +23,7 @@ void shaderSetVec3(GLuint shaderProgram, const char* name, glm::vec3& value);
 void shaderSetVec4(GLuint shaderProgram, const char* name, glm::vec4& value);
 void shaderSetMat4(GLuint shaderProgram, const char* name, glm::mat4& value);
 void shaderSetFloat(GLuint shaderProgram, const char* name, float value);
+void shaderSetInt(GLuint shaderProgram, const char* name, int value);
 
 static glm::mat4 getProjectionMatrix();
 glm::mat4 getViewMatrix(RenderInfo& ri);
@@ -35,6 +36,7 @@ void draw3(RenderInfo& ri);
 void draw4(RenderInfo& ri);
 void drawPlane(RenderInfo& ri);
 void drawSphere(RenderInfo& ri);
+void drawLightSpheres(RenderInfo& ri);
 
 // settings 
 //const unsigned int SCR_WIDTH = 1600;
@@ -110,6 +112,7 @@ struct MaterialType {
 };
 
 struct Material {
+    MaterialType blue;
     MaterialType gold;
     MaterialType silver;
 };
@@ -315,11 +318,12 @@ void createLights(RenderInfo& ri)
 
     // Directional
     DirectionalLight dirLight{};
-    dirLight.direction = glm::vec3(1.0f, -5.0f, -1.0f);
+    dirLight.direction = glm::vec3(0.0f, -5.0f, 0.0f);
 
     dirLight.ambient = glm::vec4(0.05f, 0.05f, 0.05f, 1.0f);
     dirLight.diffuse = glm::vec4(0.4f, 0.4f, 0.4f, 1.0f);
     dirLight.specular = glm::vec4(0.5f, 0.5f, 0.5f, 1.0f);
+    dirLight.specular = glm::vec4(0.1f, 0.1f, 0.1f, 1.0f);
     
     ri.light.directional.push_back(dirLight);
 
@@ -336,11 +340,22 @@ void createLights(RenderInfo& ri)
     pointLight.quadratic = 0.032f;
 
     ri.light.point.push_back(pointLight);
+
+    pointLight.position = glm::vec3(-1.0f, 0.0f, 2.0f);
+    ri.light.point.push_back(pointLight);
+
 }
 
 
 void createMaterials(RenderInfo& ri)
 {
+    ri.material.blue = {
+    glm::vec4(0.0f, 0.0f, 1.0f, 1),
+    glm::vec4(0.0f, 0.0f, 1.0f, 1),
+    glm::vec4(1.0f, 1.0f, 1.0f, 1),
+    40.0f
+    };
+
     ri.material.gold = {
     glm::vec4(0.2473f, 0.1995f, 0.0745f, 1),
     glm::vec4(0.7516f, 0.6065f, 0.2265f, 1),
@@ -399,6 +414,11 @@ void shaderSetFloat(GLuint shaderProgram, const char* name, float value)
     glUniform1f(glGetUniformLocation(shaderProgram, name), value);
 }
 
+void shaderSetInt(GLuint shaderProgram, const char* name, int value)
+{
+    glUniform1i(glGetUniformLocation(shaderProgram, name), value);
+}
+
 
 static glm::mat4 getProjectionMatrix()
 {
@@ -437,6 +457,7 @@ void prepareShaderPhong(GLuint shaderProgram, glm::mat4 modelMatrix, RenderInfo&
     shaderSetMat4(shaderProgram, "uProjection", ri.projectionMatrix);
     shaderSetMat4(shaderProgram, "uNormal", normalMatrix);
     shaderSetVec3(shaderProgram, "viewPos", ri.camera.cameraPos);
+    shaderSetInt(shaderProgram, "NR_POINT_LIGHTS", ri.light.point.size());
 
     // Ambient
     shaderSetVec4(shaderProgram, "ambientLight", ri.light.ambient.color);
@@ -449,14 +470,37 @@ void prepareShaderPhong(GLuint shaderProgram, glm::mat4 modelMatrix, RenderInfo&
     shaderSetVec4(shaderProgram, "dirLight.specular", dirLight.specular);
 
     // Point
+    /*for (int i = 0; i < ri.light.point.size(); i++) {
+        PointLight pointLight = ri.light.point[i];
+        std::string start = "pointLight[" + std::to_string(i) + "].position";
+        const char* cstr = start.c_str();
+
+        shaderSetVec3(shaderProgram, "pointLight.position", pointLight.position);
+        shaderSetVec4(shaderProgram, "pointLight.ambient", pointLight.ambient);
+        shaderSetVec4(shaderProgram, "pointLight.diffuse", pointLight.diffuse);
+        shaderSetVec4(shaderProgram, "pointLight.specular", pointLight.specular);
+        shaderSetFloat(shaderProgram, "pointLight.constant", pointLight.constant);
+        shaderSetFloat(shaderProgram, "pointLight.linear", pointLight.linear);
+        shaderSetFloat(shaderProgram, "pointLight.quadratic", pointLight.quadratic);
+    }*/
+
     PointLight pointLight = ri.light.point[0];
-    shaderSetVec3(shaderProgram, "pointLight.position", pointLight.position);
-    shaderSetVec4(shaderProgram, "pointLight.ambient", pointLight.ambient);
-    shaderSetVec4(shaderProgram, "pointLight.diffuse", pointLight.diffuse);
-    shaderSetVec4(shaderProgram, "pointLight.specular", pointLight.specular);
-    shaderSetFloat(shaderProgram, "pointLight.constant", pointLight.constant);
-    shaderSetFloat(shaderProgram, "pointLight.linear", pointLight.linear);
-    shaderSetFloat(shaderProgram, "pointLight.quadratic", pointLight.quadratic);
+    shaderSetVec3(shaderProgram, "pointLight[0].position", pointLight.position);
+    shaderSetVec4(shaderProgram, "pointLight[0].ambient", pointLight.ambient);
+    shaderSetVec4(shaderProgram, "pointLight[0].diffuse", pointLight.diffuse);
+    shaderSetVec4(shaderProgram, "pointLight[0].specular", pointLight.specular);
+    shaderSetFloat(shaderProgram, "pointLight[0].constant", pointLight.constant);
+    shaderSetFloat(shaderProgram, "pointLight[0].linear", pointLight.linear);
+    shaderSetFloat(shaderProgram, "pointLight[0].quadratic", pointLight.quadratic);
+
+    pointLight = ri.light.point[1];
+    shaderSetVec3(shaderProgram, "pointLight[1].position", pointLight.position);
+    shaderSetVec4(shaderProgram, "pointLight[1].ambient", pointLight.ambient);
+    shaderSetVec4(shaderProgram, "pointLight[1].diffuse", pointLight.diffuse);
+    shaderSetVec4(shaderProgram, "pointLight[1].specular", pointLight.specular);
+    shaderSetFloat(shaderProgram, "pointLight[1].constant", pointLight.constant);
+    shaderSetFloat(shaderProgram, "pointLight[1].linear", pointLight.linear);
+    shaderSetFloat(shaderProgram, "pointLight[1].quadratic", pointLight.quadratic);
 
     // Material
     shaderSetVec4(shaderProgram, "material.ambient", mat.ambient);
@@ -481,13 +525,16 @@ void animate(GLFWwindow* window, RenderInfo& ri)
         glClearColor(0.2f, 0.0f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        //draw(ri);
+        draw(ri);
         //draw2(ri);
         //draw3(ri);
         //draw4(ri);
 
-        drawPlane(ri);
+        //drawPlane(ri);
+
         drawSphere(ri);
+        drawLightSpheres(ri);
+
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -511,6 +558,7 @@ void draw(RenderInfo& ri)
     glm::mat4 modelViewMatrix = ri.viewMatrix * modelMatrix;
 
     prepareShaderBasic(ri.shaderProgram.base, modelViewMatrix, ri);
+    //prepareShaderPhong(ri.shaderProgram.phong, modelMatrix, ri, ri.material.gold);
     ri.shape["box"]->draw();
 }
 
@@ -607,7 +655,22 @@ void drawSphere(RenderInfo& ri)
 
     glm::mat4 modelViewMatrix = ri.viewMatrix * modelMatrix;
 
-    prepareShaderPhong(ri.shaderProgram.phong, modelMatrix, ri, ri.material.gold);
+    prepareShaderPhong(ri.shaderProgram.phong, modelMatrix, ri, ri.material.blue);
 
     ri.shape["sphere"]->draw();
+}
+
+void drawLightSpheres(RenderInfo& ri)
+{
+    for (const PointLight& light : ri.light.point) {
+        glm::mat4 modelMatrix = glm::mat4(1.0f);
+
+        modelMatrix = glm::translate(modelMatrix, light.position);
+        modelMatrix = glm::scale(modelMatrix, glm::vec3(0.1f, 0.1f, 0.1f));
+
+        glm::mat4 modelViewMatrix = ri.viewMatrix * modelMatrix;
+
+        prepareShaderBasic(ri.shaderProgram.base, modelViewMatrix, ri);
+        ri.shape["sphere"]->draw();
+    }
 }

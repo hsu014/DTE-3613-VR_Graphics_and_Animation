@@ -38,11 +38,12 @@ struct Material
 };
 
 uniform sampler2D ourTexture;
+uniform int NR_POINT_LIGHTS ;
 
 uniform vec3 viewPos;
 uniform vec4 ambientLight;
 uniform DirectionalLight dirLight;
-uniform PointLight pointLight;
+uniform PointLight pointLight[10];
 uniform Material material;
 
 // function prototypes
@@ -58,7 +59,8 @@ void main() {
     vec3 result = CalcDirLight(dirLight, norm, viewDir);
 
 	// phase 2: point lights
-	result += CalcPointLight(pointLight, norm, FragPos, viewDir);
+    for(int i = 0; i < NR_POINT_LIGHTS; i++)
+	    result += CalcPointLight(pointLight[i], norm, FragPos, viewDir);
 
 	fragColor = vec4(result, 1.0); // * vec4(Color, 1.0);
 
@@ -74,12 +76,12 @@ vec3 CalcDirLight(DirectionalLight light, vec3 normal, vec3 viewDir)
     vec3 reflectDir = reflect(-lightDir, normal);
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
     // combine results
-    // vec3 ambient = vec3(light.ambient) * vec3(material.ambient);
-	// vec3 diffuse = vec3(light.diffuse) * diff * vec3(material.diffuse);
-	// vec3 specular = vec3(light.specular) * spec * vec3(material.specular);
-	vec3 ambient = vec3(light.ambient) * Color;
-	vec3 diffuse = vec3(light.diffuse) * diff * Color;
-    vec3 specular = vec3(light.specular) * spec * Color;
+    vec3 ambient = vec3(light.ambient) * vec3(material.ambient);
+	vec3 diffuse = vec3(light.diffuse) * diff * vec3(material.diffuse);
+	vec3 specular = vec3(light.specular) * spec * vec3(material.specular);
+	// vec3 ambient = vec3(light.ambient) * Color;
+	// vec3 diffuse = vec3(light.diffuse) * diff * Color;
+    // vec3 specular = vec3(light.specular) * spec * Color;
     
 	return (ambient + diffuse + specular);
 }
@@ -97,12 +99,12 @@ vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
     float distance = length(light.position - fragPos);
     float attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * (distance * distance));    
     // combine results
-    // vec3 ambient = vec3(light.ambient) * vec3(material.diffuse);
-    // vec3 diffuse = vec3(light.diffuse) * diff * vec3(material.diffuse);
-	// vec3 specular = vec3(light.specular) * spec * vec3(material.specular);
-	vec3 ambient = vec3(light.ambient) * Color;
-    vec3 diffuse = vec3(light.diffuse) * diff * Color;
-    vec3 specular = vec3(light.specular) * spec * Color;
+    vec3 ambient = vec3(light.ambient) * vec3(material.diffuse);
+    vec3 diffuse = vec3(light.diffuse) * diff * vec3(material.diffuse);
+	vec3 specular = vec3(light.specular) * spec * vec3(material.specular);
+	// vec3 ambient = vec3(light.ambient) * Color;
+    // vec3 diffuse = vec3(light.diffuse) * diff * Color;
+    // vec3 specular = vec3(light.specular) * spec * Color;
     ambient *= attenuation;
     diffuse *= attenuation;
     specular *= attenuation;
