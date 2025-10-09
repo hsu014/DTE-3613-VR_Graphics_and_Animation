@@ -39,10 +39,10 @@ void drawSphere(RenderInfo& ri);
 void drawLightSpheres(RenderInfo& ri);
 
 // settings 
-//const unsigned int SCR_WIDTH = 1600;
-//const unsigned int SCR_HEIGHT = 1200;
-const unsigned int SCR_WIDTH = 1100;
-const unsigned int SCR_HEIGHT = 800;
+const unsigned int SCR_WIDTH = 1600;
+const unsigned int SCR_HEIGHT = 1200;
+//const unsigned int SCR_WIDTH = 1100;
+//const unsigned int SCR_HEIGHT = 800;
 
 unsigned int CUR_WIDTH = SCR_WIDTH;
 unsigned int CUR_HEIGHT = SCR_HEIGHT;
@@ -72,6 +72,7 @@ struct ShaderProgram {
     GLuint red;
     GLuint texture;
     GLuint phong;
+    GLuint particle;
 };
 
 struct AmbientLight {
@@ -283,6 +284,7 @@ void initRenderInfo(RenderInfo& ri)
     ri.texture["heightmap_3"] = Utils::loadTexture("src/Textures/Heightmaps/heightmap_3.png");
     ri.texture["heightmap_4"] = Utils::loadTexture("src/Textures/Heightmaps/heightmap_4.png");
     ri.texture["chicken"] = Utils::loadTexture("src/Textures/mc_chicken.jpeg");
+    //ri.texture["particle"] = Utils::loadTexture("src/Textures/particle.png");
 
     // Heightmap
     ri.heightMap["heightmap_1"] = 
@@ -491,6 +493,13 @@ void prepareShaderPhong(GLuint shaderProgram, glm::mat4 modelMatrix, RenderInfo&
 }
 
 
+void prepareShaderParticle(GLuint shaderProgram, glm::mat4 modelViewMatrix, RenderInfo& ri) {
+    glUseProgram(shaderProgram);
+    shaderSetMat4(shaderProgram, "uModelView", modelViewMatrix);
+    shaderSetMat4(shaderProgram, "uProjection", ri.projectionMatrix);
+}
+
+
 void animate(GLFWwindow* window, RenderInfo& ri)
 {
     while (!glfwWindowShouldClose(window))
@@ -505,12 +514,12 @@ void animate(GLFWwindow* window, RenderInfo& ri)
         glClearColor(0.2f, 0.0f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // draw(ri);
+        //draw(ri);
         //draw2(ri);
         //draw3(ri);
         //draw4(ri);
 
-        //drawPlane(ri);
+        drawPlane(ri);
 
         drawSphere(ri);
         drawLightSpheres(ri);
@@ -636,6 +645,7 @@ void drawSphere(RenderInfo& ri)
     glm::mat4 modelViewMatrix = ri.viewMatrix * modelMatrix;
 
     prepareShaderPhong(ri.shaderProgram.phong, modelMatrix, ri, ri.material.blue);
+    //prepareShaderBasic(ri.shaderProgram.texture, modelViewMatrix, ri);
 
     ri.shape["sphere"]->draw();
 }

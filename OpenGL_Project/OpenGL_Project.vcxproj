@@ -20,18 +20,22 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\particle_emitter.cpp" />
     <ClCompile Include="src\shape.cpp" />
     <ClCompile Include="src\Utils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="src\fragmentShader.glsl" />
+    <None Include="src\fragmentShaderParticle.glsl" />
     <None Include="src\fragmentShaderPhong.glsl" />
     <None Include="src\fragmentShaderRed.glsl" />
     <None Include="src\fragmentShaderTexture.glsl" />
     <None Include="src\vertexShader.glsl" />
+    <None Include="src\vertexShaderParticle.glsl" />
     <None Include="src\vertexShaderPhong.glsl" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\particle_emitter.h" />
     <ClInclude Include="src\shape.h" />
     <ClInclude Include="src\Utils.h" />
   </ItemGroup>
@@ -42,6 +46,7 @@
     <Image Include="src\Textures\Heightmaps\heightmap_4.png" />
     <Image Include="src\Textures\Heightmaps\mc_chicken.jpeg" />
     <Image Include="src\Textures\mc_chicken.jpeg" />
+    <Image Include="src\Textures\particle.png" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>

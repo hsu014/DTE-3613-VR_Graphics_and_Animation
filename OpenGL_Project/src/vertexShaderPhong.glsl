@@ -5,10 +5,10 @@ layout (location = 1) in vec3 inColor;
 layout (location = 2) in vec2 inTexCoord;
 layout (location = 3) in vec3 inNormal;
 
-out vec3 FragPos;
-out vec3 Color;
-out vec2 TexCoord;
-out vec3 Normal;
+out vec3 fragPos;
+out vec3 color;
+out vec2 texCoord;
+out vec3 normal;
 
 uniform mat4 uModel;
 uniform mat4 uModelView;
@@ -17,10 +17,10 @@ uniform mat4 uNormal;
 
 void main() 
 {
-	FragPos = vec3(uModel * vec4(inPosition, 1.0));
-	Normal = mat3(uNormal) * inNormal;
-	Color = inColor;
-    TexCoord = inTexCoord;
+	fragPos = vec3(uModel * vec4(inPosition, 1.0));
+	normal = mat3(uNormal) * inNormal;
+	color = inColor;
+    texCoord = inTexCoord;
 
     gl_Position = uProjection * uModelView * vec4(inPosition, 1.0);
 }

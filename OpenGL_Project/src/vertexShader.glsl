@@ -5,7 +5,7 @@ layout (location = 1) in vec3 inColor;
 layout (location = 2) in vec2 inTexCoord;
 
 out vec3 ourColor;
-out vec2 TexCoord;
+out vec2 texCoord;
 uniform mat4 uModelView;
 uniform mat4 uProjection;
 
@@ -13,5 +13,5 @@ void main()
 {
     gl_Position = uProjection * uModelView * vec4(inPosition, 1.0);
     ourColor = inColor;
-    TexCoord = inTexCoord;
+    texCoord = inTexCoord;
 }

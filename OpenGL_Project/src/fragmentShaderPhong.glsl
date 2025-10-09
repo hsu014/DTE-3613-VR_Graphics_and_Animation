@@ -2,10 +2,10 @@
 
 out vec4 fragColor;
 
-in vec3 FragPos;
-in vec3 Color;
-in vec2 TexCoord;
-in vec3 Normal;
+in vec3 fragPos;
+in vec3 color;
+in vec2 texCoord;
+in vec3 normal;
 
 struct DirectionalLight
 {	
@@ -52,15 +52,15 @@ vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir);
 
 void main() {
 	// Properties
-	vec3 norm = normalize(Normal);
-    vec3 viewDir = normalize(viewPos - FragPos);
+	vec3 norm = normalize(normal);
+    vec3 viewDir = normalize(viewPos - fragPos);
 
 	// phase 1: directional lighting
     vec3 result = CalcDirLight(dirLight, norm, viewDir);
 
 	// phase 2: point lights
     for(int i = 0; i < numPointLights; i++)
-	    result += CalcPointLight(pointLight[i], norm, FragPos, viewDir);
+	    result += CalcPointLight(pointLight[i], norm, fragPos, viewDir);
 
     // ambient light
     result += vec3(ambientLight);

@@ -86,6 +86,7 @@ public:
     GLuint mTexture;
 
     Sphere(int sectors, int stacks);
+    Sphere(int sectors, int stacks, GLuint texture);
     ~Sphere();
     void fillBuffers() override;
     void draw() override;

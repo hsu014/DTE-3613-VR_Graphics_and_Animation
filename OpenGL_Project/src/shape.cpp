@@ -374,11 +374,6 @@ void CompositePlane::fillBuffers()
 
 
     indexCount = static_cast<GLsizei>(indices.size());
-    //std::cout << "vertexCount: " << vertices.size() << std::endl;
-    //std::cout << "indexCount:  " << indexCount << std::endl;
-
-    //if (mTexture) std::cout << "Texture found" << std::endl;
-    //else std::cout << "No texture found" << std::endl;
 
     glGenVertexArrays(1, &VAO);
     glGenBuffers(numVBOs, VBO);
@@ -407,6 +402,14 @@ void CompositePlane::fillBuffers()
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint), &indices[0], GL_STATIC_DRAW);
 
+    // Unbind VAO
+    glBindVertexArray(0);
+}
+
+void CompositePlane::draw()
+{
+    glBindVertexArray(VAO);
+
     if (mTexture)
     {
         // set the texture wrapping parameters
@@ -421,13 +424,6 @@ void CompositePlane::fillBuffers()
         glBindTexture(GL_TEXTURE_2D, mTexture);
     }
 
-    // Unbind VAO
-    glBindVertexArray(0);
-}
-
-void CompositePlane::draw()
-{
-    glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, 0);
 
     glBindVertexArray(0);
@@ -436,6 +432,11 @@ void CompositePlane::draw()
 
 
 Sphere::Sphere(int sectors = 10, int stacks = 10) : mSectors(sectors), mStacks(stacks)
+{
+    fillBuffers();
+}
+
+Sphere::Sphere(int sectors, int stacks, GLuint texture) : mSectors(sectors), mStacks(stacks), mTexture(texture)
 {
     fillBuffers();
 }
@@ -587,6 +588,16 @@ void Sphere::fillBuffers()
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint), &indices[0], GL_STATIC_DRAW);
 
+    // Unbind VAO
+    glBindVertexArray(0);
+    
+
+}
+
+void Sphere::draw()
+{
+    glBindVertexArray(VAO);
+
     if (mTexture)
     {
         // set the texture wrapping parameters
@@ -601,15 +612,6 @@ void Sphere::fillBuffers()
         glBindTexture(GL_TEXTURE_2D, mTexture);
     }
 
-    // Unbind VAO
-    glBindVertexArray(0);
-    
-
-}
-
-void Sphere::draw()
-{
-    glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, 0);
 
     glBindVertexArray(0);
