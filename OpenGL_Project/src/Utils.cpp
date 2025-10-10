@@ -221,3 +221,32 @@ float* Utils::bronzeAmbient() { static float a[4] = { 0.2125f, 0.1275f, 0.0540f,
 float* Utils::bronzeDiffuse() { static float a[4] = { 0.7140f, 0.4284f, 0.1814f, 1 }; return (float*)a; }
 float* Utils::bronzeSpecular() { static float a[4] = { 0.3936f, 0.2719f, 0.1667f, 1 }; return (float*)a; }
 float Utils::bronzeShininess() { return 25.6f; }
+
+void shaderSetVec3(GLuint shaderProgram, const char* name, glm::vec3& value)
+{
+	glUniform3fv(glGetUniformLocation(shaderProgram, name), 1, &value[0]);
+}
+
+
+void shaderSetVec4(GLuint shaderProgram, const char* name, glm::vec4& value)
+{
+	glUniform4fv(glGetUniformLocation(shaderProgram, name), 1, &value[0]);
+}
+
+
+void shaderSetMat4(GLuint shaderProgram, const char* name, glm::mat4& value)
+{
+	glUniformMatrix4fv(glGetUniformLocation(shaderProgram, name), 1, GL_FALSE, &value[0][0]);
+}
+
+
+void shaderSetFloat(GLuint shaderProgram, const char* name, float value)
+{
+	glUniform1f(glGetUniformLocation(shaderProgram, name), value);
+}
+
+
+void shaderSetInt(GLuint shaderProgram, const char* name, int value)
+{
+	glUniform1i(glGetUniformLocation(shaderProgram, name), value);
+}

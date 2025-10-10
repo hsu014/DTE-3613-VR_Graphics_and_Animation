@@ -7,6 +7,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include "Utils.h"
 #include "shape.h"
+#include "particle_emitter.h"
 
 struct RenderInfo;
 struct Light;
@@ -19,16 +20,12 @@ void createMaterials(RenderInfo& ri);
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void updateCameraFront(RenderInfo& ri);
 
-void shaderSetVec3(GLuint shaderProgram, const char* name, glm::vec3& value);
-void shaderSetVec4(GLuint shaderProgram, const char* name, glm::vec4& value);
-void shaderSetMat4(GLuint shaderProgram, const char* name, glm::mat4& value);
-void shaderSetFloat(GLuint shaderProgram, const char* name, float value);
-void shaderSetInt(GLuint shaderProgram, const char* name, int value);
-
 static glm::mat4 getProjectionMatrix();
 glm::mat4 getViewMatrix(RenderInfo& ri);
 void prepareShaderBasic(GLuint shaderProgram, glm::mat4 modelViewMatrix, RenderInfo& ri);
 void prepareShaderPhong(GLuint shaderProgram, glm::mat4 modelMatrix, RenderInfo& ri, MaterialType& mat);
+void prepareShaderParticle(GLuint shaderProgram, glm::mat4 modelViewMatrix, RenderInfo& ri);
+
 void animate(GLFWwindow* window, RenderInfo& ri);
 void draw(RenderInfo& ri);
 void draw2(RenderInfo& ri);
@@ -37,6 +34,7 @@ void draw4(RenderInfo& ri);
 void drawPlane(RenderInfo& ri);
 void drawSphere(RenderInfo& ri);
 void drawLightSpheres(RenderInfo& ri);
+void drawEmitter(RenderInfo& ri);
 
 // settings 
 const unsigned int SCR_WIDTH = 1600;
@@ -130,6 +128,7 @@ struct RenderInfo {
     std::map<std::string, Shape*> shape;
     std::map<std::string, GLuint> texture;
     std::map<std::string, std::shared_ptr<std::vector<std::vector<float>>>> heightMap;
+    Emitter emitter;
     
 };
 
@@ -170,6 +169,7 @@ int main()
     ri.shaderProgram.red = Utils::createShaderProgram("src/vertexShader.glsl", "src/fragmentShaderRed.glsl");
     ri.shaderProgram.texture = Utils::createShaderProgram("src/vertexShader.glsl", "src/fragmentShaderTexture.glsl");
     ri.shaderProgram.phong = Utils::createShaderProgram("src/vertexShaderPhong.glsl", "src/fragmentShaderPhong.glsl");
+    ri.shaderProgram.particle = Utils::createShaderProgram("src/vertexShaderParticle.glsl", "src/fragmentShaderParticle.glsl");
 
     animate(window, ri);
 
@@ -178,6 +178,7 @@ int main()
     glDeleteProgram(ri.shaderProgram.red);
     glDeleteProgram(ri.shaderProgram.texture);
     glDeleteProgram(ri.shaderProgram.phong);
+    glDeleteProgram(ri.shaderProgram.particle);
 
     glfwTerminate();
 
@@ -284,7 +285,8 @@ void initRenderInfo(RenderInfo& ri)
     ri.texture["heightmap_3"] = Utils::loadTexture("src/Textures/Heightmaps/heightmap_3.png");
     ri.texture["heightmap_4"] = Utils::loadTexture("src/Textures/Heightmaps/heightmap_4.png");
     ri.texture["chicken"] = Utils::loadTexture("src/Textures/mc_chicken.jpeg");
-    //ri.texture["particle"] = Utils::loadTexture("src/Textures/particle.png");
+    ri.texture["particle"] = Utils::loadTexture("src/Textures/particle.png");
+    ri.texture["fire"] = Utils::loadTexture("src/Textures/fire.png");
 
     // Heightmap
     ri.heightMap["heightmap_1"] = 
@@ -309,6 +311,9 @@ void initRenderInfo(RenderInfo& ri)
     std::string mapName = "heightmap_4";
     ri.shape["plane"] = new CompositePlane(
         ri.texture[mapName], ri.heightMap[mapName]);
+
+    // Particle emitter
+    ri.emitter = Emitter(2000, 2.0f, 0.5f, ri.texture["particle"]);
 }
 
 
@@ -392,36 +397,6 @@ void updateCameraFront(RenderInfo& ri)
 }
 
 
-void shaderSetVec3(GLuint shaderProgram, const char* name, glm::vec3& value)
-{
-    glUniform3fv(glGetUniformLocation(shaderProgram, name), 1, &value[0]);
-}
-
-
-void shaderSetVec4(GLuint shaderProgram, const char* name, glm::vec4& value)
-{
-    glUniform4fv(glGetUniformLocation(shaderProgram, name), 1, &value[0]);
-}
-
-
-void shaderSetMat4(GLuint shaderProgram, const char* name, glm::mat4& value)
-{
-    glUniformMatrix4fv(glGetUniformLocation(shaderProgram, name), 1, GL_FALSE, &value[0][0]);
-}
-
-
-void shaderSetFloat(GLuint shaderProgram, const char* name, float value)
-{
-    glUniform1f(glGetUniformLocation(shaderProgram, name), value);
-}
-
-
-void shaderSetInt(GLuint shaderProgram, const char* name, int value)
-{
-    glUniform1i(glGetUniformLocation(shaderProgram, name), value);
-}
-
-
 static glm::mat4 getProjectionMatrix()
 {
     float fov = 45.0f;
@@ -445,7 +420,6 @@ void prepareShaderBasic(GLuint shaderProgram, glm::mat4 modelViewMatrix, RenderI
     shaderSetMat4(shaderProgram, "uModelView", modelViewMatrix);
     shaderSetMat4(shaderProgram, "uProjection", ri.projectionMatrix);
 }
-
 
 void prepareShaderPhong(GLuint shaderProgram, glm::mat4 modelMatrix, RenderInfo& ri, MaterialType& mat)
 {
@@ -492,11 +466,15 @@ void prepareShaderPhong(GLuint shaderProgram, glm::mat4 modelMatrix, RenderInfo&
 
 }
 
+void prepareShaderParticle(GLuint shaderProgram, glm::mat4 modelViewMatrix, RenderInfo& ri)
+{
+    glm::vec3 up = glm::vec3(ri.viewMatrix[0][1], ri.viewMatrix[1][1], ri.viewMatrix[2][1]);
 
-void prepareShaderParticle(GLuint shaderProgram, glm::mat4 modelViewMatrix, RenderInfo& ri) {
     glUseProgram(shaderProgram);
     shaderSetMat4(shaderProgram, "uModelView", modelViewMatrix);
     shaderSetMat4(shaderProgram, "uProjection", ri.projectionMatrix);
+    shaderSetVec3(shaderProgram, "cameraUp", up);
+    shaderSetVec3(shaderProgram, "cameraFront", ri.camera.cameraFront);
 }
 
 
@@ -515,15 +493,16 @@ void animate(GLFWwindow* window, RenderInfo& ri)
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         //draw(ri);
-        //draw2(ri);
+        draw2(ri);
         //draw3(ri);
         //draw4(ri);
 
-        drawPlane(ri);
+        //drawPlane(ri);
 
-        drawSphere(ri);
-        drawLightSpheres(ri);
+        //drawSphere(ri);
+        //drawLightSpheres(ri);
 
+        drawEmitter(ri);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -664,4 +643,23 @@ void drawLightSpheres(RenderInfo& ri)
         prepareShaderBasic(ri.shaderProgram.base, modelViewMatrix, ri);
         ri.shape["sphere"]->draw();
     }
+}
+
+void drawEmitter(RenderInfo& ri)
+{
+    glm::mat4 modelMatrix = glm::mat4(1.0f);
+
+    // Translate
+    //modelMatrix = glm::translate(modelMatrix, glm::vec3(0.0f, -1.0f, 0.0f));
+    modelMatrix = glm::translate(modelMatrix, glm::vec3(-2.0f, 1.0f, 0.0f));
+
+    // Scale
+    modelMatrix = glm::scale(modelMatrix, glm::vec3(1.0f, 1.0f, 1.0f) * 1.0f);
+
+    glm::mat4 modelViewMatrix = ri.viewMatrix * modelMatrix;
+
+    prepareShaderParticle(ri.shaderProgram.particle, modelViewMatrix, ri);
+
+    ri.emitter.updateParticles(ri.time.dt);
+    ri.emitter.renderParticles(ri.shaderProgram.particle);
 }

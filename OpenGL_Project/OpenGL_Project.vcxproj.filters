@@ -30,6 +30,9 @@
     <ClCompile Include="src\shape.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\particle_emitter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\fragmentShaderRed.glsl">
@@ -50,12 +53,17 @@
     <None Include="src\fragmentShaderPhong.glsl">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="src\fragmentShaderParticle.glsl" />
+    <None Include="src\vertexShaderParticle.glsl" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Utils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\shape.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\particle_emitter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -77,6 +85,9 @@
     </Image>
     <Image Include="src\Textures\Heightmaps\mc_chicken.jpeg">
       <Filter>Resource Files\Textures\Heightmaps</Filter>
+    </Image>
+    <Image Include="src\Textures\particle.png">
+      <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>
 </Project>

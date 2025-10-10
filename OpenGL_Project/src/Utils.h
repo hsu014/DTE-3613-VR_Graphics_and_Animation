@@ -47,3 +47,9 @@ public:
 	static float* bronzeSpecular();
 	static float bronzeShininess();
 };
+
+void shaderSetVec3(GLuint shaderProgram, const char* name, glm::vec3& value);
+void shaderSetVec4(GLuint shaderProgram, const char* name, glm::vec4& value);
+void shaderSetMat4(GLuint shaderProgram, const char* name, glm::mat4& value);
+void shaderSetFloat(GLuint shaderProgram, const char* name, float value);
+void shaderSetInt(GLuint shaderProgram, const char* name, int value);
