@@ -55,6 +55,8 @@
     </None>
     <None Include="src\fragmentShaderParticle.glsl" />
     <None Include="src\vertexShaderParticle.glsl" />
+    <None Include="src\fragmentShaderPair.glsl" />
+    <None Include="src\vertexShaderPair.glsl" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Utils.h">
@@ -87,6 +89,9 @@
       <Filter>Resource Files\Textures\Heightmaps</Filter>
     </Image>
     <Image Include="src\Textures\particle.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="src\Textures\fire.png">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>

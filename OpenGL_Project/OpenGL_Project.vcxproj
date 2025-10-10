@@ -26,11 +26,13 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="src\fragmentShader.glsl" />
+    <None Include="src\fragmentShaderPair.glsl" />
     <None Include="src\fragmentShaderParticle.glsl" />
     <None Include="src\fragmentShaderPhong.glsl" />
     <None Include="src\fragmentShaderRed.glsl" />
     <None Include="src\fragmentShaderTexture.glsl" />
     <None Include="src\vertexShader.glsl" />
+    <None Include="src\vertexShaderPair.glsl" />
     <None Include="src\vertexShaderParticle.glsl" />
     <None Include="src\vertexShaderPhong.glsl" />
   </ItemGroup>
@@ -40,6 +42,7 @@
     <ClInclude Include="src\Utils.h" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="src\Textures\fire.png" />
     <Image Include="src\Textures\Heightmaps\heightmap_3.png" />
     <Image Include="src\Textures\Heightmaps\heightmap_1.png" />
     <Image Include="src\Textures\Heightmaps\heightmap_2.png" />

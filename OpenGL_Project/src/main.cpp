@@ -68,6 +68,7 @@ struct Time {
 struct ShaderProgram {
     GLuint base;
     GLuint red;
+    GLuint pair;
     GLuint texture;
     GLuint phong;
     GLuint particle;
@@ -128,8 +129,7 @@ struct RenderInfo {
     std::map<std::string, Shape*> shape;
     std::map<std::string, GLuint> texture;
     std::map<std::string, std::shared_ptr<std::vector<std::vector<float>>>> heightMap;
-    Emitter emitter;
-    
+    Emitter emitter;  
 };
 
 
@@ -167,6 +167,7 @@ int main()
     // Compile and link shaders
     ri.shaderProgram.base = Utils::createShaderProgram("src/vertexShader.glsl", "src/fragmentShader.glsl");
     ri.shaderProgram.red = Utils::createShaderProgram("src/vertexShader.glsl", "src/fragmentShaderRed.glsl");
+    ri.shaderProgram.pair = Utils::createShaderProgram("src/vertexShaderPair.glsl", "src/fragmentShaderPair.glsl");
     ri.shaderProgram.texture = Utils::createShaderProgram("src/vertexShader.glsl", "src/fragmentShaderTexture.glsl");
     ri.shaderProgram.phong = Utils::createShaderProgram("src/vertexShaderPhong.glsl", "src/fragmentShaderPhong.glsl");
     ri.shaderProgram.particle = Utils::createShaderProgram("src/vertexShaderParticle.glsl", "src/fragmentShaderParticle.glsl");
@@ -492,17 +493,19 @@ void animate(GLFWwindow* window, RenderInfo& ri)
         glClearColor(0.2f, 0.0f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        //draw(ri);
+        draw(ri);
         draw2(ri);
-        //draw3(ri);
-        //draw4(ri);
-
-        //drawPlane(ri);
-
-        //drawSphere(ri);
-        //drawLightSpheres(ri);
-
         drawEmitter(ri);
+        
+        ////draw3(ri);
+        draw4(ri);
+
+        drawPlane(ri);
+
+        drawSphere(ri);
+        drawLightSpheres(ri);
+
+        
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -518,7 +521,7 @@ void draw(RenderInfo& ri)
 
     // Translate
     //modelMatrix = glm::translate(modelMatrix, glm::vec3(2.0f, 1.0f, 0.0f));
-    modelMatrix = glm::translate(modelMatrix, glm::vec3(2.0f, 1.0f, 0.0f));
+    modelMatrix = glm::translate(modelMatrix, glm::vec3(2.0f, 1.0f, 5.0f));
 
     // Rotate
     modelMatrix *= ri.rotationMatrix;
@@ -537,7 +540,7 @@ void draw2(RenderInfo& ri)
     glm::mat4 modelMatrix = glm::mat4(1.0f);
 
     // Translate
-    modelMatrix = glm::translate(modelMatrix, glm::vec3(-2.0f, 1.0f, 0.0f));
+    modelMatrix = glm::translate(modelMatrix, glm::vec3(-2.0f, 1.0f, 5.0f));
 
     // Rotate
     modelMatrix *= ri.rotationMatrix;
@@ -569,18 +572,23 @@ void draw3(RenderInfo& ri)
 
 void draw4(RenderInfo& ri) 
 {
+    // Task 4
+
     //M=I*T*O*R*S, der O=R*T
     glm::mat4 modelMatrix = glm::mat4(1.0f);
 
     // Translate
-    modelMatrix = glm::translate(modelMatrix, glm::vec3(-2.0f, -2.0f, 0.0f));
+    modelMatrix = glm::translate(modelMatrix, glm::vec3(-4.0f, 1.0f, 0.0f));
 
     // Rotate
     modelMatrix *= ri.rotationMatrix;
 
     glm::mat4 modelViewMatrix = ri.viewMatrix * modelMatrix;
 
-    prepareShaderBasic(ri.shaderProgram.red, modelViewMatrix, ri);
+    prepareShaderBasic(ri.shaderProgram.pair, modelViewMatrix, ri);
+    float changeColor = cos(ri.time.current);
+    shaderSetFloat(ri.shaderProgram.pair, "changeColor", changeColor);
+
     ri.shape["pyramid"]->draw();
 }
 
@@ -591,14 +599,14 @@ void drawPlane(RenderInfo& ri)
     glm::mat4 modelMatrix = glm::mat4(1.0f);
 
     // Translate
-    modelMatrix = glm::translate(modelMatrix, glm::vec3(0.0f, -1.5f, 0.0f));
+    modelMatrix = glm::translate(modelMatrix, glm::vec3(0.0f, -2.5f, 0.0f));
 
     // Rotate
-    modelMatrix *= ri.rotationMatrix;
+    // modelMatrix *= ri.rotationMatrix;
     // modelMatrix = glm::rotate(modelMatrix, glm::half_pi<float>(), glm::vec3(-1.0f, 0.0f, 0.0f));
 
     // Scale
-    modelMatrix = glm::scale(modelMatrix, glm::vec3(5.0f, 5.0f, 5.0f));
+    modelMatrix = glm::scale(modelMatrix, glm::vec3(1.0f, 1.0f, 1.0f) * 10.0f);
 
     glm::mat4 modelViewMatrix = ri.viewMatrix * modelMatrix;
 
@@ -613,7 +621,7 @@ void drawSphere(RenderInfo& ri)
     glm::mat4 modelMatrix = glm::mat4(1.0f);
 
     // Translate
-    modelMatrix = glm::translate(modelMatrix, glm::vec3(2.0f, 1.0f, 0.0f));
+    modelMatrix = glm::translate(modelMatrix, glm::vec3(4.0f, 1.0f, 0.0f));
 
     // Rotate
     modelMatrix *= ri.rotationMatrix;
@@ -645,13 +653,13 @@ void drawLightSpheres(RenderInfo& ri)
     }
 }
 
+
 void drawEmitter(RenderInfo& ri)
 {
     glm::mat4 modelMatrix = glm::mat4(1.0f);
 
     // Translate
-    //modelMatrix = glm::translate(modelMatrix, glm::vec3(0.0f, -1.0f, 0.0f));
-    modelMatrix = glm::translate(modelMatrix, glm::vec3(-2.0f, 1.0f, 0.0f));
+    modelMatrix = glm::translate(modelMatrix, glm::vec3(-2.0f, 1.0f, 5.0f));
 
     // Scale
     modelMatrix = glm::scale(modelMatrix, glm::vec3(1.0f, 1.0f, 1.0f) * 1.0f);
