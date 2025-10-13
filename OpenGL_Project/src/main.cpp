@@ -37,13 +37,10 @@ void drawLightSpheres(RenderInfo& ri);
 void drawEmitter(RenderInfo& ri);
 
 // settings 
-const unsigned int SCR_WIDTH = 1600;
-const unsigned int SCR_HEIGHT = 1200;
-//const unsigned int SCR_WIDTH = 1100;
-//const unsigned int SCR_HEIGHT = 800;
-
-unsigned int CUR_WIDTH = SCR_WIDTH;
-unsigned int CUR_HEIGHT = SCR_HEIGHT;
+unsigned int SCR_WIDTH = 1600;
+unsigned int SCR_HEIGHT = 1200;
+// unsigned int SCR_WIDTH = 1100;
+// unsigned int SCR_HEIGHT = 800;
 
 const double CAMERA_SPEED = 2.5;
 const double ROTATION_SPEED = 2;
@@ -381,10 +378,10 @@ void createMaterials(RenderInfo& ri)
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
-    
     glViewport(0, 0, width, height);
-    CUR_WIDTH = width;
-    CUR_HEIGHT = height;
+
+    SCR_WIDTH = width;
+    SCR_HEIGHT = height;
 }
 
 
@@ -506,6 +503,7 @@ void animate(GLFWwindow* window, RenderInfo& ri)
         drawLightSpheres(ri);
 
         
+        ri.projectionMatrix = getProjectionMatrix();
 
         glfwSwapBuffers(window);
         glfwPollEvents();
