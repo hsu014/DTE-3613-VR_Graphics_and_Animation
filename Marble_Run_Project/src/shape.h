@@ -5,11 +5,11 @@
 #include <glm/glm.hpp>
 #include <iostream>
 #include <vector>
+//#include "render_info.h"
 
 class Shape {
 private:
-    
-	
+    	
 public:
     ~Shape();
     
@@ -19,9 +19,10 @@ public:
     void fillUVBuffer(std::vector<float> textureUVs);
     void fillNormalBuffer(std::vector<float> normals);
     void fillIndexBuffer(std::vector<unsigned int> indices);
+    void useTexture(GLuint texture);
 
     virtual void fillBuffers() = 0;
-    virtual void draw() = 0;
+    void draw();
 
     GLuint VAO;
     GLuint VBO[4];
@@ -30,7 +31,9 @@ public:
     // 2 - UV
     // 3 - normal
     GLuint EBO;
+
     GLsizei mIndexCount;
+    GLuint mTexture;
 };
 
 class Box : public Shape {
@@ -42,7 +45,7 @@ private:
 public:
     Box(float size_x, float size_y, float size_z);
 	void fillBuffers() override;
-    void draw() override;
+    //void draw() override;
 };
 
 class Pyramid : public Shape {
@@ -54,7 +57,7 @@ private:
 public:
     Pyramid(float size_x, float height, float size_z);
     void fillBuffers() override;
-    void draw() override;
+    //void draw() override;
 };
 
 class CompositePlane : public Shape {
@@ -68,23 +71,16 @@ public:
     CompositePlane(GLuint texture, 
         std::shared_ptr<std::vector<std::vector<float>>> heightMap);
     void fillBuffers() override;
-    void draw() override;
-
-    GLuint mTexture;
+    //void draw() override;
 };
 
 class Sphere : public Shape {
 private:
     int mSectors;
     int mStacks;
-    GLsizei indexCount;
 
 public:
-    GLuint mTexture;
-
     Sphere(int sectors, int stacks);
-    Sphere(int sectors, int stacks, GLuint texture);
     void fillBuffers() override;
-    void draw() override;
-
+    //void draw() override;
 };

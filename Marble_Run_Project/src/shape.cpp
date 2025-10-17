@@ -58,6 +58,32 @@ void Shape::fillIndexBuffer(std::vector<unsigned int> indices)
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint), &indices[0], GL_STATIC_DRAW);
 }
 
+void Shape::useTexture(GLuint texture)
+{
+    mTexture = texture;
+}
+
+void Shape::draw()
+{
+    glBindVertexArray(VAO);
+
+    if (mTexture)
+    {
+        // set the texture wrapping parameters
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+
+        // set texture filtering parameters
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, mTexture);
+    }
+
+    glDrawElements(GL_TRIANGLES, mIndexCount, GL_UNSIGNED_INT, 0);
+    glBindVertexArray(0);
+}
 
 
 
@@ -212,14 +238,6 @@ void Box::fillBuffers()
 
 };
 
-void Box::draw()
-{
-    glBindVertexArray(VAO);
-    glDrawElements(GL_TRIANGLES, mIndexCount, GL_UNSIGNED_INT, 0);
-
-    glBindVertexArray(0);
-}
-
 
 
 Pyramid::Pyramid(float size_x, float height, float size_z) :
@@ -286,6 +304,57 @@ void Pyramid::fillBuffers()
          0.0f, 0.0f, 1.0f,
     };
 
+    std::vector<float> textureUVs = {
+        1.0, 0.0,
+        0.0, 0.0,
+        0.5, 1.0,
+
+        1.0, 0.0,
+        0.0, 0.0,
+        0.5, 1.0,
+
+        1.0, 0.0,
+        0.0, 0.0,
+        0.5, 1.0,
+
+        1.0, 0.0,
+        0.0, 0.0,
+        0.5, 1.0,
+
+        0.0, 0.0,
+        0.0, 1.0,
+        1.0, 1.0,
+        1.0, 0.0,
+    };
+
+    glm::vec3 n1 = glm::normalize(glm::cross(glm::vec3(0, mHeight, z), glm::vec3(1, 0, 0) ));
+    glm::vec3 n2 = glm::normalize(glm::cross(glm::vec3(-x, mHeight, 0), glm::vec3(0, 0, 1) ));
+    glm::vec3 n3 = glm::normalize(glm::cross(glm::vec3(0, mHeight, -z), glm::vec3(-1, 0, 0) ));
+    glm::vec3 n4 = glm::normalize(glm::cross(glm::vec3(x, mHeight, 0), glm::vec3(0, 0, -1) ));
+ 
+    std::vector<float> normals = {
+        n1.x, n1.y, n1.z,
+        n1.x, n1.y, n1.z,
+        n1.x, n1.y, n1.z,
+
+        n2.x, n2.y, n2.z,
+        n2.x, n2.y, n2.z,
+        n2.x, n2.y, n2.z,
+
+        n3.x, n3.y, n3.z,
+        n3.x, n3.y, n3.z,
+        n3.x, n3.y, n3.z,
+
+        n4.x, n4.y, n4.z,
+        n4.x, n4.y, n4.z,
+        n4.x, n4.y, n4.z,
+
+        0.0, -1.0, 0.0,
+        0.0, -1.0, 0.0,
+        0.0, -1.0, 0.0,
+        0.0, -1.0, 0.0,
+    };
+
     std::vector<unsigned int> indices = {
         // Sides
         0, 1, 2,
@@ -301,27 +370,20 @@ void Pyramid::fillBuffers()
 
     fillVertexBuffer(vertices);
     fillColorBuffer(colors);
-    // fillUVBuffer(textureUVs);
-    // fillNormalBuffer(normals);
+    fillUVBuffer(textureUVs);
+    fillNormalBuffer(normals);
     fillIndexBuffer(indices);
 
     // Unbind VAO
     glBindVertexArray(0);
 }
 
-void Pyramid::draw()
-{
-    glBindVertexArray(VAO);
-    glDrawElements(GL_TRIANGLES, mIndexCount, GL_UNSIGNED_INT, 0);
-
-    glBindVertexArray(0);
-}
-
 
 
 CompositePlane::CompositePlane(int width, int depth, GLuint texture)
-    : mWidth(width), mDepth(depth), mTexture(texture), mHeightMap(nullptr)
+    : mWidth(width), mDepth(depth), mHeightMap(nullptr)
 {
+    mTexture = texture;
     initBuffers();
     fillBuffers();
 }
@@ -329,8 +391,10 @@ CompositePlane::CompositePlane(int width, int depth, GLuint texture)
 CompositePlane::CompositePlane(
     GLuint texture,
     std::shared_ptr<std::vector<std::vector<float>>> heightMap)
-    : mTexture(texture), mHeightMap(heightMap)
+    : mHeightMap(heightMap)
 {
+    mTexture = texture;
+
     if (mHeightMap && !mHeightMap->empty() && !(*mHeightMap)[0].empty()) {
         mWidth = (*mHeightMap).size();
         mDepth = (*mHeightMap)[0].size();
@@ -348,7 +412,7 @@ void CompositePlane::fillBuffers()
     std::vector<float> vertices;
     std::vector<float> colors;
     std::vector<float> textureUVs;
-
+    std::vector<float> normals;
     std::vector<unsigned int> indices;
 
     float x_to_z_ratio = static_cast<float>(mDepth) / mWidth;
@@ -379,6 +443,10 @@ void CompositePlane::fillBuffers()
             // UV
             textureUVs.push_back(1-u); // Mirror texture the correct way
             textureUVs.push_back(v);
+
+            normals.push_back(0.0f);
+            normals.push_back(1.0f);
+            normals.push_back(0.0f);
         }
     }
 
@@ -402,44 +470,16 @@ void CompositePlane::fillBuffers()
     fillVertexBuffer(vertices);
     fillColorBuffer(colors);
     fillUVBuffer(textureUVs);
-    //fillNormalBuffer(normals);
+    fillNormalBuffer(normals);
     fillIndexBuffer(indices);
 
     // Unbind VAO
     glBindVertexArray(0);
 }
 
-void CompositePlane::draw()
-{
-    glBindVertexArray(VAO);
-
-    if (mTexture)
-    {
-        // set the texture wrapping parameters
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
-
-        // set texture filtering parameters
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, mTexture);
-    }
-
-    glDrawElements(GL_TRIANGLES, mIndexCount, GL_UNSIGNED_INT, 0);
-    glBindVertexArray(0);
-}
-
 
 
 Sphere::Sphere(int sectors = 10, int stacks = 10) : mSectors(sectors), mStacks(stacks)
-{
-    initBuffers();
-    fillBuffers();
-}
-
-Sphere::Sphere(int sectors, int stacks, GLuint texture) : mSectors(sectors), mStacks(stacks), mTexture(texture)
 {
     initBuffers();
     fillBuffers();
@@ -562,25 +602,4 @@ void Sphere::fillBuffers()
     glBindVertexArray(0);
 }
 
-void Sphere::draw()
-{
-    glBindVertexArray(VAO);
-
-    if (mTexture)
-    {
-        // set the texture wrapping parameters
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
-
-        // set texture filtering parameters
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, mTexture);
-    }
-
-    glDrawElements(GL_TRIANGLES, mIndexCount, GL_UNSIGNED_INT, 0);
-    glBindVertexArray(0);
-}
 
