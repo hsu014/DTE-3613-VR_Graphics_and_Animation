@@ -17,6 +17,8 @@ struct MaterialType;
 struct Material;
 void processInput(GLFWwindow* window, RenderInfo& ri);
 void initRenderInfo(RenderInfo& ri);
+void loadTextures(RenderInfo& ri);
+void loadHeightmaps(RenderInfo& ri);
 void createLights(RenderInfo& ri);
 void createMaterials(RenderInfo& ri);
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -190,30 +192,9 @@ void initRenderInfo(RenderInfo& ri)
     ri.time.dt = 0;
 
     createLights(ri);
-
     createMaterials(ri);
-
-    // Textures
-    ri.texture["heightmap_1"] = Utils::loadTexture("src/Textures/Heightmaps/heightmap_1.png");
-    ri.texture["heightmap_2"] = Utils::loadTexture("src/Textures/Heightmaps/heightmap_2.png");
-    ri.texture["heightmap_3"] = Utils::loadTexture("src/Textures/Heightmaps/heightmap_3.png");
-    ri.texture["heightmap_4"] = Utils::loadTexture("src/Textures/Heightmaps/heightmap_4.png");
-    ri.texture["chicken"] = Utils::loadTexture("src/Textures/mc_chicken.jpeg");
-    ri.texture["particle"] = Utils::loadTexture("src/Textures/particle.png");
-    ri.texture["fire"] = Utils::loadTexture("src/Textures/fire.png");
-
-    // Heightmap
-    ri.heightMap["heightmap_1"] = 
-        std::make_shared<std::vector<std::vector<float>>>(Utils::loadHeightMap("src/Textures/Heightmaps/heightmap_1.png"));
-    ri.heightMap["heightmap_2"] =
-        std::make_shared<std::vector<std::vector<float>>>(Utils::loadHeightMap("src/Textures/Heightmaps/heightmap_2.png"));
-    ri.heightMap["heightmap_3"] =
-        std::make_shared<std::vector<std::vector<float>>>(Utils::loadHeightMap("src/Textures/Heightmaps/heightmap_3.png"));
-    ri.heightMap["heightmap_4"] =
-        std::make_shared<std::vector<std::vector<float>>>(Utils::loadHeightMap("src/Textures/Heightmaps/heightmap_4.png"));
-    ri.heightMap["chicken"] =
-        std::make_shared<std::vector<std::vector<float>>>(Utils::loadHeightMap("src/Textures/Heightmaps/mc_chicken.jpeg"));
-
+    loadTextures(ri);
+    loadHeightmaps(ri);
 
     // Create shapes
     ri.shape["box"] = new Box(2, 3, 2);
@@ -227,6 +208,33 @@ void initRenderInfo(RenderInfo& ri)
 
     // Particle emitter
     ri.emitter = Emitter(2000, 2.0f, 0.5f, ri.texture["particle"]);
+}
+
+void loadTextures(RenderInfo& ri)
+{
+    ri.texture["heightmap_1"] = Utils::loadTexture("src/textures/heightmaps/heightmap_1.png");
+    ri.texture["heightmap_2"] = Utils::loadTexture("src/textures/heightmaps/heightmap_2.png");
+    ri.texture["heightmap_3"] = Utils::loadTexture("src/textures/heightmaps/heightmap_3.png");
+    ri.texture["heightmap_4"] = Utils::loadTexture("src/textures/heightmaps/heightmap_4.png");
+    ri.texture["chicken"] = Utils::loadTexture("src/textures/mc_chicken.jpeg");
+    ri.texture["particle"] = Utils::loadTexture("src/textures/particle.png");
+    ri.texture["fire"] = Utils::loadTexture("src/textures/fire.png");
+}
+
+
+void loadHeightmaps(RenderInfo& ri)
+{
+    ri.heightMap["heightmap_1"] =
+        std::make_shared<std::vector<std::vector<float>>>(Utils::loadHeightMap("src/textures/heightmaps/heightmap_1.png"));
+    ri.heightMap["heightmap_2"] =
+        std::make_shared<std::vector<std::vector<float>>>(Utils::loadHeightMap("src/textures/heightmaps/heightmap_2.png"));
+    ri.heightMap["heightmap_3"] =
+        std::make_shared<std::vector<std::vector<float>>>(Utils::loadHeightMap("src/textures/heightmaps/heightmap_3.png"));
+    ri.heightMap["heightmap_4"] =
+        std::make_shared<std::vector<std::vector<float>>>(Utils::loadHeightMap("src/textures/heightmaps/heightmap_4.png"));
+    ri.heightMap["chicken"] =
+        std::make_shared<std::vector<std::vector<float>>>(Utils::loadHeightMap("src/textures/heightmaps/mc_chicken.jpeg"));
+
 }
 
 
@@ -268,6 +276,13 @@ void createLights(RenderInfo& ri)
 
 void createMaterials(RenderInfo& ri)
 {
+    ri.material["white"] = {
+    glm::vec4(1.0f, 1.0f, 1.0f, 1),
+    glm::vec4(1.0f, 1.0f, 1.0f, 1),
+    glm::vec4(1.0f, 1.0f, 1.0f, 1),
+    40.0f
+    };
+
     ri.material["blue"] = {
     glm::vec4(0.0f, 0.0f, 1.0f, 1),
     glm::vec4(0.0f, 0.0f, 1.0f, 1),
@@ -438,8 +453,8 @@ void draw(RenderInfo& ri)
 
     glm::mat4 modelViewMatrix = ri.viewMatrix * modelMatrix;
 
-    prepareShaderBasic(ri.shaderProgram.base, modelViewMatrix, ri);
-    //prepareShaderPhong(ri.shaderProgram.phong, modelMatrix, ri, ri.material.gold);
+    //prepareShaderBasic(ri.shaderProgram.base, modelViewMatrix, ri);
+    prepareShaderPhong(ri.shaderProgram.phong, modelMatrix, ri, ri.material["silver"]);
     ri.shape["box"]->draw();
 }
 
@@ -457,7 +472,8 @@ void draw2(RenderInfo& ri)
 
     glm::mat4 modelViewMatrix = ri.viewMatrix * modelMatrix;
 
-    prepareShaderBasic(ri.shaderProgram.base, modelViewMatrix, ri);
+    //prepareShaderBasic(ri.shaderProgram.base, modelViewMatrix, ri);
+    prepareShaderPhong(ri.shaderProgram.phong, modelMatrix, ri, ri.material["gold"]);
     ri.shape["pyramid"]->draw();
 }
 
