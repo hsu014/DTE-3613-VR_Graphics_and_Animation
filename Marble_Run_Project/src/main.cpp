@@ -11,6 +11,8 @@
 #include "particle_emitter.h"
 #include "render_info.h"
 
+#include <BulletDynamics/Dynamics/btDynamicsWorld.h>
+
 struct RenderInfo;
 struct Light;
 struct MaterialType;
@@ -87,6 +89,13 @@ int main()
     ri.shaderProgram.texture = Utils::createShaderProgram("src/shader/vertexShader.glsl", "src/shader/fragmentShaderTexture.glsl");
     ri.shaderProgram.phong = Utils::createShaderProgram("src/shader/vertexShaderPhong.glsl", "src/shader/fragmentShaderPhong.glsl");
     ri.shaderProgram.particle = Utils::createShaderProgram("src/shader/vertexShaderParticle.glsl", "src/shader/fragmentShaderParticle.glsl");
+
+    // Init bullet
+    btBroadphaseInterface* m_pBroadphase;
+    btCollisionConfiguration* m_pCollisionConfiguration;
+    btCollisionDispatcher* m_pDispatcher;
+    btConstraintSolver* m_pSolver;
+    btDynamicsWorld* m_pWorld;
 
     animate(window, ri);
 
@@ -221,7 +230,6 @@ void loadTextures(RenderInfo& ri)
     ri.texture["fire"] = Utils::loadTexture("src/textures/fire.png");
 }
 
-
 void loadHeightmaps(RenderInfo& ri)
 {
     ri.heightMap["heightmap_1"] =
@@ -236,7 +244,6 @@ void loadHeightmaps(RenderInfo& ri)
         std::make_shared<std::vector<std::vector<float>>>(Utils::loadHeightMap("src/textures/heightmaps/mc_chicken.jpeg"));
 
 }
-
 
 void createLights(RenderInfo& ri)
 {
@@ -272,7 +279,6 @@ void createLights(RenderInfo& ri)
     ri.light.point.push_back(pointLight);
 
 }
-
 
 void createMaterials(RenderInfo& ri)
 {
@@ -314,7 +320,6 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
     SCR_HEIGHT = height;
 }
 
-
 void updateCameraFront(RenderInfo& ri)
 {
     glm::vec3 front{};
@@ -323,7 +328,6 @@ void updateCameraFront(RenderInfo& ri)
     front.z = sin(glm::radians(ri.camera.yaw)) * cos(glm::radians(ri.camera.pitch));
     ri.camera.cameraFront = glm::normalize(front);
 }
-
 
 static glm::mat4 getProjectionMatrix()
 {
@@ -334,7 +338,6 @@ static glm::mat4 getProjectionMatrix()
 
     return glm::perspective(glm::radians(fov), aspect, near, far);
 }
-
 
 glm::mat4 getViewMatrix(RenderInfo& ri)
 {
@@ -420,6 +423,7 @@ void animate(GLFWwindow* window, RenderInfo& ri)
         glClearColor(0.2f, 0.0f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+
         draw(ri);
         draw2(ri);
         drawEmitter(ri);
@@ -429,7 +433,6 @@ void animate(GLFWwindow* window, RenderInfo& ri)
         drawSphere(ri);
         drawLightSpheres(ri);
 
-        
         ri.projectionMatrix = getProjectionMatrix();
 
         glfwSwapBuffers(window);
