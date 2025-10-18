@@ -22,7 +22,7 @@ public:
     void useTexture(GLuint texture);
 
     virtual void fillBuffers() = 0;
-    void draw();
+    virtual void draw();
 
     GLuint VAO;
     GLuint VBO[4];
@@ -34,6 +34,15 @@ public:
 
     GLsizei mIndexCount;
     GLuint mTexture;
+};
+
+class Skybox : public Shape {
+    private:
+
+    public:
+        Skybox();
+        void fillBuffers() override;
+        void draw();
 };
 
 class Box : public Shape {

@@ -12,14 +12,12 @@
 #include "render_info.h"
 
 #include <BulletDynamics/Dynamics/btDynamicsWorld.h>
+#include <btBulletDynamicsCommon.h>
 
-struct RenderInfo;
-struct Light;
-struct MaterialType;
-struct Material;
 void processInput(GLFWwindow* window, RenderInfo& ri);
 void initRenderInfo(RenderInfo& ri);
 void loadTextures(RenderInfo& ri);
+void loadSkybox(RenderInfo& ri);
 void loadHeightmaps(RenderInfo& ri);
 void createLights(RenderInfo& ri);
 void createMaterials(RenderInfo& ri);
@@ -34,6 +32,7 @@ void prepareShaderParticle(GLuint shaderProgram, glm::mat4 modelViewMatrix, Rend
 
 void animate(GLFWwindow* window, RenderInfo& ri);
 
+void drawSkybox(RenderInfo& ri);
 void draw(RenderInfo& ri);
 void draw2(RenderInfo& ri);
 void drawPlane(RenderInfo& ri);
@@ -48,7 +47,8 @@ unsigned int SCR_HEIGHT = 1200;
 // unsigned int SCR_WIDTH = 1100;
 // unsigned int SCR_HEIGHT = 800;
 
-const double CAMERA_SPEED = 2.5;
+const double CAMERA_SPEED = 4;
+const double CAMERA_ROT_SPEED = 8;
 const double ROTATION_SPEED = 2;
 
 Utils util = Utils();
@@ -83,27 +83,38 @@ int main()
     initRenderInfo(ri);
     
     glEnable(GL_DEPTH_TEST);
+    glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 
     // Compile and link shaders
     ri.shaderProgram.base = Utils::createShaderProgram("src/shader/vertexShader.glsl", "src/shader/fragmentShader.glsl");
     ri.shaderProgram.texture = Utils::createShaderProgram("src/shader/vertexShader.glsl", "src/shader/fragmentShaderTexture.glsl");
     ri.shaderProgram.phong = Utils::createShaderProgram("src/shader/vertexShaderPhong.glsl", "src/shader/fragmentShaderPhong.glsl");
     ri.shaderProgram.particle = Utils::createShaderProgram("src/shader/vertexShaderParticle.glsl", "src/shader/fragmentShaderParticle.glsl");
+    ri.shaderProgram.skybox = Utils::createShaderProgram("src/shader/vertexShaderSkybox.glsl", "src/shader/fragmentShaderSkybox.glsl");
 
     // Init bullet
-    btBroadphaseInterface* m_pBroadphase;
-    btCollisionConfiguration* m_pCollisionConfiguration;
-    btCollisionDispatcher* m_pDispatcher;
-    btConstraintSolver* m_pSolver;
-    btDynamicsWorld* m_pWorld;
+    ri.bullet.pCollisionConfiguration = new btDefaultCollisionConfiguration();
+    ri.bullet.pDispatcher = new btCollisionDispatcher(ri.bullet.pCollisionConfiguration);
+    ri.bullet.pBroadphase = new btDbvtBroadphase();
+    ri.bullet.pSolver = new btSequentialImpulseConstraintSolver();
+    ri.bullet.pWorld = new btDiscreteDynamicsWorld(
+        ri.bullet.pDispatcher, ri.bullet.pBroadphase, ri.bullet.pSolver, ri.bullet.pCollisionConfiguration);
+    ri.bullet.pWorld->setGravity(btVector3(0, -9.81f, 0));
 
     animate(window, ri);
 
-    //Delete used resources
+    // Delete used resources
     glDeleteProgram(ri.shaderProgram.base);
     glDeleteProgram(ri.shaderProgram.texture);
     glDeleteProgram(ri.shaderProgram.phong);
     glDeleteProgram(ri.shaderProgram.particle);
+
+    // Shutdown bullet
+    delete ri.bullet.pWorld;
+    delete ri.bullet.pSolver;
+    delete ri.bullet.pBroadphase;
+    delete ri.bullet.pDispatcher;
+    delete ri.bullet.pCollisionConfiguration;
 
     glfwTerminate();
 
@@ -114,7 +125,7 @@ int main()
 void processInput(GLFWwindow* window, RenderInfo& ri)
 {
     float moveAmount = static_cast<float>(CAMERA_SPEED * ri.time.dt);
-    float rotateSpeed = 50.0f; // degrees per second
+    float rotateSpeed = static_cast<float>(CAMERA_ROT_SPEED * 360 * ri.time.dt); // 50.0f; // degrees per second
     float rotateAmount = static_cast<float>(ROTATION_SPEED * ri.time.dt);
 
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
@@ -203,7 +214,12 @@ void initRenderInfo(RenderInfo& ri)
     createLights(ri);
     createMaterials(ri);
     loadTextures(ri);
+    loadSkybox(ri);
     loadHeightmaps(ri);
+
+    // Create skybox shape
+    ri.shape["skybox"] = new Skybox();
+    ri.shape["skybox"]->useTexture(ri.skybox["sky_27"]);
 
     // Create shapes
     ri.shape["box"] = new Box(2, 3, 2);
@@ -228,6 +244,13 @@ void loadTextures(RenderInfo& ri)
     ri.texture["chicken"] = Utils::loadTexture("src/textures/mc_chicken.jpeg");
     ri.texture["particle"] = Utils::loadTexture("src/textures/particle.png");
     ri.texture["fire"] = Utils::loadTexture("src/textures/fire.png");
+}
+
+void loadSkybox(RenderInfo& ri)
+{
+    ri.skybox["sky_22"] = Utils::loadCubeMap("src/textures/skybox/sky_22");
+    ri.skybox["sky_27"] = Utils::loadCubeMap("src/textures/skybox/sky_27");
+    ri.skybox["sky_42"] = Utils::loadCubeMap("src/textures/skybox/sky_42");
 }
 
 void loadHeightmaps(RenderInfo& ri)
@@ -419,10 +442,13 @@ void animate(GLFWwindow* window, RenderInfo& ri)
 
         processInput(window, ri);
         ri.viewMatrix = getViewMatrix(ri);
+        ri.projectionMatrix = getProjectionMatrix();
 
         glClearColor(0.2f, 0.0f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        drawSkybox(ri);
 
+        ri.bullet.pWorld->stepSimulation(ri.time.dt);
 
         draw(ri);
         draw2(ri);
@@ -433,14 +459,25 @@ void animate(GLFWwindow* window, RenderInfo& ri)
         drawSphere(ri);
         drawLightSpheres(ri);
 
-        ri.projectionMatrix = getProjectionMatrix();
-
+        
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
 
 }
 
+
+void drawSkybox(RenderInfo& ri)
+{
+    glm::mat4 view = glm::mat4(glm::mat3(ri.viewMatrix)); // remove translation from the view matrix
+
+    GLuint shaderProgram = ri.shaderProgram.skybox;
+    glUseProgram(shaderProgram);
+    shaderSetMat4(shaderProgram, "uView", view);
+    shaderSetMat4(shaderProgram, "uProjection", ri.projectionMatrix);
+
+    ri.shape["skybox"]->draw();
+}
 
 void draw(RenderInfo& ri)
 {

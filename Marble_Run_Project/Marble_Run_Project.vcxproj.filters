@@ -41,5 +41,8 @@
     <ClInclude Include="src\render_info.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\structs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

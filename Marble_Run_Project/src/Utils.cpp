@@ -139,12 +139,12 @@ GLuint Utils::createShaderProgram(const char *vp, const char *fp)
 GLuint Utils::loadCubeMap(const char *mapDir) 
 {
 	GLuint textureRef;
-	string xp = mapDir; xp = xp + "/xp.jpg";
-	string xn = mapDir; xn = xn + "/xn.jpg";
-	string yp = mapDir; yp = yp + "/yp.jpg";
-	string yn = mapDir; yn = yn + "/yn.jpg";
-	string zp = mapDir; zp = zp + "/zp.jpg";
-	string zn = mapDir; zn = zn + "/zn.jpg";
+	string xp = mapDir; xp = xp + "/px.png";
+	string xn = mapDir; xn = xn + "/nx.png";
+	string yp = mapDir; yp = yp + "/py.png";
+	string yn = mapDir; yn = yn + "/ny.png";
+	string zp = mapDir; zp = zp + "/pz.png";
+	string zn = mapDir; zn = zn + "/nz.png";
 	textureRef = SOIL_load_OGL_cubemap(xp.c_str(), xn.c_str(), yp.c_str(), yn.c_str(), zp.c_str(), zn.c_str(),
 		SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS);
 	if (textureRef == 0) cout << "didnt find cube map image file" << endl;

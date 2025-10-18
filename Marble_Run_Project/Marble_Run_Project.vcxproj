@@ -153,6 +153,7 @@
     <ClInclude Include="src\particle_emitter.h" />
     <ClInclude Include="src\render_info.h" />
     <ClInclude Include="src\shape.h" />
+    <ClInclude Include="src\structs.h" />
     <ClInclude Include="src\Utils.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
