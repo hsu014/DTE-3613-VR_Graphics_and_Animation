@@ -13,6 +13,27 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Resource Files\shader">
+      <UniqueIdentifier>{d1051f2a-b225-4ffc-b254-be629fe07451}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\textures">
+      <UniqueIdentifier>{c113e7f6-ab59-4e47-938e-1b374216a5a7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\textures\skybox">
+      <UniqueIdentifier>{cdbd024a-60c0-4ae5-9a06-5686aef27d69}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\textures\heightmaps">
+      <UniqueIdentifier>{981c3d3b-271b-4a7f-b98a-1da5bb48b260}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\textures\skybox\sky_22">
+      <UniqueIdentifier>{65d70e47-3d08-4a20-b0e7-7625b97a7c12}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\textures\skybox\sky_27">
+      <UniqueIdentifier>{112a62b5-e8c9-410f-a95d-a17bb6b9e9c3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\textures\skybox\sky_42">
+      <UniqueIdentifier>{89b18de9-92f3-4f39-9811-de224bd00e32}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp">
@@ -25,6 +46,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\Utils.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\scene.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -44,5 +68,117 @@
     <ClInclude Include="src\structs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\scene.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="src\textures\heightmaps\heightmap_1.png">
+      <Filter>Resource Files\textures\heightmaps</Filter>
+    </Image>
+    <Image Include="src\textures\heightmaps\heightmap_2.png">
+      <Filter>Resource Files\textures\heightmaps</Filter>
+    </Image>
+    <Image Include="src\textures\heightmaps\heightmap_3.png">
+      <Filter>Resource Files\textures\heightmaps</Filter>
+    </Image>
+    <Image Include="src\textures\heightmaps\heightmap_4.png">
+      <Filter>Resource Files\textures\heightmaps</Filter>
+    </Image>
+    <Image Include="src\textures\heightmaps\mc_chicken.jpeg">
+      <Filter>Resource Files\textures\heightmaps</Filter>
+    </Image>
+    <Image Include="src\textures\skybox\sky_22\nx.png">
+      <Filter>Resource Files\textures\skybox\sky_22</Filter>
+    </Image>
+    <Image Include="src\textures\skybox\sky_22\ny.png">
+      <Filter>Resource Files\textures\skybox\sky_22</Filter>
+    </Image>
+    <Image Include="src\textures\skybox\sky_22\nz.png">
+      <Filter>Resource Files\textures\skybox\sky_22</Filter>
+    </Image>
+    <Image Include="src\textures\skybox\sky_22\px.png">
+      <Filter>Resource Files\textures\skybox\sky_22</Filter>
+    </Image>
+    <Image Include="src\textures\skybox\sky_22\py.png">
+      <Filter>Resource Files\textures\skybox\sky_22</Filter>
+    </Image>
+    <Image Include="src\textures\skybox\sky_22\pz.png">
+      <Filter>Resource Files\textures\skybox\sky_22</Filter>
+    </Image>
+    <Image Include="src\textures\skybox\sky_27\nx.png">
+      <Filter>Resource Files\textures\skybox\sky_27</Filter>
+    </Image>
+    <Image Include="src\textures\skybox\sky_27\ny.png">
+      <Filter>Resource Files\textures\skybox\sky_27</Filter>
+    </Image>
+    <Image Include="src\textures\skybox\sky_27\nz.png">
+      <Filter>Resource Files\textures\skybox\sky_27</Filter>
+    </Image>
+    <Image Include="src\textures\skybox\sky_27\px.png">
+      <Filter>Resource Files\textures\skybox\sky_27</Filter>
+    </Image>
+    <Image Include="src\textures\skybox\sky_27\py.png">
+      <Filter>Resource Files\textures\skybox\sky_27</Filter>
+    </Image>
+    <Image Include="src\textures\skybox\sky_27\pz.png">
+      <Filter>Resource Files\textures\skybox\sky_27</Filter>
+    </Image>
+    <Image Include="src\textures\skybox\sky_42\nx.png">
+      <Filter>Resource Files\textures\skybox\sky_42</Filter>
+    </Image>
+    <Image Include="src\textures\skybox\sky_42\ny.png">
+      <Filter>Resource Files\textures\skybox\sky_42</Filter>
+    </Image>
+    <Image Include="src\textures\skybox\sky_42\nz.png">
+      <Filter>Resource Files\textures\skybox\sky_42</Filter>
+    </Image>
+    <Image Include="src\textures\skybox\sky_42\px.png">
+      <Filter>Resource Files\textures\skybox\sky_42</Filter>
+    </Image>
+    <Image Include="src\textures\skybox\sky_42\py.png">
+      <Filter>Resource Files\textures\skybox\sky_42</Filter>
+    </Image>
+    <Image Include="src\textures\skybox\sky_42\pz.png">
+      <Filter>Resource Files\textures\skybox\sky_42</Filter>
+    </Image>
+    <Image Include="src\textures\fire.png">
+      <Filter>Resource Files\textures</Filter>
+    </Image>
+    <Image Include="src\textures\mc_chicken.jpeg">
+      <Filter>Resource Files\textures</Filter>
+    </Image>
+    <Image Include="src\textures\particle.png">
+      <Filter>Resource Files\textures</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="src\shader\fragmentShader.glsl">
+      <Filter>Resource Files\shader</Filter>
+    </None>
+    <None Include="src\shader\fragmentShaderParticle.glsl">
+      <Filter>Resource Files\shader</Filter>
+    </None>
+    <None Include="src\shader\fragmentShaderPhong.glsl">
+      <Filter>Resource Files\shader</Filter>
+    </None>
+    <None Include="src\shader\fragmentShaderSkybox.glsl">
+      <Filter>Resource Files\shader</Filter>
+    </None>
+    <None Include="src\shader\fragmentShaderTexture.glsl">
+      <Filter>Resource Files\shader</Filter>
+    </None>
+    <None Include="src\shader\vertexShader.glsl">
+      <Filter>Resource Files\shader</Filter>
+    </None>
+    <None Include="src\shader\vertexShaderParticle.glsl">
+      <Filter>Resource Files\shader</Filter>
+    </None>
+    <None Include="src\shader\vertexShaderPhong.glsl">
+      <Filter>Resource Files\shader</Filter>
+    </None>
+    <None Include="src\shader\vertexShaderSkybox.glsl">
+      <Filter>Resource Files\shader</Filter>
+    </None>
   </ItemGroup>
 </Project>

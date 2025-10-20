@@ -21,3 +21,8 @@ Release
 BulletCollision.lib
 BulletDynamics.lib
 LinearMath.lib
+
+
+C:\Users\hogne\Programmering\DTE-3613_VR_Graphics\Marble_Run_Project\libs\bullet\include\bullet
+
+$(SolutionDir)\libs\bullet\include\bullet

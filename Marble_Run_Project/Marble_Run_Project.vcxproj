@@ -146,15 +146,56 @@
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\particle_emitter.cpp" />
+    <ClCompile Include="src\scene.cpp" />
     <ClCompile Include="src\shape.cpp" />
     <ClCompile Include="src\Utils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\particle_emitter.h" />
     <ClInclude Include="src\render_info.h" />
+    <ClInclude Include="src\scene.h" />
     <ClInclude Include="src\shape.h" />
     <ClInclude Include="src\structs.h" />
     <ClInclude Include="src\Utils.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="src\textures\fire.png" />
+    <Image Include="src\textures\heightmaps\heightmap_1.png" />
+    <Image Include="src\textures\heightmaps\heightmap_2.png" />
+    <Image Include="src\textures\heightmaps\heightmap_3.png" />
+    <Image Include="src\textures\heightmaps\heightmap_4.png" />
+    <Image Include="src\textures\heightmaps\mc_chicken.jpeg" />
+    <Image Include="src\textures\mc_chicken.jpeg" />
+    <Image Include="src\textures\particle.png" />
+    <Image Include="src\textures\skybox\sky_22\nx.png" />
+    <Image Include="src\textures\skybox\sky_22\ny.png" />
+    <Image Include="src\textures\skybox\sky_22\nz.png" />
+    <Image Include="src\textures\skybox\sky_22\px.png" />
+    <Image Include="src\textures\skybox\sky_22\py.png" />
+    <Image Include="src\textures\skybox\sky_22\pz.png" />
+    <Image Include="src\textures\skybox\sky_27\nx.png" />
+    <Image Include="src\textures\skybox\sky_27\ny.png" />
+    <Image Include="src\textures\skybox\sky_27\nz.png" />
+    <Image Include="src\textures\skybox\sky_27\px.png" />
+    <Image Include="src\textures\skybox\sky_27\py.png" />
+    <Image Include="src\textures\skybox\sky_27\pz.png" />
+    <Image Include="src\textures\skybox\sky_42\nx.png" />
+    <Image Include="src\textures\skybox\sky_42\ny.png" />
+    <Image Include="src\textures\skybox\sky_42\nz.png" />
+    <Image Include="src\textures\skybox\sky_42\px.png" />
+    <Image Include="src\textures\skybox\sky_42\py.png" />
+    <Image Include="src\textures\skybox\sky_42\pz.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="src\shader\fragmentShader.glsl" />
+    <None Include="src\shader\fragmentShaderParticle.glsl" />
+    <None Include="src\shader\fragmentShaderPhong.glsl" />
+    <None Include="src\shader\fragmentShaderSkybox.glsl" />
+    <None Include="src\shader\fragmentShaderTexture.glsl" />
+    <None Include="src\shader\vertexShader.glsl" />
+    <None Include="src\shader\vertexShaderParticle.glsl" />
+    <None Include="src\shader\vertexShaderPhong.glsl" />
+    <None Include="src\shader\vertexShaderSkybox.glsl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
