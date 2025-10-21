@@ -5,7 +5,9 @@
 #include <glm/glm.hpp>
 #include <iostream>
 #include <vector>
-//#include "render_info.h"
+
+#include "structs.h"
+#include "Utils.h"
 
 class Shape {
 private:
@@ -19,10 +21,13 @@ public:
     void fillUVBuffer(std::vector<float> textureUVs);
     void fillNormalBuffer(std::vector<float> normals);
     void fillIndexBuffer(std::vector<unsigned int> indices);
+
+    void setModelMatrix(glm::mat4 modelMatrix);
     void useTexture(GLuint texture);
+    void setMaterial(MaterialType mat);
 
     virtual void fillBuffers() = 0;
-    virtual void draw();
+    virtual void draw(GLuint shaderProgram);
 
     GLuint VAO;
     GLuint VBO[4];
@@ -34,15 +39,23 @@ public:
 
     GLsizei mIndexCount;
     GLuint mTexture;
+
+    // Material
+    glm::vec4 mAmbient = glm::vec4(1.0f);
+    glm::vec4 mDiffuse = glm::vec4(1.0f);
+    glm::vec4 mSpecular = glm::vec4(1.0f);
+    float mShininess = 1.0f;
+
+    glm::mat4 mModelMatrix = glm::mat4(1.0f);
 };
 
 class Skybox : public Shape {
     private:
 
     public:
-        Skybox();
+        Skybox(/*GLuint texture*/);
         void fillBuffers() override;
-        void draw();
+        void draw(GLuint shaderProgram);
 };
 
 class Box : public Shape {

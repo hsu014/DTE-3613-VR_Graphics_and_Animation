@@ -17,10 +17,11 @@
 void processInput(GLFWwindow* window, RenderInfo& ri);
 void initRenderInfo(RenderInfo& ri);
 void loadTextures(RenderInfo& ri);
-void loadSkybox(RenderInfo& ri);
+void loadSkyboxTextures(RenderInfo& ri);
 void loadHeightmaps(RenderInfo& ri);
 void createLights(RenderInfo& ri);
 void createMaterials(RenderInfo& ri);
+void createShapes(RenderInfo& ri);
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void updateCameraFront(RenderInfo& ri);
 
@@ -31,9 +32,10 @@ void prepareShaderPhong(GLuint shaderProgram, glm::mat4 modelMatrix, RenderInfo&
 void prepareShaderParticle(GLuint shaderProgram, glm::mat4 modelViewMatrix, RenderInfo& ri);
 
 void animate(GLFWwindow* window, RenderInfo& ri);
+void drawScene(RenderInfo& ri);
 
 void drawSkybox(RenderInfo& ri);
-void draw(RenderInfo& ri);
+void draw1(RenderInfo& ri);
 void draw2(RenderInfo& ri);
 void drawPlane(RenderInfo& ri);
 void drawSphere(RenderInfo& ri);
@@ -87,10 +89,11 @@ int main()
 
     // Compile and link shaders
     ri.shaderProgram.base = Utils::createShaderProgram("src/shader/vertexShader.glsl", "src/shader/fragmentShader.glsl");
-    ri.shaderProgram.texture = Utils::createShaderProgram("src/shader/vertexShader.glsl", "src/shader/fragmentShaderTexture.glsl");
+    //ri.shaderProgram.texture = Utils::createShaderProgram("src/shader/vertexShader.glsl", "src/shader/fragmentShaderTexture.glsl");
     ri.shaderProgram.phong = Utils::createShaderProgram("src/shader/vertexShaderPhong.glsl", "src/shader/fragmentShaderPhong.glsl");
     ri.shaderProgram.particle = Utils::createShaderProgram("src/shader/vertexShaderParticle.glsl", "src/shader/fragmentShaderParticle.glsl");
     ri.shaderProgram.skybox = Utils::createShaderProgram("src/shader/vertexShaderSkybox.glsl", "src/shader/fragmentShaderSkybox.glsl");
+    ri.scene.setShaders(ri.shaderProgram.base, ri.shaderProgram.phong, ri.shaderProgram.skybox);
 
     // Init bullet
     ri.bullet.pCollisionConfiguration = new btDefaultCollisionConfiguration();
@@ -105,9 +108,10 @@ int main()
 
     // Delete used resources
     glDeleteProgram(ri.shaderProgram.base);
-    glDeleteProgram(ri.shaderProgram.texture);
+    //glDeleteProgram(ri.shaderProgram.texture);
     glDeleteProgram(ri.shaderProgram.phong);
     glDeleteProgram(ri.shaderProgram.particle);
+    glDeleteProgram(ri.shaderProgram.skybox);
 
     // Shutdown bullet
     delete ri.bullet.pWorld;
@@ -211,15 +215,31 @@ void initRenderInfo(RenderInfo& ri)
     ri.time.prev = glfwGetTime();
     ri.time.dt = 0;
 
+    ri.scene = Scene();
+    /*ri.scene.setShaders(ri.shaderProgram.base, ri.shaderProgram.phong, ri.shaderProgram.skybox);*/
+
     createLights(ri);
     createMaterials(ri);
+
     loadTextures(ri);
-    loadSkybox(ri);
+    loadSkyboxTextures(ri);
     loadHeightmaps(ri);
 
+    createShapes(ri);
+
+
+
+
+
+    //Old way:
+
     // Create skybox shape
-    ri.shape["skybox"] = new Skybox();
-    ri.shape["skybox"]->useTexture(ri.skybox["sky_27"]);
+    Skybox* skybox = new Skybox();
+    skybox->useTexture(ri.skyboxTexture["sky_27"]);
+
+    //ri.shape["skybox"] = new Skybox();
+    //ri.shape["skybox"]->useTexture(ri.skyboxTexture["sky_27"]);
+    ri.shape["skybox"] = skybox;
 
     // Create shapes
     ri.shape["box"] = new Box(2, 3, 2);
@@ -246,11 +266,11 @@ void loadTextures(RenderInfo& ri)
     ri.texture["fire"] = Utils::loadTexture("src/textures/fire.png");
 }
 
-void loadSkybox(RenderInfo& ri)
+void loadSkyboxTextures(RenderInfo& ri)
 {
-    ri.skybox["sky_22"] = Utils::loadCubeMap("src/textures/skybox/sky_22");
-    ri.skybox["sky_27"] = Utils::loadCubeMap("src/textures/skybox/sky_27");
-    ri.skybox["sky_42"] = Utils::loadCubeMap("src/textures/skybox/sky_42");
+    ri.skyboxTexture["sky_22"] = Utils::loadCubeMap("src/textures/skybox/sky_22");
+    ri.skyboxTexture["sky_27"] = Utils::loadCubeMap("src/textures/skybox/sky_27");
+    ri.skyboxTexture["sky_42"] = Utils::loadCubeMap("src/textures/skybox/sky_42");
 }
 
 void loadHeightmaps(RenderInfo& ri)
@@ -332,6 +352,32 @@ void createMaterials(RenderInfo& ri)
     glm::vec4(0.5083f, 0.5083f, 0.5083f, 1),
     51.2f
     };
+}
+
+void createShapes(RenderInfo& ri)
+{
+    // Create shapes and put into scene
+
+    // Skybox:
+    Skybox* skybox = new Skybox();
+    skybox->useTexture(ri.skyboxTexture["sky_27"]);
+    ri.scene.addSkybox(skybox);
+
+    // Basic shape:
+    Shape* box = new Box(2.0, 2.0, 1.0);
+    box->useTexture(ri.texture["fire"]);
+    ri.scene.addBaseShape(box);
+
+
+    glm::mat4 modelMatrix = glm::mat4(1.0f);
+    modelMatrix = glm::translate(modelMatrix, glm::vec3(2.0f, 1.0f, 5.0f));
+
+    Shape* box2 = new Box(2.0, 2.0, 2.0);
+    box2->useTexture(ri.texture["chicken"]);
+    box2->setModelMatrix(modelMatrix);
+    ri.scene.addBaseShape(box2);
+
+
 }
 
 
@@ -423,12 +469,13 @@ void prepareShaderPhong(GLuint shaderProgram, glm::mat4 modelMatrix, RenderInfo&
 void prepareShaderParticle(GLuint shaderProgram, glm::mat4 modelViewMatrix, RenderInfo& ri)
 {
     glm::vec3 up = glm::vec3(ri.viewMatrix[0][1], ri.viewMatrix[1][1], ri.viewMatrix[2][1]);
+    glm::vec3 front = glm::vec3(ri.viewMatrix[0][2], ri.viewMatrix[1][2], ri.viewMatrix[2][2]);
 
     glUseProgram(shaderProgram);
     shaderSetMat4(shaderProgram, "uModelView", modelViewMatrix);
     shaderSetMat4(shaderProgram, "uProjection", ri.projectionMatrix);
     shaderSetVec3(shaderProgram, "cameraUp", up);
-    shaderSetVec3(shaderProgram, "cameraFront", ri.camera.cameraFront);
+    shaderSetVec3(shaderProgram, "cameraFront", front);
 }
 
 
@@ -446,23 +493,36 @@ void animate(GLFWwindow* window, RenderInfo& ri)
 
         glClearColor(0.2f, 0.0f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        drawSkybox(ri);
+
+        //drawSkybox(ri);
+        drawScene(ri);
+
+
+
+        //draw1(ri);
+        //draw2(ri);
+        //drawEmitter(ri);
+
+        //drawPlane(ri);
+
+        //drawSphere(ri);
+        //drawLightSpheres(ri);
 
         ri.bullet.pWorld->stepSimulation(ri.time.dt);
-
-        draw(ri);
-        draw2(ri);
-        drawEmitter(ri);
-
-        drawPlane(ri);
-
-        drawSphere(ri);
-        drawLightSpheres(ri);
 
         
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
+
+}
+
+void drawScene(RenderInfo& ri)
+{
+    // Draw shapes in scene
+    ri.scene.update(ri.viewMatrix, ri.projectionMatrix);
+    ri.scene.draw();
+
 
 }
 
@@ -476,10 +536,10 @@ void drawSkybox(RenderInfo& ri)
     shaderSetMat4(shaderProgram, "uView", view);
     shaderSetMat4(shaderProgram, "uProjection", ri.projectionMatrix);
 
-    ri.shape["skybox"]->draw();
+    ri.shape["skybox"]->draw(shaderProgram);
 }
 
-void draw(RenderInfo& ri)
+void draw1(RenderInfo& ri)
 {
     //M=I*T*O*R*S, der O=R*T
     glm::mat4 modelMatrix = glm::mat4(1.0f);
@@ -495,7 +555,7 @@ void draw(RenderInfo& ri)
 
     //prepareShaderBasic(ri.shaderProgram.base, modelViewMatrix, ri);
     prepareShaderPhong(ri.shaderProgram.phong, modelMatrix, ri, ri.material["silver"]);
-    ri.shape["box"]->draw();
+    ri.shape["box"]->draw(ri.shaderProgram.phong);
 }
 
 
@@ -514,7 +574,7 @@ void draw2(RenderInfo& ri)
 
     //prepareShaderBasic(ri.shaderProgram.base, modelViewMatrix, ri);
     prepareShaderPhong(ri.shaderProgram.phong, modelMatrix, ri, ri.material["gold"]);
-    ri.shape["pyramid"]->draw();
+    ri.shape["pyramid"]->draw(ri.shaderProgram.phong);
 }
 
 
@@ -536,7 +596,7 @@ void drawPlane(RenderInfo& ri)
     glm::mat4 modelViewMatrix = ri.viewMatrix * modelMatrix;
 
     prepareShaderBasic(ri.shaderProgram.texture, modelViewMatrix, ri);
-    ri.shape["plane"]->draw();
+    ri.shape["plane"]->draw(ri.shaderProgram.texture);
 }
 
 
@@ -559,7 +619,7 @@ void drawSphere(RenderInfo& ri)
     prepareShaderPhong(ri.shaderProgram.phong, modelMatrix, ri, ri.material["blue"]);
     //prepareShaderBasic(ri.shaderProgram.texture, modelViewMatrix, ri);
 
-    ri.shape["sphere"]->draw();
+    ri.shape["sphere"]->draw(ri.shaderProgram.phong);
 }
 
 
@@ -574,7 +634,7 @@ void drawLightSpheres(RenderInfo& ri)
         glm::mat4 modelViewMatrix = ri.viewMatrix * modelMatrix;
 
         prepareShaderBasic(ri.shaderProgram.base, modelViewMatrix, ri);
-        ri.shape["sphere"]->draw();
+        ri.shape["sphere"]->draw(ri.shaderProgram.base);
     }
 }
 

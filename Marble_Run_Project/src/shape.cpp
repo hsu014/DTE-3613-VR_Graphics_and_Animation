@@ -58,13 +58,27 @@ void Shape::fillIndexBuffer(std::vector<unsigned int> indices)
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint), &indices[0], GL_STATIC_DRAW);
 }
 
+void Shape::setModelMatrix(glm::mat4 modelMatrix)
+{
+    mModelMatrix = modelMatrix;
+}
+
 void Shape::useTexture(GLuint texture)
 {
     mTexture = texture;
 }
 
-void Shape::draw()
+void Shape::setMaterial(MaterialType mat)
 {
+    mAmbient = mat.ambient;
+    mDiffuse = mat.diffuse;
+    mSpecular = mat.specular;
+    mShininess = mat.shininess;
+}
+
+void Shape::draw(GLuint shaderProgram)
+{
+    shaderSetMat4(shaderProgram, "uModel", mModelMatrix);
     glBindVertexArray(VAO);
 
     if (mTexture)
@@ -79,7 +93,14 @@ void Shape::draw()
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, mTexture);
+
+        shaderSetInt(shaderProgram, "useTexture", 1);
     }
+    else {
+        shaderSetInt(shaderProgram, "useTexture", 0);
+    }
+
+    // Set modelMatrix:
 
     glDrawElements(GL_TRIANGLES, mIndexCount, GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
@@ -87,8 +108,10 @@ void Shape::draw()
 
 
 
-Skybox::Skybox()
+Skybox::Skybox(/*GLuint texture*/)
 {
+    //mTexture = texture;
+
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, VBO);
 
@@ -149,7 +172,7 @@ void Skybox::fillBuffers()
     glBindVertexArray(0);
 }
 
-void Skybox::draw()
+void Skybox::draw(GLuint shaderProgram)
 {
     glBindVertexArray(VAO);
     
@@ -260,6 +283,16 @@ void Box::fillBuffers()
         1.0f, 0.4f, 0.0f,
     };
 
+    std::vector<float> textureUVs{
+        1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0,
+        1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0,
+        1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0,
+        1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0,
+        1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0,
+        1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0,
+
+    };
+
     std::vector<float> normals = {
         // Front face
         -1.0f, 0.0f, 0.0f, 
@@ -319,7 +352,7 @@ void Box::fillBuffers()
 
     fillVertexBuffer(vertices);
     fillColorBuffer(colors);
-    //fillUVBuffer(textureUVs);
+    fillUVBuffer(textureUVs);
     fillNormalBuffer(normals);
     fillIndexBuffer(indices);
 
