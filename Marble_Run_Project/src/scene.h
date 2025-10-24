@@ -39,6 +39,7 @@ public:
 	void prepareShaderBasic();
 	void prepareShaderPhong();
 	void prepareShaderParticle();
+	//void prepareShaderEmitter();
 	
 	void drawSkybox();
 	void drawBaseShapes();

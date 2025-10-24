@@ -34,12 +34,6 @@ void prepareShaderParticle(GLuint shaderProgram, glm::mat4 modelViewMatrix, Rend
 void animate(GLFWwindow* window, RenderInfo& ri);
 void drawScene(RenderInfo& ri);
 
-void drawSkybox(RenderInfo& ri);
-void draw1(RenderInfo& ri);
-void draw2(RenderInfo& ri);
-void drawPlane(RenderInfo& ri);
-void drawSphere(RenderInfo& ri);
-void drawLightSpheres(RenderInfo& ri);
 void drawEmitter(RenderInfo& ri);
 
 
@@ -215,7 +209,6 @@ void initRenderInfo(RenderInfo& ri)
     ri.time.dt = 0;
 
     ri.scene = Scene();
-    /*ri.scene.setShaders(ri.shaderProgram.base, ri.shaderProgram.phong, ri.shaderProgram.skybox);*/
 
     createLights(ri);
     createMaterials(ri);
@@ -226,32 +219,6 @@ void initRenderInfo(RenderInfo& ri)
 
     createShapes(ri);
 
-
-
-
-
-    //Old way:
-
-    // Create skybox shape
-    Skybox* skybox = new Skybox(ri.skyboxTexture["sky_27"]);
-    //skybox->useTexture(ri.skyboxTexture["sky_27"]);
-
-    //ri.shape["skybox"] = new Skybox();
-    //ri.shape["skybox"]->useTexture(ri.skyboxTexture["sky_27"]);
-    ri.shape["skybox"] = skybox;
-
-    // Create shapes
-    ri.shape["box"] = new Box(2, 3, 2);
-    ri.shape["pyramid"] = new Pyramid(2, 2, 2);
-    ri.shape["sphere"] = new Sphere(1.0 ,20, 20);
-
-    // Create heightmap plane:
-    std::string mapName = "heightmap_4";
-    ri.shape["plane"] = new CompositePlane(
-        ri.texture[mapName], ri.heightMap[mapName]);
-
-    // Particle emitter
-    ri.emitter = Emitter(2000, 2.0f, 0.5f, ri.texture["particle"]);
 }
 
 void loadTextures(RenderInfo& ri)
@@ -510,19 +477,7 @@ void animate(GLFWwindow* window, RenderInfo& ri)
         glClearColor(0.2f, 0.0f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        //drawSkybox(ri);
         drawScene(ri);
-
-
-
-        //draw1(ri);
-        //draw2(ri);
-        //drawEmitter(ri);
-
-        //drawPlane(ri);
-
-        //drawSphere(ri);
-        //drawLightSpheres(ri);
 
         ri.bullet.pWorld->stepSimulation(ri.time.dt);
 
@@ -541,119 +496,6 @@ void drawScene(RenderInfo& ri)
 
 
 }
-
-
-void drawSkybox(RenderInfo& ri)
-{
-    glm::mat4 view = glm::mat4(glm::mat3(ri.viewMatrix)); // remove translation from the view matrix
-
-    GLuint shaderProgram = ri.shaderProgram.skybox;
-    glUseProgram(shaderProgram);
-    shaderSetMat4(shaderProgram, "uView", view);
-    shaderSetMat4(shaderProgram, "uProjection", ri.projectionMatrix);
-
-    ri.shape["skybox"]->draw(shaderProgram);
-}
-
-void draw1(RenderInfo& ri)
-{
-    //M=I*T*O*R*S, der O=R*T
-    glm::mat4 modelMatrix = glm::mat4(1.0f);
-
-    // Translate
-    //modelMatrix = glm::translate(modelMatrix, glm::vec3(2.0f, 1.0f, 0.0f));
-    modelMatrix = glm::translate(modelMatrix, glm::vec3(2.0f, 1.0f, 5.0f));
-
-    // Rotate
-    modelMatrix *= ri.rotationMatrix;
-
-    glm::mat4 modelViewMatrix = ri.viewMatrix * modelMatrix;
-
-    //prepareShaderBasic(ri.shaderProgram.base, modelViewMatrix, ri);
-    prepareShaderPhong(ri.shaderProgram.phong, modelMatrix, ri, ri.material["silver"]);
-    ri.shape["box"]->draw(ri.shaderProgram.phong);
-}
-
-
-void draw2(RenderInfo& ri)
-{
-    //M=I*T*O*R*S, der O=R*T
-    glm::mat4 modelMatrix = glm::mat4(1.0f);
-
-    // Translate
-    modelMatrix = glm::translate(modelMatrix, glm::vec3(-2.0f, 1.0f, 5.0f));
-
-    // Rotate
-    modelMatrix *= ri.rotationMatrix;
-
-    glm::mat4 modelViewMatrix = ri.viewMatrix * modelMatrix;
-
-    //prepareShaderBasic(ri.shaderProgram.base, modelViewMatrix, ri);
-    prepareShaderPhong(ri.shaderProgram.phong, modelMatrix, ri, ri.material["gold"]);
-    ri.shape["pyramid"]->draw(ri.shaderProgram.phong);
-}
-
-
-void drawPlane(RenderInfo& ri)
-{
-    //M=I*T*O*R*S, der O=R*T
-    glm::mat4 modelMatrix = glm::mat4(1.0f);
-
-    // Translate
-    modelMatrix = glm::translate(modelMatrix, glm::vec3(0.0f, -2.5f, 0.0f));
-
-    // Rotate
-    // modelMatrix *= ri.rotationMatrix;
-    // modelMatrix = glm::rotate(modelMatrix, glm::half_pi<float>(), glm::vec3(-1.0f, 0.0f, 0.0f));
-
-    // Scale
-    modelMatrix = glm::scale(modelMatrix, glm::vec3(1.0f, 1.0f, 1.0f) * 10.0f);
-
-    glm::mat4 modelViewMatrix = ri.viewMatrix * modelMatrix;
-
-    prepareShaderBasic(ri.shaderProgram.texture, modelViewMatrix, ri);
-    ri.shape["plane"]->draw(ri.shaderProgram.texture);
-}
-
-
-void drawSphere(RenderInfo& ri)
-{
-    //M=I*T*O*R*S, der O=R*T
-    glm::mat4 modelMatrix = glm::mat4(1.0f);
-
-    // Translate
-    modelMatrix = glm::translate(modelMatrix, glm::vec3(4.0f, 1.0f, 3.0f));
-
-    // Rotate
-    modelMatrix *= ri.rotationMatrix;
-
-    // Scale
-    modelMatrix = glm::scale(modelMatrix, glm::vec3(1.0f, 1.0f, 1.0f));
-
-    glm::mat4 modelViewMatrix = ri.viewMatrix * modelMatrix;
-
-    prepareShaderPhong(ri.shaderProgram.phong, modelMatrix, ri, ri.material["blue"]);
-    //prepareShaderBasic(ri.shaderProgram.texture, modelViewMatrix, ri);
-
-    ri.shape["sphere"]->draw(ri.shaderProgram.phong);
-}
-
-
-void drawLightSpheres(RenderInfo& ri)
-{
-    for (const PointLight& light : ri.light.point) {
-        glm::mat4 modelMatrix = glm::mat4(1.0f);
-
-        modelMatrix = glm::translate(modelMatrix, light.position);
-        modelMatrix = glm::scale(modelMatrix, glm::vec3(0.1f, 0.1f, 0.1f));
-
-        glm::mat4 modelViewMatrix = ri.viewMatrix * modelMatrix;
-
-        prepareShaderBasic(ri.shaderProgram.base, modelViewMatrix, ri);
-        ri.shape["sphere"]->draw(ri.shaderProgram.base);
-    }
-}
-
 
 void drawEmitter(RenderInfo& ri)
 {

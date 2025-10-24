@@ -17,11 +17,6 @@ void Scene::update(glm::mat4 viewMatrix, glm::mat4 projectionMatrix, glm::vec3 c
 	mCameraUp = glm::vec3(mViewMatrix[0][1], mViewMatrix[1][1], mViewMatrix[2][1]);
 	mCameraFront = glm::vec3(mViewMatrix[0][2], mViewMatrix[1][2], mViewMatrix[2][2]);
 	mCameraPos = cameraPos;
-
-	//std::cout << "Front: " << mCameraFront[0] << " " << mCameraFront[1] << " " << mCameraFront[2] << "\n";
-	//std::cout << "Up:    " << mCameraUp[0] << " " << mCameraUp[1] << " " << mCameraUp[2] << "\n\n";
-	//std::cout << "Pos:   " << mCameraPos[0] << " " << mCameraPos[1] << " " << mCameraPos[2] << "\n";
-
 }
 
 void Scene::setShaders(GLuint basicShader, GLuint phongShader, GLuint skyboxShader)
@@ -139,7 +134,6 @@ void Scene::drawBaseShapes()
 void Scene::drawPhongShapes()
 {
 	prepareShaderPhong();
-	// Must prepare normal matrix, shapes handle this
 	for (Shape* shape : mPhongShapes) {
 		shape->draw(mPhongShader);
 	}
