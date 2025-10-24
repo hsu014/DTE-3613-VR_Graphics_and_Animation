@@ -21,11 +21,14 @@ public:
 	Scene();
 	~Scene();
 
-	void update(glm::mat4 viewMatrix, glm::mat4 projectionMatrix);
+	void update(glm::mat4 viewMatrix, glm::mat4 projectionMatrix, glm::vec3 cameraPos);
 
 	void setShaders(GLuint basicShader, GLuint phongShader, GLuint skyboxShader);
 
-	//void addLights();
+	//Add Lights
+	void setAmbientLight(glm::vec4 color);
+	void addDirectionLight(DirectionalLight light);
+	void addPointLight(PointLight light);
 
 	void addSkybox(Skybox* skybox);
 	void addBaseShape(Shape* shape);
@@ -39,7 +42,7 @@ public:
 	
 	void drawSkybox();
 	void drawBaseShapes();
-	//void drawPhongShapes();
+	void drawPhongShapes();
 	//void drawEmitters();
 
 	void draw();
@@ -52,8 +55,9 @@ public:
 	glm::mat4 mProjectionMatrix;
 	glm::vec3 mCameraUp;
 	glm::vec3 mCameraFront;
+	glm::vec3 mCameraPos;
 
-	Light lights;
+	Light mLights;
 	std::vector<Shape*> mBasicShapes;
 	std::vector<Shape*> mPhongShapes;
 	std::vector<Skybox*> mSkybox;

@@ -100,7 +100,16 @@ void Shape::draw(GLuint shaderProgram)
         shaderSetInt(shaderProgram, "useTexture", 0);
     }
 
-    // Set modelMatrix:
+    // Material
+    shaderSetVec4(shaderProgram, "material.ambient", mAmbient);
+    shaderSetVec4(shaderProgram, "material.diffuse", mDiffuse);
+    shaderSetVec4(shaderProgram, "material.specular", mSpecular);
+    shaderSetFloat(shaderProgram, "material.shininess", mShininess);
+
+    // Normal matrix
+    glm::mat4 normalMatrix = glm::transpose(glm::inverse(mModelMatrix));
+    shaderSetMat4(shaderProgram, "uNormal", normalMatrix);
+
 
     glDrawElements(GL_TRIANGLES, mIndexCount, GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
@@ -108,9 +117,9 @@ void Shape::draw(GLuint shaderProgram)
 
 
 
-Skybox::Skybox(/*GLuint texture*/)
+Skybox::Skybox(GLuint texture)
 {
-    //mTexture = texture;
+    mTexture = texture;
 
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, VBO);
@@ -602,7 +611,7 @@ void CompositePlane::fillBuffers()
 
 
 
-Sphere::Sphere(int sectors = 10, int stacks = 10) : mSectors(sectors), mStacks(stacks)
+Sphere::Sphere(float radius = 1.0, int sectors = 10, int stacks = 10) : mRadius(radius), mSectors(sectors), mStacks(stacks)
 {
     initBuffers();
     fillBuffers();
@@ -618,7 +627,7 @@ void Sphere::fillBuffers()
     std::vector<unsigned int> indices;
 
     const float PI = acos(-1.0f);
-    const float radius = 1;
+    const float radius = mRadius;
 
     float x, y, z, xy;                              // vertex position
     float nx, ny, nz, lengthInv = 1.0f / radius;    // normal

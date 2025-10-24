@@ -89,10 +89,10 @@ int main()
 
     // Compile and link shaders
     ri.shaderProgram.base = Utils::createShaderProgram("src/shader/vertexShader.glsl", "src/shader/fragmentShader.glsl");
-    //ri.shaderProgram.texture = Utils::createShaderProgram("src/shader/vertexShader.glsl", "src/shader/fragmentShaderTexture.glsl");
     ri.shaderProgram.phong = Utils::createShaderProgram("src/shader/vertexShaderPhong.glsl", "src/shader/fragmentShaderPhong.glsl");
-    ri.shaderProgram.particle = Utils::createShaderProgram("src/shader/vertexShaderParticle.glsl", "src/shader/fragmentShaderParticle.glsl");
     ri.shaderProgram.skybox = Utils::createShaderProgram("src/shader/vertexShaderSkybox.glsl", "src/shader/fragmentShaderSkybox.glsl");
+    ri.shaderProgram.particle = Utils::createShaderProgram("src/shader/vertexShaderParticle.glsl", "src/shader/fragmentShaderParticle.glsl");
+    
     ri.scene.setShaders(ri.shaderProgram.base, ri.shaderProgram.phong, ri.shaderProgram.skybox);
 
     // Init bullet
@@ -108,10 +108,9 @@ int main()
 
     // Delete used resources
     glDeleteProgram(ri.shaderProgram.base);
-    //glDeleteProgram(ri.shaderProgram.texture);
     glDeleteProgram(ri.shaderProgram.phong);
-    glDeleteProgram(ri.shaderProgram.particle);
     glDeleteProgram(ri.shaderProgram.skybox);
+    glDeleteProgram(ri.shaderProgram.particle);
 
     // Shutdown bullet
     delete ri.bullet.pWorld;
@@ -234,8 +233,8 @@ void initRenderInfo(RenderInfo& ri)
     //Old way:
 
     // Create skybox shape
-    Skybox* skybox = new Skybox();
-    skybox->useTexture(ri.skyboxTexture["sky_27"]);
+    Skybox* skybox = new Skybox(ri.skyboxTexture["sky_27"]);
+    //skybox->useTexture(ri.skyboxTexture["sky_27"]);
 
     //ri.shape["skybox"] = new Skybox();
     //ri.shape["skybox"]->useTexture(ri.skyboxTexture["sky_27"]);
@@ -244,7 +243,7 @@ void initRenderInfo(RenderInfo& ri)
     // Create shapes
     ri.shape["box"] = new Box(2, 3, 2);
     ri.shape["pyramid"] = new Pyramid(2, 2, 2);
-    ri.shape["sphere"] = new Sphere(20, 20);
+    ri.shape["sphere"] = new Sphere(1.0 ,20, 20);
 
     // Create heightmap plane:
     std::string mapName = "heightmap_4";
@@ -291,7 +290,8 @@ void loadHeightmaps(RenderInfo& ri)
 void createLights(RenderInfo& ri)
 {
     // Ambient
-    ri.light.ambient.color = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+    ri.light.ambient.color = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);  // Old
+    ri.scene.setAmbientLight(glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
 
     // Directional
     DirectionalLight dirLight{};
@@ -302,7 +302,8 @@ void createLights(RenderInfo& ri)
     dirLight.specular = glm::vec4(0.5f, 0.5f, 0.5f, 1.0f);
     dirLight.specular = glm::vec4(0.1f, 0.1f, 0.1f, 1.0f);
     
-    ri.light.directional.push_back(dirLight);
+    ri.light.directional.push_back(dirLight);  // Old
+    ri.scene.addDirectionLight(dirLight);
 
     // Point
     PointLight pointLight{};
@@ -316,10 +317,12 @@ void createLights(RenderInfo& ri)
     pointLight.linear = 0.09f;
     pointLight.quadratic = 0.032f;
 
-    ri.light.point.push_back(pointLight);
+    ri.light.point.push_back(pointLight);  // Old
+    ri.scene.addPointLight(pointLight);
 
     pointLight.position = glm::vec3(-1.0f, 0.0f, 2.0f);
-    ri.light.point.push_back(pointLight);
+    ri.light.point.push_back(pointLight);  // Old
+    ri.scene.addPointLight(pointLight);
 
 }
 
@@ -357,10 +360,10 @@ void createMaterials(RenderInfo& ri)
 void createShapes(RenderInfo& ri)
 {
     // Create shapes and put into scene
+    glm::mat4 modelMatrix = glm::mat4(1.0f);
 
     // Skybox:
-    Skybox* skybox = new Skybox();
-    skybox->useTexture(ri.skyboxTexture["sky_27"]);
+    Skybox* skybox = new Skybox(ri.skyboxTexture["sky_27"]);
     ri.scene.addSkybox(skybox);
 
     // Basic shape:
@@ -368,15 +371,28 @@ void createShapes(RenderInfo& ri)
     box->useTexture(ri.texture["fire"]);
     ri.scene.addBaseShape(box);
 
-
-    glm::mat4 modelMatrix = glm::mat4(1.0f);
-    modelMatrix = glm::translate(modelMatrix, glm::vec3(2.0f, 1.0f, 5.0f));
-
     Shape* box2 = new Box(2.0, 2.0, 2.0);
     box2->useTexture(ri.texture["chicken"]);
+    box2->setMaterial(ri.material["silver"]);
+    modelMatrix = glm::mat4(1.0f);
+    modelMatrix = glm::translate(modelMatrix, glm::vec3(2.0f, 1.0f, 5.0f));
     box2->setModelMatrix(modelMatrix);
-    ri.scene.addBaseShape(box2);
+    ri.scene.addPhongShape(box2);
 
+    // Phong shape
+    Shape* sphere = new Sphere(1.0, 20, 20);
+    sphere->setMaterial(ri.material["gold"]);
+    modelMatrix = glm::mat4(1.0f);
+    modelMatrix = glm::translate(modelMatrix, glm::vec3(4.0f, 1.0f, 0.0f));
+    sphere->setModelMatrix(modelMatrix);
+    ri.scene.addPhongShape(sphere);
+
+    Shape* sphere2 = new Sphere(0.5, 20, 20);
+    sphere2->setMaterial(ri.material["silver"]);
+    modelMatrix = glm::mat4(1.0f);
+    modelMatrix = glm::translate(modelMatrix, glm::vec3(4.0f, 3.0f, 0.0f));
+    sphere2->setModelMatrix(modelMatrix);
+    ri.scene.addPhongShape(sphere2);
 
 }
 
@@ -432,7 +448,7 @@ void prepareShaderPhong(GLuint shaderProgram, glm::mat4 modelMatrix, RenderInfo&
     shaderSetMat4(shaderProgram, "uModelView", modelViewMatrix);
     shaderSetMat4(shaderProgram, "uProjection", ri.projectionMatrix);
     shaderSetMat4(shaderProgram, "uNormal", normalMatrix);
-    shaderSetVec3(shaderProgram, "viewPos", ri.camera.cameraPos);
+    shaderSetVec3(shaderProgram, "uViewPos", ri.camera.cameraPos);
     shaderSetInt(shaderProgram, "numPointLights", ri.light.point.size());
 
     // Ambient
@@ -520,7 +536,7 @@ void animate(GLFWwindow* window, RenderInfo& ri)
 void drawScene(RenderInfo& ri)
 {
     // Draw shapes in scene
-    ri.scene.update(ri.viewMatrix, ri.projectionMatrix);
+    ri.scene.update(ri.viewMatrix, ri.projectionMatrix, ri.camera.cameraPos);
     ri.scene.draw();
 
 
@@ -606,7 +622,7 @@ void drawSphere(RenderInfo& ri)
     glm::mat4 modelMatrix = glm::mat4(1.0f);
 
     // Translate
-    modelMatrix = glm::translate(modelMatrix, glm::vec3(4.0f, 1.0f, 0.0f));
+    modelMatrix = glm::translate(modelMatrix, glm::vec3(4.0f, 1.0f, 3.0f));
 
     // Rotate
     modelMatrix *= ri.rotationMatrix;

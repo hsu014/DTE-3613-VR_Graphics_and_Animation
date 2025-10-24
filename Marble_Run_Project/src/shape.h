@@ -53,7 +53,7 @@ class Skybox : public Shape {
     private:
 
     public:
-        Skybox(/*GLuint texture*/);
+        Skybox(GLuint texture);
         void fillBuffers() override;
         void draw(GLuint shaderProgram);
 };
@@ -98,11 +98,12 @@ public:
 
 class Sphere : public Shape {
 private:
+    float mRadius;
     int mSectors;
     int mStacks;
 
 public:
-    Sphere(int sectors, int stacks);
+    Sphere(float radius, int sectors, int stacks);
     void fillBuffers() override;
     //void draw() override;
 };

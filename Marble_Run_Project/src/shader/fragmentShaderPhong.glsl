@@ -40,7 +40,7 @@ struct Material
 uniform sampler2D ourTexture;
 uniform int numPointLights ;
 
-uniform vec3 viewPos;
+uniform vec3 uViewPos;
 uniform vec4 ambientLight;
 uniform DirectionalLight dirLight;
 uniform PointLight pointLight[10];
@@ -53,7 +53,7 @@ vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir);
 void main() {
 	// Properties
 	vec3 norm = normalize(normal);
-    vec3 viewDir = normalize(viewPos - fragPos);
+    vec3 viewDir = normalize(uViewPos - fragPos);
 
 	// phase 1: directional lighting
     vec3 result = CalcDirLight(dirLight, norm, viewDir);

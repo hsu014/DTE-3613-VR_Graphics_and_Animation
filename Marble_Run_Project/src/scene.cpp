@@ -10,12 +10,17 @@ Scene::~Scene()
 {
 }
 
-void Scene::update(glm::mat4 viewMatrix, glm::mat4 projectionMatrix)
+void Scene::update(glm::mat4 viewMatrix, glm::mat4 projectionMatrix, glm::vec3 cameraPos)
 {
 	mViewMatrix = viewMatrix;
 	mProjectionMatrix = projectionMatrix;
 	mCameraUp = glm::vec3(mViewMatrix[0][1], mViewMatrix[1][1], mViewMatrix[2][1]);
 	mCameraFront = glm::vec3(mViewMatrix[0][2], mViewMatrix[1][2], mViewMatrix[2][2]);
+	mCameraPos = cameraPos;
+
+	//std::cout << "Front: " << mCameraFront[0] << " " << mCameraFront[1] << " " << mCameraFront[2] << "\n";
+	//std::cout << "Up:    " << mCameraUp[0] << " " << mCameraUp[1] << " " << mCameraUp[2] << "\n\n";
+	//std::cout << "Pos:   " << mCameraPos[0] << " " << mCameraPos[1] << " " << mCameraPos[2] << "\n";
 
 }
 
@@ -24,6 +29,21 @@ void Scene::setShaders(GLuint basicShader, GLuint phongShader, GLuint skyboxShad
 	mBasicShader = basicShader;
 	mPhongShader = phongShader;
 	mSkyboxShader = skyboxShader;
+}
+
+void Scene::setAmbientLight(glm::vec4 color)
+{
+	mLights.ambient.color = color;
+}
+
+void Scene::addDirectionLight(DirectionalLight light)
+{
+	mLights.directional.push_back(light);
+}
+
+void Scene::addPointLight(PointLight light)
+{
+	mLights.point.push_back(light);
 }
 
 void Scene::addSkybox(Skybox* skybox)
@@ -61,6 +81,35 @@ void Scene::prepareShaderBasic()
 
 void Scene::prepareShaderPhong()
 {
+	GLuint shaderProgram = mPhongShader;
+	glUseProgram(shaderProgram);
+	shaderSetMat4(shaderProgram, "uView", mViewMatrix);
+	shaderSetMat4(shaderProgram, "uProjection", mProjectionMatrix);
+	shaderSetVec3(shaderProgram, "uViewPos", mCameraPos);
+	shaderSetInt(shaderProgram, "numPointLights", mLights.point.size());
+
+	// Ambient
+	shaderSetVec4(shaderProgram, "ambientLight", mLights.ambient.color);
+
+	// Directional
+	DirectionalLight dirLight = mLights.directional[0];
+	shaderSetVec3(shaderProgram, "dirLight.direction", dirLight.direction);
+	shaderSetVec4(shaderProgram, "dirLight.ambient", dirLight.ambient);
+	shaderSetVec4(shaderProgram, "dirLight.diffuse", dirLight.diffuse);
+	shaderSetVec4(shaderProgram, "dirLight.specular", dirLight.specular);
+
+	// Point
+	for (int i = 0; i < mLights.point.size(); i++) {
+		PointLight pointLight = mLights.point[i];
+
+		shaderSetVec3(shaderProgram, (std::string("pointLight[") + std::to_string(i) + "].position").c_str(), pointLight.position);
+		shaderSetVec4(shaderProgram, (std::string("pointLight[") + std::to_string(i) + "].ambient").c_str(), pointLight.ambient);
+		shaderSetVec4(shaderProgram, (std::string("pointLight[") + std::to_string(i) + "].diffuse").c_str(), pointLight.diffuse);
+		shaderSetVec4(shaderProgram, (std::string("pointLight[") + std::to_string(i) + "].specular").c_str(), pointLight.specular);
+		shaderSetFloat(shaderProgram, (std::string("pointLight[") + std::to_string(i) + "].constant").c_str(), pointLight.constant);
+		shaderSetFloat(shaderProgram, (std::string("pointLight[") + std::to_string(i) + "].linear").c_str(), pointLight.linear);
+		shaderSetFloat(shaderProgram, (std::string("pointLight[") + std::to_string(i) + "].quadratic").c_str(), pointLight.quadratic);
+	}
 }
 
 void Scene::prepareShaderParticle()
@@ -70,13 +119,12 @@ void Scene::prepareShaderParticle()
 void Scene::drawSkybox()
 {
 	if (mSkybox.size() >= 1 ) {
-		// std::cout << "Skybox exists\n";
 		prepareShaderSkybox();
 		mSkybox[0]->draw(mSkyboxShader);
 
 	}
 	else {
-		std::cout << "Skybox doesn't exists\n";
+		std::cout << "Skybox doesn't exist\n";
 	}
 }
 
@@ -88,8 +136,18 @@ void Scene::drawBaseShapes()
 	}
 }
 
+void Scene::drawPhongShapes()
+{
+	prepareShaderPhong();
+	// Must prepare normal matrix, shapes handle this
+	for (Shape* shape : mPhongShapes) {
+		shape->draw(mPhongShader);
+	}
+}
+
 void Scene::draw()
 {
 	drawSkybox();
 	drawBaseShapes();
+	drawPhongShapes();
 }
