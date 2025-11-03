@@ -76,8 +76,26 @@ void Shape::setMaterial(MaterialType mat)
     mShininess = mat.shininess;
 }
 
+void Shape::setPBody(btRigidBody* pBody)
+{
+    m_pBody = pBody;
+}
+
 void Shape::draw(GLuint shaderProgram)
 {
+    if (m_pBody) {
+        //mModelMatrix = glm::mat4(1.0f);
+        
+        btTransform trans;
+        m_pBody->getMotionState()->getWorldTransform(trans);
+
+        btScalar matrix[16];
+        trans.getOpenGLMatrix(matrix);
+        
+        mModelMatrix = glm::make_mat4(matrix);
+
+    }
+
     shaderSetMat4(shaderProgram, "uModel", mModelMatrix);
     glBindVertexArray(VAO);
 
@@ -496,6 +514,65 @@ void Pyramid::fillBuffers()
         // Bottom
         12, 13, 14,
         14, 15, 12,
+    };
+
+    glBindVertexArray(VAO);
+
+    fillVertexBuffer(vertices);
+    fillColorBuffer(colors);
+    fillUVBuffer(textureUVs);
+    fillNormalBuffer(normals);
+    fillIndexBuffer(indices);
+
+    // Unbind VAO
+    glBindVertexArray(0);
+}
+
+
+
+Plane::Plane(float size_x, float size_z) :
+    mSizeX(size_x), mSizeZ(size_z)
+{
+    initBuffers();
+    fillBuffers();
+}
+
+void Plane::fillBuffers()
+{
+    float x = mSizeX / 2;
+    float z = mSizeZ / 2;
+
+    std::vector<float> vertices = {  
+             x, 0.0f, -z,
+             x, 0.0f,  z,
+            -x, 0.0f,  z,
+            -x, 0.0f, -z,
+    };
+
+    std::vector<float> colors{
+         1.0f, 1.0f, 1.0f,
+         1.0f, 1.0f, 1.0f,
+         1.0f, 1.0f, 1.0f,
+         1.0f, 1.0f, 1.0f,
+    };
+
+    std::vector<float> textureUVs = {
+        0.0, 0.0,
+        0.0, 1.0,
+        1.0, 1.0,
+        1.0, 0.0,
+    };
+
+    std::vector<float> normals = {
+        0.0, 1.0, 0.0,
+        0.0, 1.0, 0.0,
+        0.0, 1.0, 0.0,
+        0.0, 1.0, 0.0,
+    };
+
+    std::vector<unsigned int> indices = {
+        0, 2, 1,
+        2, 0, 3,
     };
 
     glBindVertexArray(VAO);

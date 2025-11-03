@@ -38,6 +38,7 @@ struct Material
 };
 
 uniform sampler2D ourTexture;
+uniform int useTexture;
 uniform int numPointLights ;
 
 uniform vec3 uViewPos;
@@ -45,6 +46,8 @@ uniform vec4 ambientLight;
 uniform DirectionalLight dirLight;
 uniform PointLight pointLight[10];
 uniform Material material;
+
+
 
 // function prototypes
 vec3 CalcDirLight(DirectionalLight light, vec3 normal, vec3 viewDir);
@@ -65,7 +68,12 @@ void main() {
     // ambient light
     result += vec3(ambientLight);
 
-	fragColor = vec4(result, 1.0); // * vec4(Color, 1.0);
+    if (useTexture == 1) {
+        fragColor = texture(ourTexture, texCoord) * vec4(result, 1.0f);
+    }
+    else {
+        fragColor = vec4(result, 1.0f);
+    }
 }
 
 // calculates the color when using a directional light.

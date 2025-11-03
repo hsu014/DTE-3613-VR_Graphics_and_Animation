@@ -22,6 +22,8 @@ void loadHeightmaps(RenderInfo& ri);
 void createLights(RenderInfo& ri);
 void createMaterials(RenderInfo& ri);
 void createShapes(RenderInfo& ri);
+void testBulletShapes(RenderInfo& ri);
+
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void updateCameraFront(RenderInfo& ri);
 
@@ -31,7 +33,7 @@ glm::mat4 getViewMatrix(RenderInfo& ri);
 void animate(GLFWwindow* window, RenderInfo& ri);
 void drawScene(RenderInfo& ri);
 
-void drawEmitter(RenderInfo& ri);
+void drawEmitter(RenderInfo& ri); // Move to scene later
 
 
 // settings 
@@ -94,6 +96,10 @@ int main()
     ri.bullet.pWorld = new btDiscreteDynamicsWorld(
         ri.bullet.pDispatcher, ri.bullet.pBroadphase, ri.bullet.pSolver, ri.bullet.pCollisionConfiguration);
     ri.bullet.pWorld->setGravity(btVector3(0, -9.81f, 0));
+
+    // Create shapes
+    //createShapes(ri);
+    testBulletShapes(ri);
 
     animate(window, ri);
 
@@ -203,8 +209,8 @@ void initRenderInfo(RenderInfo& ri)
     loadSkyboxTextures(ri);
     loadHeightmaps(ri);
 
-    createShapes(ri);
-
+    Skybox* skybox = new Skybox(ri.skyboxTexture["sky_42"]);
+    ri.scene.addSkybox(skybox);
 }
 
 void loadTextures(RenderInfo& ri)
@@ -216,6 +222,9 @@ void loadTextures(RenderInfo& ri)
     ri.texture["chicken"] = Utils::loadTexture("src/textures/mc_chicken.jpeg");
     ri.texture["particle"] = Utils::loadTexture("src/textures/particle.png");
     ri.texture["fire"] = Utils::loadTexture("src/textures/fire.png");
+    ri.texture["wood"] = Utils::loadTexture("src/textures/wood.png");
+    ri.texture["gray_brick"] = Utils::loadTexture("src/textures/gray_brick.jpg");
+    ri.texture["grass"] = Utils::loadTexture("src/textures/grass.png");
 }
 
 void loadSkyboxTextures(RenderInfo& ri)
@@ -243,16 +252,16 @@ void loadHeightmaps(RenderInfo& ri)
 void createLights(RenderInfo& ri)
 {
     // Ambient
-    ri.scene.setAmbientLight(glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
+    ri.scene.setAmbientLight(glm::vec4(0.05f, 0.05f, 0.05f, 1.0f));
 
     // Directional
     DirectionalLight dirLight{};
-    dirLight.direction = glm::vec3(0.0f, -5.0f, 0.0f);
+    dirLight.direction = glm::vec3(0.0f, -5.0f, 3.0f);
 
-    dirLight.ambient = glm::vec4(0.05f, 0.05f, 0.05f, 1.0f);
-    dirLight.diffuse = glm::vec4(0.4f, 0.4f, 0.4f, 1.0f);
+    dirLight.ambient = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+    dirLight.diffuse = glm::vec4(0.6f, 0.6f, 0.6f, 1.0f);
     dirLight.specular = glm::vec4(0.5f, 0.5f, 0.5f, 1.0f);
-    dirLight.specular = glm::vec4(0.1f, 0.1f, 0.1f, 1.0f);
+    // dirLight.specular = glm::vec4(0.4f, 0.4f, 0.4f, 1.0f);
     
     ri.scene.addDirectionLight(dirLight);
 
@@ -260,7 +269,7 @@ void createLights(RenderInfo& ri)
     PointLight pointLight{};
     pointLight.position = glm::vec3(-1.0f, 2.0f, 0.0f);
 
-    pointLight.ambient = glm::vec4(0.05f, 0.05f, 0.05f, 1.0f);
+    pointLight.ambient = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
     pointLight.diffuse = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
     pointLight.specular = glm::vec4(0.5f, 0.5f, 0.5f, 1.0f);
 
@@ -268,10 +277,10 @@ void createLights(RenderInfo& ri)
     pointLight.linear = 0.09f;
     pointLight.quadratic = 0.032f;
 
-    ri.scene.addPointLight(pointLight);
+    ri.scene.addPointLight(pointLight, true);
 
-    pointLight.position = glm::vec3(-1.0f, 0.0f, 2.0f);
-    ri.scene.addPointLight(pointLight);
+    pointLight.position = glm::vec3(-1.0f, 0.1f, 2.0f);
+    ri.scene.addPointLight(pointLight, true);
 
 }
 
@@ -311,10 +320,6 @@ void createShapes(RenderInfo& ri)
     // Create shapes and put into scene
     glm::mat4 modelMatrix = glm::mat4(1.0f);
 
-    // Skybox:
-    Skybox* skybox = new Skybox(ri.skyboxTexture["sky_27"]);
-    ri.scene.addSkybox(skybox);
-
     // Basic shape:
     Shape* box = new Box(2.0, 2.0, 1.0);
     box->useTexture(ri.texture["fire"]);
@@ -342,6 +347,88 @@ void createShapes(RenderInfo& ri)
     modelMatrix = glm::translate(modelMatrix, glm::vec3(4.0f, 3.0f, 0.0f));
     sphere2->setModelMatrix(modelMatrix);
     ri.scene.addPhongShape(sphere2);
+
+}
+
+void testBulletShapes(RenderInfo& ri)
+{
+    // Plane normal pointing up (y-axis), and plane constant (distance from origin)
+    btCollisionShape* groundShape = new btStaticPlaneShape(btVector3(0, 1, 0), 0);
+
+    // Default motion state: plane at world origin
+    btDefaultMotionState* groundMotionState =
+        new btDefaultMotionState(btTransform(btQuaternion(0, 0, 0, 1), btVector3(0, 0, 0)));
+
+    // Static body -> mass = 0
+    btRigidBody::btRigidBodyConstructionInfo groundRigidBodyCI(
+        0,                     // mass
+        groundMotionState,
+        groundShape,
+        btVector3(0, 0, 0));   // inertia (not used for static objects)
+
+    btRigidBody* groundRigidBody = new btRigidBody(groundRigidBodyCI);
+    groundRigidBody->setRestitution(0.6f);  // bounciness
+    groundRigidBody->setFriction(0.5f);     // rolling resistance
+    
+
+    // Optional: make sure it doesn’t get deactivated
+    //groundRigidBody->setActivationState(DISABLE_DEACTIVATION);
+
+    // Finally, add it to the world
+    ri.bullet.pWorld->addRigidBody(groundRigidBody);
+
+    Shape* plane = new Plane(20, 20);
+    plane->useTexture(ri.texture["grass"]);
+    //plane->setMaterial(ri.material["gold"]);
+    ri.scene.addPhongShape(plane);
+
+
+
+
+    // Test sphere
+    glm::mat4 modelMatrix = glm::mat4(1.0f);
+
+    btScalar mass = 1.0f;
+    btVector3 sphereInertia(0, 0, 0);
+    btScalar radius = 0.2f;
+
+    // 1. Create the collision shape
+    btCollisionShape* sphereShape = new btSphereShape(radius);
+
+    // 2. Calculate the inertia for the given mass
+    sphereShape->calculateLocalInertia(mass, sphereInertia);
+
+    // 3. Set the initial transform (position & rotation)
+    btTransform startTransform;
+    startTransform.setIdentity();
+    startTransform.setOrigin(btVector3(0, 2, 0)); // start 10 units above ground
+
+    // 4. Create the motion state (keeps transform in sync)
+    btDefaultMotionState* sphereMotionState = new btDefaultMotionState(startTransform);
+
+    // 5. Construct the rigid body
+    btRigidBody::btRigidBodyConstructionInfo sphereRigidBodyCI(
+        mass,
+        sphereMotionState,
+        sphereShape,
+        sphereInertia);
+
+    btRigidBody* sphereRigidBody = new btRigidBody(sphereRigidBodyCI);
+    sphereRigidBody->setRestitution(0.6f);  // bounciness
+    sphereRigidBody->setFriction(0.8f);     // rolling resistance
+    sphereRigidBody->setActivationState(DISABLE_DEACTIVATION);
+    sphereRigidBody->setLinearVelocity(btVector3(0.3f, 0.0f, 0.0f));
+    sphereRigidBody->setAngularVelocity(btVector3(1.0f, 2.0f, 0.0f));
+
+    // 6. Add to the Bullet world
+    ri.bullet.pWorld->addRigidBody(sphereRigidBody);
+
+    // Phong shape
+    Shape* sphere = new Sphere(radius, 40, 40);
+    //sphere->setMaterial(ri.material["gold"]);
+    sphere->useTexture(ri.texture["wood"]);
+    sphere->setPBody(sphereRigidBody);
+    ri.scene.addPhongShape(sphere);
 
 }
 
@@ -395,9 +482,8 @@ void animate(GLFWwindow* window, RenderInfo& ri)
 
         drawScene(ri);
 
-        ri.bullet.pWorld->stepSimulation(ri.time.dt);
+        ri.bullet.pWorld->stepSimulation(float(ri.time.dt));
 
-        
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
@@ -409,7 +495,6 @@ void drawScene(RenderInfo& ri)
     // Draw shapes in scene
     ri.scene.update(ri.viewMatrix, ri.projectionMatrix, ri.camera.cameraPos);
     ri.scene.draw();
-
 
 }
 

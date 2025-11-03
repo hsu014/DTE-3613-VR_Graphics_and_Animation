@@ -5,13 +5,13 @@
 #include <glm/glm.hpp>
 #include <iostream>
 #include <vector>
+#include <BulletDynamics/Dynamics/btDynamicsWorld.h>
+#include <btBulletDynamicsCommon.h>
 
 #include "structs.h"
 #include "Utils.h"
 
-class Shape {
-private:
-    	
+class Shape {  	
 public:
     ~Shape();
     
@@ -25,6 +25,7 @@ public:
     void setModelMatrix(glm::mat4 modelMatrix);
     void useTexture(GLuint texture);
     void setMaterial(MaterialType mat);
+    void setPBody(btRigidBody* pBody);
 
     virtual void fillBuffers() = 0;
     virtual void draw(GLuint shaderProgram);
@@ -47,11 +48,12 @@ public:
     float mShininess = 1.0f;
 
     glm::mat4 mModelMatrix = glm::mat4(1.0f);
+
+    // Bullet
+    btRigidBody* m_pBody = nullptr;
 };
 
 class Skybox : public Shape {
-    private:
-
     public:
         Skybox(GLuint texture);
         void fillBuffers() override;
@@ -80,6 +82,15 @@ public:
     Pyramid(float size_x, float height, float size_z);
     void fillBuffers() override;
     //void draw() override;
+};
+
+class Plane : public Shape {
+private:
+    float mSizeX;
+    float mSizeZ;
+public:
+    Plane(float size_x, float size_z);
+    void fillBuffers() override;
 };
 
 class CompositePlane : public Shape {
