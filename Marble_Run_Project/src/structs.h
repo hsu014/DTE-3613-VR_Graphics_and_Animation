@@ -25,7 +25,6 @@ struct Time {
 
 struct ShaderProgram {
     GLuint base;
-    GLuint texture;
     GLuint phong;
     GLuint particle;
     GLuint skybox;

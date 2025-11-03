@@ -15,7 +15,6 @@ struct RenderInfo {
     Camera camera;
     Time time;
     ShaderProgram shaderProgram;
-    glm::mat4 rotationMatrix;
     glm::mat4 viewMatrix;
     glm::mat4 projectionMatrix;
 
@@ -28,7 +27,7 @@ struct RenderInfo {
 
     Scene scene;
     // Move to scene:
-    Light light;
+    //Light light;
     std::map<std::string, Shape*> shape;
     Emitter emitter;
 };

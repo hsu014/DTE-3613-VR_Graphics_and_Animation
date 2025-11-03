@@ -165,9 +165,6 @@
     <None Include="src\shader\fragmentShaderSkybox.glsl">
       <Filter>Resource Files\shader</Filter>
     </None>
-    <None Include="src\shader\fragmentShaderTexture.glsl">
-      <Filter>Resource Files\shader</Filter>
-    </None>
     <None Include="src\shader\vertexShader.glsl">
       <Filter>Resource Files\shader</Filter>
     </None>

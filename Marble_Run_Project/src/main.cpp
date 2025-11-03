@@ -27,9 +27,6 @@ void updateCameraFront(RenderInfo& ri);
 
 static glm::mat4 getProjectionMatrix();
 glm::mat4 getViewMatrix(RenderInfo& ri);
-void prepareShaderBasic(GLuint shaderProgram, glm::mat4 modelViewMatrix, RenderInfo& ri);
-void prepareShaderPhong(GLuint shaderProgram, glm::mat4 modelMatrix, RenderInfo& ri, MaterialType& mat);
-void prepareShaderParticle(GLuint shaderProgram, glm::mat4 modelViewMatrix, RenderInfo& ri);
 
 void animate(GLFWwindow* window, RenderInfo& ri);
 void drawScene(RenderInfo& ri);
@@ -181,16 +178,6 @@ void processInput(GLFWwindow* window, RenderInfo& ri)
         if (ri.camera.pitch < -89.0f) ri.camera.pitch = -89.0f;
         updateCameraFront(ri);
     }
-
-    // Rotate model
-    if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS)
-    {
-        ri.rotationMatrix = glm::rotate(ri.rotationMatrix, rotateAmount, glm::vec3(0.0f, 1.0f, 0.0f));
-    }
-    if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS)
-    {
-        ri.rotationMatrix = glm::rotate(ri.rotationMatrix, -rotateAmount, glm::vec3(0.0f, 1.0f, 0.0f));
-    }
 }
 
 
@@ -203,7 +190,6 @@ void initRenderInfo(RenderInfo& ri)
     ri.camera.pitch = 0.0f;
     updateCameraFront(ri);
 
-    ri.rotationMatrix = glm::mat4(1.0f);
     ri.projectionMatrix = getProjectionMatrix();
     ri.time.prev = glfwGetTime();
     ri.time.dt = 0;
@@ -257,7 +243,6 @@ void loadHeightmaps(RenderInfo& ri)
 void createLights(RenderInfo& ri)
 {
     // Ambient
-    ri.light.ambient.color = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);  // Old
     ri.scene.setAmbientLight(glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
 
     // Directional
@@ -269,7 +254,6 @@ void createLights(RenderInfo& ri)
     dirLight.specular = glm::vec4(0.5f, 0.5f, 0.5f, 1.0f);
     dirLight.specular = glm::vec4(0.1f, 0.1f, 0.1f, 1.0f);
     
-    ri.light.directional.push_back(dirLight);  // Old
     ri.scene.addDirectionLight(dirLight);
 
     // Point
@@ -284,11 +268,9 @@ void createLights(RenderInfo& ri)
     pointLight.linear = 0.09f;
     pointLight.quadratic = 0.032f;
 
-    ri.light.point.push_back(pointLight);  // Old
     ri.scene.addPointLight(pointLight);
 
     pointLight.position = glm::vec3(-1.0f, 0.0f, 2.0f);
-    ri.light.point.push_back(pointLight);  // Old
     ri.scene.addPointLight(pointLight);
 
 }
@@ -396,72 +378,6 @@ glm::mat4 getViewMatrix(RenderInfo& ri)
     return glm::lookAt(ri.camera.cameraPos, ri.camera.cameraPos + ri.camera.cameraFront, ri.camera.cameraUp);
 }
 
-
-void prepareShaderBasic(GLuint shaderProgram, glm::mat4 modelViewMatrix, RenderInfo& ri)
-{
-    glUseProgram(shaderProgram);
-    shaderSetMat4(shaderProgram, "uModelView", modelViewMatrix);
-    shaderSetMat4(shaderProgram, "uProjection", ri.projectionMatrix);
-}
-
-void prepareShaderPhong(GLuint shaderProgram, glm::mat4 modelMatrix, RenderInfo& ri, MaterialType& mat)
-{
-    glm::mat4 normalMatrix = glm::transpose(glm::inverse(modelMatrix));
-    glm::mat4 modelViewMatrix = ri.viewMatrix * modelMatrix;
-    
-    // Bind lighting and material info to Phong shader
-    glUseProgram(shaderProgram);
-    shaderSetMat4(shaderProgram, "uModel", modelMatrix);
-    shaderSetMat4(shaderProgram, "uModelView", modelViewMatrix);
-    shaderSetMat4(shaderProgram, "uProjection", ri.projectionMatrix);
-    shaderSetMat4(shaderProgram, "uNormal", normalMatrix);
-    shaderSetVec3(shaderProgram, "uViewPos", ri.camera.cameraPos);
-    shaderSetInt(shaderProgram, "numPointLights", ri.light.point.size());
-
-    // Ambient
-    shaderSetVec4(shaderProgram, "ambientLight", ri.light.ambient.color);
-
-    // Directional
-    DirectionalLight dirLight = ri.light.directional[0];
-    shaderSetVec3(shaderProgram, "dirLight.direction", dirLight.direction);
-    shaderSetVec4(shaderProgram, "dirLight.ambient", dirLight.ambient);
-    shaderSetVec4(shaderProgram, "dirLight.diffuse", dirLight.diffuse);
-    shaderSetVec4(shaderProgram, "dirLight.specular", dirLight.specular);
-
-    // Point
-    for (int i = 0; i < ri.light.point.size(); i++) {
-        PointLight pointLight = ri.light.point[i];
-
-        shaderSetVec3(shaderProgram, (std::string("pointLight[") + std::to_string(i) + "].position").c_str(), pointLight.position);
-        shaderSetVec4(shaderProgram, (std::string("pointLight[") + std::to_string(i) + "].ambient").c_str(), pointLight.ambient);
-        shaderSetVec4(shaderProgram, (std::string("pointLight[") + std::to_string(i) + "].diffuse").c_str(), pointLight.diffuse);
-        shaderSetVec4(shaderProgram, (std::string("pointLight[") + std::to_string(i) + "].specular").c_str(), pointLight.specular);
-        shaderSetFloat(shaderProgram, (std::string("pointLight[") + std::to_string(i) + "].constant").c_str(), pointLight.constant);
-        shaderSetFloat(shaderProgram, (std::string("pointLight[") + std::to_string(i) + "].linear").c_str(), pointLight.linear);
-        shaderSetFloat(shaderProgram, (std::string("pointLight[") + std::to_string(i) + "].quadratic").c_str(), pointLight.quadratic);
-    }
-
-    // Material
-    shaderSetVec4(shaderProgram, "material.ambient", mat.ambient);
-    shaderSetVec4(shaderProgram, "material.diffuse", mat.diffuse);
-    shaderSetVec4(shaderProgram, "material.specular", mat.specular);
-    shaderSetFloat(shaderProgram, "material.shininess", mat.shininess);
-
-}
-
-void prepareShaderParticle(GLuint shaderProgram, glm::mat4 modelViewMatrix, RenderInfo& ri)
-{
-    glm::vec3 up = glm::vec3(ri.viewMatrix[0][1], ri.viewMatrix[1][1], ri.viewMatrix[2][1]);
-    glm::vec3 front = glm::vec3(ri.viewMatrix[0][2], ri.viewMatrix[1][2], ri.viewMatrix[2][2]);
-
-    glUseProgram(shaderProgram);
-    shaderSetMat4(shaderProgram, "uModelView", modelViewMatrix);
-    shaderSetMat4(shaderProgram, "uProjection", ri.projectionMatrix);
-    shaderSetVec3(shaderProgram, "cameraUp", up);
-    shaderSetVec3(shaderProgram, "cameraFront", front);
-}
-
-
 void animate(GLFWwindow* window, RenderInfo& ri)
 {
     while (!glfwWindowShouldClose(window))
@@ -499,6 +415,8 @@ void drawScene(RenderInfo& ri)
 
 void drawEmitter(RenderInfo& ri)
 {
+    /// Move functionality to scene
+
     glm::mat4 modelMatrix = glm::mat4(1.0f);
 
     // Translate
@@ -509,8 +427,8 @@ void drawEmitter(RenderInfo& ri)
 
     glm::mat4 modelViewMatrix = ri.viewMatrix * modelMatrix;
 
-    prepareShaderParticle(ri.shaderProgram.particle, modelViewMatrix, ri);
+    //prepareShaderParticle(ri.shaderProgram.particle, modelViewMatrix, ri);
 
-    ri.emitter.updateParticles(ri.time.dt);
-    ri.emitter.renderParticles(ri.shaderProgram.particle);
+    //ri.emitter.updateParticles(ri.time.dt);
+    //ri.emitter.renderParticles(ri.shaderProgram.particle);
 }

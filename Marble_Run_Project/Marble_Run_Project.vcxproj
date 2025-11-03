@@ -191,7 +191,6 @@
     <None Include="src\shader\fragmentShaderParticle.glsl" />
     <None Include="src\shader\fragmentShaderPhong.glsl" />
     <None Include="src\shader\fragmentShaderSkybox.glsl" />
-    <None Include="src\shader\fragmentShaderTexture.glsl" />
     <None Include="src\shader\vertexShader.glsl" />
     <None Include="src\shader\vertexShaderParticle.glsl" />
     <None Include="src\shader\vertexShaderPhong.glsl" />

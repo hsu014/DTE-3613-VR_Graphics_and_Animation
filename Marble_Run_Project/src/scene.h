@@ -24,8 +24,8 @@ public:
 	void update(glm::mat4 viewMatrix, glm::mat4 projectionMatrix, glm::vec3 cameraPos);
 
 	void setShaders(GLuint basicShader, GLuint phongShader, GLuint skyboxShader);
+	void setParticleShaders(GLuint particleShader);
 
-	//Add Lights
 	void setAmbientLight(glm::vec4 color);
 	void addDirectionLight(DirectionalLight light);
 	void addPointLight(PointLight light);
@@ -51,6 +51,7 @@ public:
 	GLuint mBasicShader;
 	GLuint mPhongShader;
 	GLuint mSkyboxShader;
+	GLuint mParticleShader;
 
 	glm::mat4 mViewMatrix;
 	glm::mat4 mProjectionMatrix;

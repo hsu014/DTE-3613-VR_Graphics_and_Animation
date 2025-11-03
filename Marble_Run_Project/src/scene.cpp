@@ -26,6 +26,11 @@ void Scene::setShaders(GLuint basicShader, GLuint phongShader, GLuint skyboxShad
 	mSkyboxShader = skyboxShader;
 }
 
+void Scene::setParticleShaders(GLuint particleShader)
+{
+	mParticleShader = particleShader;
+}
+
 void Scene::setAmbientLight(glm::vec4 color)
 {
 	mLights.ambient.color = color;
@@ -109,6 +114,12 @@ void Scene::prepareShaderPhong()
 
 void Scene::prepareShaderParticle()
 {
+	GLuint shaderProgram = mParticleShader;
+	glUseProgram(shaderProgram);
+	shaderSetMat4(shaderProgram, "uView", mViewMatrix);
+	shaderSetMat4(shaderProgram, "uProjection", mProjectionMatrix);
+	shaderSetVec3(shaderProgram, "cameraUp", mCameraUp);
+	shaderSetVec3(shaderProgram, "cameraFront", mCameraFront);
 }
 
 void Scene::drawSkybox()
