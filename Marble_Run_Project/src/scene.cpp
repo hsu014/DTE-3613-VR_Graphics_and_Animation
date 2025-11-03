@@ -41,9 +41,18 @@ void Scene::addDirectionLight(DirectionalLight light)
 	mLights.directional.push_back(light);
 }
 
-void Scene::addPointLight(PointLight light)
+void Scene::addPointLight(PointLight light, bool visualize)
 {
 	mLights.point.push_back(light);
+
+	if (visualize) {
+		Shape* sphere = new Sphere(0.02, 20, 20);
+		glm::mat4 modelMatrix = glm::mat4(1.0f);
+		modelMatrix = glm::translate(modelMatrix, light.position);
+		sphere->setModelMatrix(modelMatrix);
+
+		addBaseShape(sphere);
+	}
 }
 
 void Scene::addSkybox(Skybox* skybox)

@@ -28,7 +28,7 @@ public:
 
 	void setAmbientLight(glm::vec4 color);
 	void addDirectionLight(DirectionalLight light);
-	void addPointLight(PointLight light);
+	void addPointLight(PointLight light, bool visualize = false);
 
 	void addSkybox(Skybox* skybox);
 	void addBaseShape(Shape* shape);

@@ -27,7 +27,5 @@ struct RenderInfo {
 
     Scene scene;
     // Move to scene:
-    //Light light;
-    std::map<std::string, Shape*> shape;
     Emitter emitter;
 };
