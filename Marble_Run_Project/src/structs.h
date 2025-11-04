@@ -9,13 +9,13 @@
 #include <btBulletDynamicsCommon.h>
 
 
-struct Camera {
-    glm::vec3 cameraPos;
-    glm::vec3 cameraFront;
-    glm::vec3 cameraUp;
-    float yaw;
-    float pitch;
-};
+//struct Camera {
+//    glm::vec3 cameraPos;
+//    glm::vec3 cameraFront;
+//    glm::vec3 cameraUp;
+//    float yaw;
+//    float pitch;
+//};
 
 struct Time {
     double prev;

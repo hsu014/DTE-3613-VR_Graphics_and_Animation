@@ -12,6 +12,7 @@
 #include "shape.h"
 #include "particle_emitter.h"
 #include "Utils.h"
+#include "camera.h"
 
 class Scene {
 private:
@@ -22,6 +23,7 @@ public:
 	~Scene();
 
 	void update(glm::mat4 viewMatrix, glm::mat4 projectionMatrix, glm::vec3 cameraPos);
+	void update(Camera& camera);
 
 	void setShaders(GLuint basicShader, GLuint phongShader, GLuint skyboxShader);
 	void setParticleShaders(GLuint particleShader);

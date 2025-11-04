@@ -10,6 +10,8 @@
 #include "shape.h"
 #include "particle_emitter.h"
 #include "render_info.h"
+#include "camera.h"
+#include "scene.h"
 
 #include <BulletDynamics/Dynamics/btDynamicsWorld.h>
 #include <btBulletDynamicsCommon.h>
@@ -19,19 +21,15 @@ void initRenderInfo(RenderInfo& ri);
 void loadTextures(RenderInfo& ri);
 void loadSkyboxTextures(RenderInfo& ri);
 void loadHeightmaps(RenderInfo& ri);
-void createLights(RenderInfo& ri);
+void createLights(Scene& scene);
 void createMaterials(RenderInfo& ri);
-void createShapes(RenderInfo& ri);
-void testBulletShapes(RenderInfo& ri);
+void createShapes(RenderInfo& ri, Scene& scene);
+void testBulletShapes(RenderInfo& ri, Scene& scene);
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-void updateCameraFront(RenderInfo& ri);
 
-static glm::mat4 getProjectionMatrix();
-glm::mat4 getViewMatrix(RenderInfo& ri);
-
-void animate(GLFWwindow* window, RenderInfo& ri);
-void drawScene(RenderInfo& ri);
+void animate(GLFWwindow* window, RenderInfo& ri, Scene& scene, Camera& camera);
+void drawScene(Scene& scene, Camera& camera);
 
 void drawEmitter(RenderInfo& ri); // Move to scene later
 
@@ -44,7 +42,6 @@ unsigned int SCR_HEIGHT = 1200;
 
 const double CAMERA_SPEED = 4;
 const double CAMERA_ROT_SPEED = 8;
-const double ROTATION_SPEED = 2;
 
 Utils util = Utils();
 
@@ -56,7 +53,7 @@ int main()
         return -1;
     }
 
-    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Start code", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Marble run", NULL, NULL);
     if (!window)
     {
         std::cout << "Failed to create GLFW window" << std::endl;
@@ -76,6 +73,8 @@ int main()
 
     RenderInfo ri{};
     initRenderInfo(ri);
+    Camera camera(window, glm::vec3(0.0f, 1.0f, -10.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+    Scene scene = Scene();
     
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
@@ -86,7 +85,10 @@ int main()
     ri.shaderProgram.skybox = Utils::createShaderProgram("src/shader/vertexShaderSkybox.glsl", "src/shader/fragmentShaderSkybox.glsl");
     ri.shaderProgram.particle = Utils::createShaderProgram("src/shader/vertexShaderParticle.glsl", "src/shader/fragmentShaderParticle.glsl");
     
-    ri.scene.setShaders(ri.shaderProgram.base, ri.shaderProgram.phong, ri.shaderProgram.skybox);
+    scene.setShaders(ri.shaderProgram.base, ri.shaderProgram.phong, ri.shaderProgram.skybox);
+    Skybox* skybox = new Skybox(ri.skyboxTexture["sky_42"]);
+    scene.addSkybox(skybox);
+    createLights(scene);
 
     // Init bullet
     ri.bullet.pCollisionConfiguration = new btDefaultCollisionConfiguration();
@@ -98,10 +100,10 @@ int main()
     ri.bullet.pWorld->setGravity(btVector3(0, -9.81f, 0));
 
     // Create shapes
-    createShapes(ri);
-    testBulletShapes(ri);
+    createShapes(ri, scene);
+    testBulletShapes(ri, scene);
 
-    animate(window, ri);
+    animate(window, ri, scene, camera);
 
     // Delete used resources
     glDeleteProgram(ri.shaderProgram.base);
@@ -124,93 +126,21 @@ int main()
 
 void processInput(GLFWwindow* window, RenderInfo& ri)
 {
-    float moveAmount = static_cast<float>(CAMERA_SPEED * ri.time.dt);
-    float rotateSpeed = static_cast<float>(CAMERA_ROT_SPEED * 360 * ri.time.dt); // 50.0f; // degrees per second
-    float rotateAmount = static_cast<float>(ROTATION_SPEED * ri.time.dt);
-
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
-
-    // Move camera
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-    {
-        glm::vec3 forward = ri.camera.cameraFront;
-        forward.y = 0.0f;
-        ri.camera.cameraPos += glm::normalize(forward) * moveAmount;
-    }
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-    {
-        glm::vec3 forward = ri.camera.cameraFront;
-        forward.y = 0.0f;
-        ri.camera.cameraPos -= glm::normalize(forward) * moveAmount;
-    }
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-    {
-        ri.camera.cameraPos -= glm::normalize(glm::cross(ri.camera.cameraFront, ri.camera.cameraUp)) * moveAmount;
-    }
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-    {
-        ri.camera.cameraPos += glm::normalize(glm::cross(ri.camera.cameraFront, ri.camera.cameraUp)) * moveAmount;
-    }
-    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
-    {
-        ri.camera.cameraPos[1] += moveAmount;
-    }
-    if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
-    {
-        ri.camera.cameraPos[1] -= moveAmount;
-    }
-
-    // Rotate camera
-    if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
-    {
-        ri.camera.yaw -= rotateSpeed * ri.time.dt;
-        updateCameraFront(ri);
-    }
-    if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
-    {
-        ri.camera.yaw += rotateSpeed * ri.time.dt;
-        updateCameraFront(ri);
-    }
-    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
-    {
-        ri.camera.pitch += rotateSpeed * ri.time.dt;
-        if (ri.camera.pitch > 89.0f) ri.camera.pitch = 89.0f;
-        updateCameraFront(ri);
-    }
-    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
-    {
-        ri.camera.pitch -= rotateSpeed * ri.time.dt;
-        if (ri.camera.pitch < -89.0f) ri.camera.pitch = -89.0f;
-        updateCameraFront(ri);
-    }
 }
 
 
 void initRenderInfo(RenderInfo& ri)
 {
-    ri.camera.cameraPos = glm::vec3(0.0f, 1.0f, -10.0f);
-    ri.camera.cameraFront = glm::vec3(0.0f, 0.0f, 1.0f);
-    ri.camera.cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
-    ri.camera.yaw = 90.0f;
-    ri.camera.pitch = 0.0f;
-    updateCameraFront(ri);
-
-    ri.projectionMatrix = getProjectionMatrix();
     ri.time.prev = glfwGetTime();
     ri.time.dt = 0;
 
-    ri.scene = Scene();
-
-    createLights(ri);
     createMaterials(ri);
 
     loadTextures(ri);
     loadSkyboxTextures(ri);
     loadHeightmaps(ri);
-
-    Skybox* skybox = new Skybox(ri.skyboxTexture["sky_42"]);
-    ri.scene.addSkybox(skybox);
 }
 
 void loadTextures(RenderInfo& ri)
@@ -249,10 +179,10 @@ void loadHeightmaps(RenderInfo& ri)
 
 }
 
-void createLights(RenderInfo& ri)
+void createLights(Scene& scene)
 {
     // Ambient
-    ri.scene.setAmbientLight(glm::vec4(0.05f, 0.05f, 0.05f, 1.0f));
+    scene.setAmbientLight(glm::vec4(0.05f, 0.05f, 0.05f, 1.0f));
 
     // Directional
     DirectionalLight dirLight{};
@@ -261,9 +191,8 @@ void createLights(RenderInfo& ri)
     dirLight.ambient = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
     dirLight.diffuse = glm::vec4(0.6f, 0.6f, 0.6f, 1.0f);
     dirLight.specular = glm::vec4(0.5f, 0.5f, 0.5f, 1.0f);
-    // dirLight.specular = glm::vec4(0.4f, 0.4f, 0.4f, 1.0f);
     
-    ri.scene.addDirectionLight(dirLight);
+    scene.addDirectionLight(dirLight);
 
     // Point
     PointLight pointLight{};
@@ -277,11 +206,10 @@ void createLights(RenderInfo& ri)
     pointLight.linear = 0.09f;
     pointLight.quadratic = 0.032f;
 
-    ri.scene.addPointLight(pointLight, true);
+    scene.addPointLight(pointLight, true);
 
     pointLight.position = glm::vec3(-1.0f, 0.1f, 2.0f);
-    ri.scene.addPointLight(pointLight, true);
-
+    scene.addPointLight(pointLight, true);
 }
 
 void createMaterials(RenderInfo& ri)
@@ -316,7 +244,7 @@ void createMaterials(RenderInfo& ri)
 }
 
 
-void createShapes(RenderInfo& ri)
+void createShapes(RenderInfo& ri, Scene& scene)
 {
     // Create shapes and put into scene
     glm::mat4 modelMatrix = glm::mat4(1.0f);
@@ -324,7 +252,7 @@ void createShapes(RenderInfo& ri)
     // Basic shape:
     Shape* box = new Box(0.2, 0.2, 0.1);
     box->useTexture(ri.texture["fire"]);
-    ri.scene.addBaseShape(box);
+    scene.addBaseShape(box);
 
     Shape* box2 = new Box(2.0, 2.0, 2.0);
     box2->useTexture(ri.texture["gray_brick"]);
@@ -332,15 +260,15 @@ void createShapes(RenderInfo& ri)
     modelMatrix = glm::mat4(1.0f);
     modelMatrix = glm::translate(modelMatrix, glm::vec3(2.0f, 1.5f, 5.0f));
     box2->setModelMatrix(modelMatrix);
-    ri.scene.addPhongShape(box2);
+    scene.addPhongShape(box2);
 
     // Phong shape
-    Shape* pyramid = new CompositePlane(1.0, 1.5, 1.0);
+    Shape* pyramid = new Pyramid(1.0, 1.5, 1.0);
     pyramid->setMaterial(ri.material["gold"]);
     modelMatrix = glm::mat4(1.0f);
     modelMatrix = glm::translate(modelMatrix, glm::vec3(-4.0f, 1.0f, 0.0f));
     pyramid->setModelMatrix(modelMatrix);
-    ri.scene.addPhongShape(pyramid);
+    scene.addPhongShape(pyramid);
 
 
     Shape* sphere = new Sphere(1.0, 20, 20);
@@ -348,18 +276,18 @@ void createShapes(RenderInfo& ri)
     modelMatrix = glm::mat4(1.0f);
     modelMatrix = glm::translate(modelMatrix, glm::vec3(4.0f, 1.0f, 0.0f));
     sphere->setModelMatrix(modelMatrix);
-    ri.scene.addPhongShape(sphere);
+    scene.addPhongShape(sphere);
 
     Shape* sphere2 = new Sphere(0.5, 20, 20);
     sphere2->setMaterial(ri.material["silver"]);
     modelMatrix = glm::mat4(1.0f);
     modelMatrix = glm::translate(modelMatrix, glm::vec3(4.0f, 3.0f, 0.0f));
     sphere2->setModelMatrix(modelMatrix);
-    ri.scene.addPhongShape(sphere2);
+    scene.addPhongShape(sphere2);
 
 }
 
-void testBulletShapes(RenderInfo& ri)
+void testBulletShapes(RenderInfo& ri, Scene& scene)
 {
     // Plane normal pointing up (y-axis), and plane constant (distance from origin)
     btCollisionShape* groundShape = new btStaticPlaneShape(btVector3(0, 1, 0), 0);
@@ -389,7 +317,7 @@ void testBulletShapes(RenderInfo& ri)
     Shape* plane = new Plane(20, 20);
     plane->useTexture(ri.texture["grass"]);
     //plane->setMaterial(ri.material["gold"]);
-    ri.scene.addPhongShape(plane);
+    scene.addPhongShape(plane);
 
 
 
@@ -436,7 +364,7 @@ void testBulletShapes(RenderInfo& ri)
     //sphere->setMaterial(ri.material["gold"]);
     sphere->useTexture(ri.texture["wood"]);
     sphere->setPBody(sphereRigidBody);
-    ri.scene.addPhongShape(sphere);
+    scene.addPhongShape(sphere);
 
 }
 
@@ -444,36 +372,9 @@ void testBulletShapes(RenderInfo& ri)
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
     glViewport(0, 0, width, height);
-
-    SCR_WIDTH = width;
-    SCR_HEIGHT = height;
 }
 
-void updateCameraFront(RenderInfo& ri)
-{
-    glm::vec3 front{};
-    front.x = cos(glm::radians(ri.camera.yaw)) * cos(glm::radians(ri.camera.pitch));
-    front.y = sin(glm::radians(ri.camera.pitch));
-    front.z = sin(glm::radians(ri.camera.yaw)) * cos(glm::radians(ri.camera.pitch));
-    ri.camera.cameraFront = glm::normalize(front);
-}
-
-static glm::mat4 getProjectionMatrix()
-{
-    float fov = 45.0f;
-    float aspect = static_cast<float>(SCR_WIDTH) / SCR_HEIGHT;
-    float near = 0.1;
-    float far = 100;
-
-    return glm::perspective(glm::radians(fov), aspect, near, far);
-}
-
-glm::mat4 getViewMatrix(RenderInfo& ri)
-{
-    return glm::lookAt(ri.camera.cameraPos, ri.camera.cameraPos + ri.camera.cameraFront, ri.camera.cameraUp);
-}
-
-void animate(GLFWwindow* window, RenderInfo& ri)
+void animate(GLFWwindow* window, RenderInfo& ri, Scene& scene, Camera& camera)
 {
     while (!glfwWindowShouldClose(window))
     {
@@ -482,27 +383,25 @@ void animate(GLFWwindow* window, RenderInfo& ri)
         ri.time.prev = ri.time.current;
 
         processInput(window, ri);
-        ri.viewMatrix = getViewMatrix(ri);
-        ri.projectionMatrix = getProjectionMatrix();
+        camera.update(ri.time.dt);
 
         glClearColor(0.2f, 0.0f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        drawScene(ri);
+        drawScene(scene, camera);
 
         ri.bullet.pWorld->stepSimulation(float(ri.time.dt));
 
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
-
 }
 
-void drawScene(RenderInfo& ri)
+void drawScene(Scene& scene, Camera& camera)
 {
     // Draw shapes in scene
-    ri.scene.update(ri.viewMatrix, ri.projectionMatrix, ri.camera.cameraPos);
-    ri.scene.draw();
+    scene.update(camera);
+    scene.draw();
 
 }
 
@@ -518,7 +417,7 @@ void drawEmitter(RenderInfo& ri)
     // Scale
     modelMatrix = glm::scale(modelMatrix, glm::vec3(1.0f, 1.0f, 1.0f) * 1.0f);
 
-    glm::mat4 modelViewMatrix = ri.viewMatrix * modelMatrix;
+    //glm::mat4 modelViewMatrix = ri.viewMatrix * modelMatrix;
 
     //prepareShaderParticle(ri.shaderProgram.particle, modelViewMatrix, ri);
 

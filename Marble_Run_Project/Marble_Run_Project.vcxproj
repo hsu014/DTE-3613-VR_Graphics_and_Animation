@@ -144,6 +144,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\camera.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\particle_emitter.cpp" />
     <ClCompile Include="src\scene.cpp" />
@@ -151,6 +152,7 @@
     <ClCompile Include="src\Utils.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\camera.h" />
     <ClInclude Include="src\particle_emitter.h" />
     <ClInclude Include="src\render_info.h" />
     <ClInclude Include="src\scene.h" />

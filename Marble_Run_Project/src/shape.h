@@ -30,6 +30,7 @@ public:
     virtual void fillBuffers() = 0;
     virtual void draw(GLuint shaderProgram);
 
+    /// Variables
     GLuint VAO;
     GLuint VBO[4];
     // 0 - position
@@ -40,6 +41,8 @@ public:
 
     GLsizei mIndexCount;
     GLuint mTexture;
+    bool mCastShadow = false;
+    bool mRecieveShadow = false;
 
     // Material
     glm::vec4 mAmbient = glm::vec4(1.0f);
