@@ -98,7 +98,7 @@ int main()
     ri.bullet.pWorld->setGravity(btVector3(0, -9.81f, 0));
 
     // Create shapes
-    //createShapes(ri);
+    createShapes(ri);
     testBulletShapes(ri);
 
     animate(window, ri);
@@ -315,25 +315,34 @@ void createMaterials(RenderInfo& ri)
     };
 }
 
+
 void createShapes(RenderInfo& ri)
 {
     // Create shapes and put into scene
     glm::mat4 modelMatrix = glm::mat4(1.0f);
 
     // Basic shape:
-    Shape* box = new Box(2.0, 2.0, 1.0);
+    Shape* box = new Box(0.2, 0.2, 0.1);
     box->useTexture(ri.texture["fire"]);
     ri.scene.addBaseShape(box);
 
     Shape* box2 = new Box(2.0, 2.0, 2.0);
-    box2->useTexture(ri.texture["chicken"]);
+    box2->useTexture(ri.texture["gray_brick"]);
     box2->setMaterial(ri.material["silver"]);
     modelMatrix = glm::mat4(1.0f);
-    modelMatrix = glm::translate(modelMatrix, glm::vec3(2.0f, 1.0f, 5.0f));
+    modelMatrix = glm::translate(modelMatrix, glm::vec3(2.0f, 1.5f, 5.0f));
     box2->setModelMatrix(modelMatrix);
     ri.scene.addPhongShape(box2);
 
     // Phong shape
+    Shape* pyramid = new CompositePlane(1.0, 1.5, 1.0);
+    pyramid->setMaterial(ri.material["gold"]);
+    modelMatrix = glm::mat4(1.0f);
+    modelMatrix = glm::translate(modelMatrix, glm::vec3(-4.0f, 1.0f, 0.0f));
+    pyramid->setModelMatrix(modelMatrix);
+    ri.scene.addPhongShape(pyramid);
+
+
     Shape* sphere = new Sphere(1.0, 20, 20);
     sphere->setMaterial(ri.material["gold"]);
     modelMatrix = glm::mat4(1.0f);
@@ -389,19 +398,19 @@ void testBulletShapes(RenderInfo& ri)
     glm::mat4 modelMatrix = glm::mat4(1.0f);
 
     btScalar mass = 1.0f;
-    btVector3 sphereInertia(0, 0, 0);
     btScalar radius = 0.2f;
 
     // 1. Create the collision shape
     btCollisionShape* sphereShape = new btSphereShape(radius);
 
     // 2. Calculate the inertia for the given mass
+    btVector3 sphereInertia(0, 0, 0);
     sphereShape->calculateLocalInertia(mass, sphereInertia);
 
     // 3. Set the initial transform (position & rotation)
     btTransform startTransform;
     startTransform.setIdentity();
-    startTransform.setOrigin(btVector3(0, 2, 0)); // start 10 units above ground
+    startTransform.setOrigin(btVector3(0, 2, 0));
 
     // 4. Create the motion state (keeps transform in sync)
     btDefaultMotionState* sphereMotionState = new btDefaultMotionState(startTransform);
@@ -417,10 +426,9 @@ void testBulletShapes(RenderInfo& ri)
     sphereRigidBody->setRestitution(0.6f);  // bounciness
     sphereRigidBody->setFriction(0.8f);     // rolling resistance
     sphereRigidBody->setActivationState(DISABLE_DEACTIVATION);
-    sphereRigidBody->setLinearVelocity(btVector3(0.3f, 0.0f, 0.0f));
-    sphereRigidBody->setAngularVelocity(btVector3(1.0f, 2.0f, 0.0f));
+    //sphereRigidBody->setLinearVelocity(btVector3(0.3f, 0.0f, 0.0f));
+    sphereRigidBody->setAngularVelocity(btVector3(0.0f, 0.0f, -3.0f));
 
-    // 6. Add to the Bullet world
     ri.bullet.pWorld->addRigidBody(sphereRigidBody);
 
     // Phong shape

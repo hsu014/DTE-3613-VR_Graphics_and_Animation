@@ -128,6 +128,7 @@ void Shape::draw(GLuint shaderProgram)
     glm::mat4 normalMatrix = glm::transpose(glm::inverse(mModelMatrix));
     shaderSetMat4(shaderProgram, "uNormal", normalMatrix);
 
+    glEnable(GL_CULL_FACE);
 
     glDrawElements(GL_TRIANGLES, mIndexCount, GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
@@ -355,20 +356,20 @@ void Box::fillBuffers()
 
     std::vector<unsigned int> indices = {
         // Front face
-        0, 1, 2,
-        2, 3, 0,
+        0, 2, 1,
+        2, 0, 3,
         // Back face
-        4, 5, 6,
-        6, 7, 4,
+        4, 6, 5,
+        6, 4, 7,
         // Right face
-        8, 9, 10,
-        10, 11, 8,
+        8, 10, 9,
+        10, 8, 11,
         // Left face
-        12, 13, 14,
-        14, 15, 12,
+        12, 14, 13,
+        14, 12, 15,
         // Top face
-        16, 17, 18,
-        18, 19, 16,
+        16, 18, 17,
+        18, 16, 19,
         // Bottom face
         20, 21, 22,
         22, 23, 20,
@@ -507,10 +508,10 @@ void Pyramid::fillBuffers()
 
     std::vector<unsigned int> indices = {
         // Sides
-        0, 1, 2,
-        3, 4, 5,
-        6, 7, 8,
-        9, 10, 11,
+        0, 2, 1,
+        3, 5, 4,
+        6, 8, 7,
+        9, 11, 10,
         // Bottom
         12, 13, 14,
         14, 15, 12,
@@ -665,12 +666,12 @@ void CompositePlane::fillBuffers()
             int start = x * mDepth + z;
 
             indices.push_back(start);
-            indices.push_back(start + mDepth);
             indices.push_back(start + 1);
+            indices.push_back(start + mDepth);
 
             indices.push_back(start + 1);
-            indices.push_back(start + mDepth);
             indices.push_back(start + mDepth + 1);
+            indices.push_back(start + mDepth);
         }
     }
 
