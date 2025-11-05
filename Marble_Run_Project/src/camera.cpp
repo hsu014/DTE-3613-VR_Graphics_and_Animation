@@ -3,6 +3,9 @@
 Camera::Camera(GLFWwindow* window, glm::vec3 pos, glm::vec3 front, glm::vec3 up) :
 	mWindow(window), mPos(pos), mFront(front), mUp(up)
 {
+    mPitch = glm::degrees(asin(mFront.y));
+    mYaw = glm::degrees(atan2(mFront.z, mFront.x));
+
     updateViewMatrix();
 }
 
@@ -64,6 +67,66 @@ void Camera::processInput()
         if (mPitch < -89.0f) mPitch = -89.0f;
         updateCameraFront();
     }
+
+    // Release mouse
+    if (glfwGetKey(mWindow, GLFW_KEY_BACKSPACE) == GLFW_PRESS)
+    {
+        mMouseLocked = false;
+        mFirstMouse = true;
+        glfwSetInputMode(mWindow, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+    }
+}
+
+void Camera::processMouseMovement()
+{
+    if (!mMouseLocked) return;
+
+    double xpos, ypos;
+    glfwGetCursorPos(mWindow, &xpos, &ypos);
+
+    if (mFirstMouse)
+    {
+        mLastX = xpos;
+        mLastY = ypos;
+        mFirstMouse = false;
+    }
+
+    double xoffset = xpos - mLastX;
+    double yoffset = mLastY - ypos;
+    xoffset *= mMouseSensitivity;
+    yoffset *= mMouseSensitivity;
+
+    mLastX = xpos;
+    mLastY = ypos;
+
+    mYaw += static_cast<float>(xoffset);
+    mPitch += static_cast<float>(yoffset);
+
+    if (mPitch > 89.0f)  mPitch = 89.0f;
+    if (mPitch < -89.0f) mPitch = -89.0f;
+
+    updateCameraFront();
+}
+
+void Camera::processMouseInput()
+{
+    if (glfwGetMouseButton(mWindow, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
+    {
+        if (!mMouseLocked) {
+            captureMouse();
+            mMouseLocked = true;
+        }
+    }
+
+}
+
+void Camera::captureMouse()
+{
+    int width, height;
+    glfwGetWindowSize(mWindow, &width, &height);
+    glfwSetCursorPos(mWindow, width / 2.0, height / 2.0);
+
+    glfwSetInputMode(mWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 }
 
 void Camera::updateCameraFront()
@@ -96,33 +159,35 @@ void Camera::updateViewMatrix()
 void Camera::update(double dt)
 {
     mDt = dt;
-    updateViewMatrix();
-    updateProjectionMatrix();
-
     processInput();
+    processMouseMovement();
+    processMouseInput();
+
+    updateViewMatrix();
+    updateProjectionMatrix();   
 }
 
-glm::mat4 Camera::getProjectionMatrix()
+glm::mat4 Camera::getProjectionMatrix() const
 {
     return mProjectionMatrix;
 }
 
-glm::mat4 Camera::getViewMatrix()
+glm::mat4 Camera::getViewMatrix() const
 {
     return mViewMatrix;
 }
 
-glm::vec3 Camera::getCameraPos()
+glm::vec3 Camera::getCameraPos() const
 {
     return mPos;
 }
 
-glm::vec3 Camera::getCameraFront()
+glm::vec3 Camera::getCameraFront() const
 {
     return mFront;
 }
 
-glm::vec3 Camera::getCameraUp()
+glm::vec3 Camera::getCameraUp() const
 {
     return mUp;
 }

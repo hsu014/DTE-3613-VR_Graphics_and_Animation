@@ -73,7 +73,10 @@ int main()
 
     RenderInfo ri{};
     initRenderInfo(ri);
-    Camera camera(window, glm::vec3(0.0f, 1.0f, -10.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+    Camera camera(window, 
+        glm::vec3(0.0f, 1.0f, -10.0f),  // Pos
+        glm::vec3(0.0f, 0.0f, 1.0f),    // Front
+        glm::vec3(0.0f, 1.0f, 0.0f));   // Up
     Scene scene = Scene();
     
     glEnable(GL_DEPTH_TEST);
