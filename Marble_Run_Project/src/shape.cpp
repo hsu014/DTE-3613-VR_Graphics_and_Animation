@@ -228,7 +228,7 @@ void Skybox::draw(GLuint shaderProgram)
 
 
 
-Box::Box(float size_x = 0.5, float size_y = 0.5, float size_z = 0.5) :
+Box::Box(float size_x, float size_y, float size_z) :
     mSizeX(size_x), mSizeY(size_y), mSizeZ(size_z)
 {
     initBuffers();

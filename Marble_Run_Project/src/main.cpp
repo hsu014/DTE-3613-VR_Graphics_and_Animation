@@ -85,12 +85,12 @@ int main()
 
     // Compile and link shaders
     // TODO: Remove shader Programs from ri?
-    ri.shaderProgram.base = Utils::createShaderProgram("src/shader/vertexShader.glsl", "src/shader/fragmentShader.glsl");
-    ri.shaderProgram.phong = Utils::createShaderProgram("src/shader/vertexShaderPhong.glsl", "src/shader/fragmentShaderPhong.glsl");
-    ri.shaderProgram.skybox = Utils::createShaderProgram("src/shader/vertexShaderSkybox.glsl", "src/shader/fragmentShaderSkybox.glsl");
-    ri.shaderProgram.particle = Utils::createShaderProgram("src/shader/vertexShaderParticle.glsl", "src/shader/fragmentShaderParticle.glsl");
+    GLuint shaderProgramBase = Utils::createShaderProgram("src/shader/vertexShader.glsl", "src/shader/fragmentShader.glsl");
+    GLuint shaderProgramPhong = Utils::createShaderProgram("src/shader/vertexShaderPhong.glsl", "src/shader/fragmentShaderPhong.glsl");
+    GLuint shaderProgramSkybox = Utils::createShaderProgram("src/shader/vertexShaderSkybox.glsl", "src/shader/fragmentShaderSkybox.glsl");
+    GLuint shaderProgramParticle = Utils::createShaderProgram("src/shader/vertexShaderParticle.glsl", "src/shader/fragmentShaderParticle.glsl");
     
-    scene.setShaders(ri.shaderProgram.base, ri.shaderProgram.phong, ri.shaderProgram.skybox);
+    scene.setShaders(shaderProgramBase, shaderProgramPhong, shaderProgramSkybox);
     Skybox* skybox = new Skybox(ri.skyboxTexture["sky_42"]);
     scene.addSkybox(skybox);
     createLights(scene);
@@ -111,10 +111,10 @@ int main()
     animate(window, ri, scene);
 
     // Delete used resources
-    glDeleteProgram(ri.shaderProgram.base);
-    glDeleteProgram(ri.shaderProgram.phong);
-    glDeleteProgram(ri.shaderProgram.skybox);
-    glDeleteProgram(ri.shaderProgram.particle);
+    glDeleteProgram(shaderProgramBase);
+    glDeleteProgram(shaderProgramPhong);
+    glDeleteProgram(shaderProgramSkybox);
+    glDeleteProgram(shaderProgramParticle);
 
     // Shutdown bullet
     delete ri.bullet.pWorld;

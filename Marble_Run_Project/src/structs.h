@@ -15,13 +15,6 @@ struct Time {
     double dt;
 };
 
-struct ShaderProgram {
-    GLuint base;
-    GLuint phong;
-    GLuint particle;
-    GLuint skybox;
-};
-
 struct AmbientLight {
     glm::vec4 color;
 };

@@ -13,7 +13,6 @@
 
 struct RenderInfo {
     Time time;
-    ShaderProgram shaderProgram;
 
     std::map<std::string, GLuint> texture;
     std::map<std::string, GLuint> skyboxTexture;
