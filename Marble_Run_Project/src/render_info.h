@@ -15,7 +15,6 @@ struct RenderInfo {
     Time time;
     ShaderProgram shaderProgram;
 
-    std::map<std::string, MaterialType> material;
     std::map<std::string, GLuint> texture;
     std::map<std::string, GLuint> skyboxTexture;
     std::map<std::string, std::shared_ptr<std::vector<std::vector<float>>>> heightMap;

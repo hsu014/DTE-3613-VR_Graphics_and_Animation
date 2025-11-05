@@ -22,7 +22,6 @@ void loadTextures(RenderInfo& ri);
 void loadSkyboxTextures(RenderInfo& ri);
 void loadHeightmaps(RenderInfo& ri);
 void createLights(Scene& scene);
-void createMaterials(RenderInfo& ri);
 void createShapes(RenderInfo& ri, Scene& scene);
 void testBulletShapes(RenderInfo& ri, Scene& scene);
 
@@ -44,6 +43,7 @@ const double CAMERA_SPEED = 4;
 const double CAMERA_ROT_SPEED = 8;
 
 Utils util = Utils();
+Material material{};
 
 
 int main()
@@ -84,6 +84,7 @@ int main()
     glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 
     // Compile and link shaders
+    // TODO: Remove shader Programs from ri?
     ri.shaderProgram.base = Utils::createShaderProgram("src/shader/vertexShader.glsl", "src/shader/fragmentShader.glsl");
     ri.shaderProgram.phong = Utils::createShaderProgram("src/shader/vertexShaderPhong.glsl", "src/shader/fragmentShaderPhong.glsl");
     ri.shaderProgram.skybox = Utils::createShaderProgram("src/shader/vertexShaderSkybox.glsl", "src/shader/fragmentShaderSkybox.glsl");
@@ -139,8 +140,6 @@ void initRenderInfo(RenderInfo& ri)
 {
     ri.time.prev = glfwGetTime();
     ri.time.dt = 0;
-
-    createMaterials(ri);
 
     loadTextures(ri);
     loadSkyboxTextures(ri);
@@ -216,37 +215,6 @@ void createLights(Scene& scene)
     scene.addPointLight(pointLight, true);
 }
 
-void createMaterials(RenderInfo& ri)
-{
-    ri.material["white"] = {
-    glm::vec4(1.0f, 1.0f, 1.0f, 1),
-    glm::vec4(1.0f, 1.0f, 1.0f, 1),
-    glm::vec4(1.0f, 1.0f, 1.0f, 1),
-    40.0f
-    };
-
-    ri.material["blue"] = {
-    glm::vec4(0.0f, 0.0f, 1.0f, 1),
-    glm::vec4(0.0f, 0.0f, 1.0f, 1),
-    glm::vec4(1.0f, 1.0f, 1.0f, 1),
-    40.0f
-    };
-
-    ri.material["gold"] = {
-    glm::vec4(0.2473f, 0.1995f, 0.0745f, 1),
-    glm::vec4(0.7516f, 0.6065f, 0.2265f, 1),
-    glm::vec4(0.6283f, 0.5559f, 0.3661f, 1),
-    51.2f
-    };
-
-    ri.material["silver"] = {
-    glm::vec4(0.1923f, 0.1923f, 0.1923f, 1),
-    glm::vec4(0.5075f, 0.5075f, 0.5075f, 1),
-    glm::vec4(0.5083f, 0.5083f, 0.5083f, 1),
-    51.2f
-    };
-}
-
 
 void createShapes(RenderInfo& ri, Scene& scene)
 {
@@ -261,8 +229,9 @@ void createShapes(RenderInfo& ri, Scene& scene)
     scene.addBaseShape(box);
 
     Shape* box2 = new Box(2.0, 2.0, 2.0);
+    box2->setMaterial(material.obsidian);
     box2->useTexture(ri.texture["gray_brick"]);
-    box2->setMaterial(ri.material["silver"]);
+    //box2->setMaterial(ri.material["silver"]);
     modelMatrix = glm::mat4(1.0f);
     modelMatrix = glm::translate(modelMatrix, glm::vec3(2.0f, 1.5f, 5.0f));
     box2->setModelMatrix(modelMatrix);
@@ -270,7 +239,7 @@ void createShapes(RenderInfo& ri, Scene& scene)
 
     // Phong shape
     Shape* pyramid = new Pyramid(1.0, 1.5, 1.0);
-    pyramid->setMaterial(ri.material["gold"]);
+    pyramid->setMaterial(material.polished_silver);
     modelMatrix = glm::mat4(1.0f);
     modelMatrix = glm::translate(modelMatrix, glm::vec3(-4.0f, 1.0f, 0.0f));
     pyramid->setModelMatrix(modelMatrix);
@@ -278,14 +247,14 @@ void createShapes(RenderInfo& ri, Scene& scene)
 
 
     Shape* sphere = new Sphere(1.0, 20, 20);
-    sphere->setMaterial(ri.material["gold"]);
+    sphere->setMaterial(material.brass);
     modelMatrix = glm::mat4(1.0f);
     modelMatrix = glm::translate(modelMatrix, glm::vec3(4.0f, 1.0f, 0.0f));
     sphere->setModelMatrix(modelMatrix);
     scene.addPhongShape(sphere);
 
     Shape* sphere2 = new Sphere(0.5, 20, 20);
-    sphere2->setMaterial(ri.material["silver"]);
+    sphere2->setMaterial(material.obsidian);
     modelMatrix = glm::mat4(1.0f);
     modelMatrix = glm::translate(modelMatrix, glm::vec3(4.0f, 3.0f, 0.0f));
     sphere2->setModelMatrix(modelMatrix);
@@ -321,8 +290,8 @@ void testBulletShapes(RenderInfo& ri, Scene& scene)
     ri.bullet.pWorld->addRigidBody(groundRigidBody);
 
     Shape* plane = new Plane(20, 20);
+    plane->setMaterial(material.emerald);
     plane->useTexture(ri.texture["grass"]);
-    //plane->setMaterial(ri.material["gold"]);
     scene.addPhongShape(plane);
 
 
@@ -370,7 +339,7 @@ void testBulletShapes(RenderInfo& ri, Scene& scene)
 
     // Phong shape
     Shape* sphere = new Sphere(radius, 40, 40);
-    //sphere->setMaterial(ri.material["gold"]);
+    sphere->setMaterial(material.brass);
     sphere->useTexture(ri.texture["wood"]);
     sphere->setPBody(sphereRigidBody);
     scene.addPhongShape(sphere);
