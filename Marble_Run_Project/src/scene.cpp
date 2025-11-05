@@ -15,11 +15,10 @@ void Scene::update(glm::mat4 viewMatrix, glm::mat4 projectionMatrix, glm::vec3 c
 
 void Scene::update(Camera& camera)
 {
-	// TODO: update using camera. fix up and front?
 	mViewMatrix = camera.getViewMatrix();
 	mProjectionMatrix = camera.getProjectionMatrix();
-	mCameraUp = glm::vec3(mViewMatrix[0][1], mViewMatrix[1][1], mViewMatrix[2][1]);
-	mCameraFront = glm::vec3(mViewMatrix[0][2], mViewMatrix[1][2], mViewMatrix[2][2]);
+	mCameraUp = camera.getCameraUp();
+	mCameraFront = camera.getCameraFront();
 	mCameraPos = camera.getCameraPos();
 }
 

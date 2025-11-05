@@ -9,6 +9,7 @@
 #include "structs.h"
 #include "shape.h"
 #include "particle_emitter.h"
+#include "camera.h"
 
 struct RenderInfo {
     Time time;
@@ -21,6 +22,7 @@ struct RenderInfo {
     
     Bullet bullet;
 
+    Camera* camera = nullptr;
     //Scene scene;
     // Move to scene:
     Emitter emitter;

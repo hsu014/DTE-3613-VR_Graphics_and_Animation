@@ -28,7 +28,7 @@ void testBulletShapes(RenderInfo& ri, Scene& scene);
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 
-void animate(GLFWwindow* window, RenderInfo& ri, Scene& scene, Camera& camera);
+void animate(GLFWwindow* window, RenderInfo& ri, Scene& scene);
 void drawScene(Scene& scene, Camera& camera);
 
 void drawEmitter(RenderInfo& ri); // Move to scene later
@@ -75,8 +75,9 @@ int main()
     initRenderInfo(ri);
     Camera camera(window, 
         glm::vec3(0.0f, 1.0f, -10.0f),  // Pos
-        glm::vec3(0.0f, 0.0f, 1.0f),    // Front
+        glm::vec3(0.0f, 0.1f, 1.0f),    // Front
         glm::vec3(0.0f, 1.0f, 0.0f));   // Up
+    ri.camera = &camera;
     Scene scene = Scene();
     
     glEnable(GL_DEPTH_TEST);
@@ -106,7 +107,7 @@ int main()
     createShapes(ri, scene);
     testBulletShapes(ri, scene);
 
-    animate(window, ri, scene, camera);
+    animate(window, ri, scene);
 
     // Delete used resources
     glDeleteProgram(ri.shaderProgram.base);
@@ -253,8 +254,10 @@ void createShapes(RenderInfo& ri, Scene& scene)
     glm::mat4 modelMatrix = glm::mat4(1.0f);
 
     // Basic shape:
-    Shape* box = new Box(0.2, 0.2, 0.1);
+    Shape* box = new Box(0.2, 0.2, 0.2);
     box->useTexture(ri.texture["fire"]);
+    modelMatrix = glm::translate(modelMatrix, glm::vec3(0.0f, 2.0f, 0.0f));
+    box->setModelMatrix(modelMatrix);
     scene.addBaseShape(box);
 
     Shape* box2 = new Box(2.0, 2.0, 2.0);
@@ -362,6 +365,9 @@ void testBulletShapes(RenderInfo& ri, Scene& scene)
 
     ri.bullet.pWorld->addRigidBody(sphereRigidBody);
 
+    // Use sphereRigidBody for followcam position
+    ri.camera->setPBody(sphereRigidBody);
+
     // Phong shape
     Shape* sphere = new Sphere(radius, 40, 40);
     //sphere->setMaterial(ri.material["gold"]);
@@ -377,7 +383,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
     glViewport(0, 0, width, height);
 }
 
-void animate(GLFWwindow* window, RenderInfo& ri, Scene& scene, Camera& camera)
+void animate(GLFWwindow* window, RenderInfo& ri, Scene& scene)
 {
     while (!glfwWindowShouldClose(window))
     {
@@ -386,12 +392,12 @@ void animate(GLFWwindow* window, RenderInfo& ri, Scene& scene, Camera& camera)
         ri.time.prev = ri.time.current;
 
         processInput(window, ri);
-        camera.update(ri.time.dt);
+        ri.camera->update(ri.time.dt);
 
         glClearColor(0.2f, 0.0f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        drawScene(scene, camera);
+        drawScene(scene, *ri.camera);
 
         ri.bullet.pWorld->stepSimulation(float(ri.time.dt));
 

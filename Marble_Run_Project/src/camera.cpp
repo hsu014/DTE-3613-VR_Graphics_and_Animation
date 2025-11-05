@@ -1,71 +1,70 @@
 #include "camera.h"
+#include <iostream>
 
 Camera::Camera(GLFWwindow* window, glm::vec3 pos, glm::vec3 front, glm::vec3 up) :
 	mWindow(window), mPos(pos), mFront(front), mUp(up)
 {
-    mPitch = glm::degrees(asin(mFront.y));
-    mYaw = glm::degrees(atan2(mFront.z, mFront.x));
-
+    updatePitchYaw();
     updateViewMatrix();
+
 }
 
 void Camera::processInput()
 {
     float moveAmount = static_cast<float>(mCameraSpeed * mDt);
-    float rotateSpeed = static_cast<float>(mCameraRotSpeed * 360 * mDt);
+    float zoomAmount = static_cast<float>(mZoomSensitivity * mDt);
 
     // Move camera
-    if (glfwGetKey(mWindow, GLFW_KEY_W) == GLFW_PRESS)
+    if (mCameraMode == FREE)
     {
-        glm::vec3 forward = mFront;
-        forward.y = 0.0f;
-        mPos += glm::normalize(forward) * moveAmount;
-    }
-    if (glfwGetKey(mWindow, GLFW_KEY_S) == GLFW_PRESS)
-    {
-        glm::vec3 forward = mFront;
-        forward.y = 0.0f;
-        mPos -= glm::normalize(forward) * moveAmount;
-    }
-    if (glfwGetKey(mWindow, GLFW_KEY_A) == GLFW_PRESS)
-    {
-        mPos -= glm::normalize(glm::cross(mFront, mUp)) * moveAmount;
-    }
-    if (glfwGetKey(mWindow, GLFW_KEY_D) == GLFW_PRESS)
-    {
-        mPos += glm::normalize(glm::cross(mFront, mUp)) * moveAmount;
-    }
-    if (glfwGetKey(mWindow, GLFW_KEY_SPACE) == GLFW_PRESS)
-    {
-        mPos[1] += moveAmount;
-    }
-    if (glfwGetKey(mWindow, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
-    {
-        mPos[1] -= moveAmount;
+        if (glfwGetKey(mWindow, GLFW_KEY_W) == GLFW_PRESS)
+        {
+            glm::vec3 forward = mFront;
+            forward.y = 0.0f;
+            mPos += glm::normalize(forward) * moveAmount;
+        }
+        if (glfwGetKey(mWindow, GLFW_KEY_S) == GLFW_PRESS)
+        {
+            glm::vec3 forward = mFront;
+            forward.y = 0.0f;
+            mPos -= glm::normalize(forward) * moveAmount;
+        }
+        if (glfwGetKey(mWindow, GLFW_KEY_A) == GLFW_PRESS)
+        {
+            mPos -= glm::normalize(glm::cross(mFront, mUp)) * moveAmount;
+        }
+        if (glfwGetKey(mWindow, GLFW_KEY_D) == GLFW_PRESS)
+        {
+            mPos += glm::normalize(glm::cross(mFront, mUp)) * moveAmount;
+        }
+        if (glfwGetKey(mWindow, GLFW_KEY_SPACE) == GLFW_PRESS)
+        {
+            mPos[1] += moveAmount;
+        }
+        if (glfwGetKey(mWindow, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
+        {
+            mPos[1] -= moveAmount;
+        }
     }
 
-    // Rotate camera
-    if (glfwGetKey(mWindow, GLFW_KEY_LEFT) == GLFW_PRESS)
+    // Controll follow cam
+    if (mCameraMode == FOLLOW)
     {
-        mYaw -= rotateSpeed * mDt;
-        updateCameraFront();
-    }
-    if (glfwGetKey(mWindow, GLFW_KEY_RIGHT) == GLFW_PRESS)
-    {
-        mYaw += rotateSpeed * mDt;
-        updateCameraFront();
-    }
-    if (glfwGetKey(mWindow, GLFW_KEY_UP) == GLFW_PRESS)
-    {
-        mPitch += rotateSpeed * mDt;
-        if (mPitch > 89.0f) mPitch = 89.0f;
-        updateCameraFront();
-    }
-    if (glfwGetKey(mWindow, GLFW_KEY_DOWN) == GLFW_PRESS)
-    {
-        mPitch -= rotateSpeed * mDt;
-        if (mPitch < -89.0f) mPitch = -89.0f;
-        updateCameraFront();
+        if (glfwGetKey(mWindow, GLFW_KEY_W) == GLFW_PRESS)
+        {
+            mCameraDistance -= zoomAmount;
+            if (mCameraDistance < 0.1f) mCameraDistance = 0.1f;
+        }
+        if (glfwGetKey(mWindow, GLFW_KEY_S) == GLFW_PRESS)
+        {
+            mCameraDistance += zoomAmount;
+        }
+        if (glfwGetKey(mWindow, GLFW_KEY_SPACE) == GLFW_PRESS)
+        {
+            mCameraMode = FREE;
+            updatePitchYaw();
+            updateCameraFront();
+        }
     }
 
     // Release mouse
@@ -74,6 +73,19 @@ void Camera::processInput()
         mMouseLocked = false;
         mFirstMouse = true;
         glfwSetInputMode(mWindow, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+    }
+
+    // Select camera mode
+    if (glfwGetKey(mWindow, GLFW_KEY_1) == GLFW_PRESS)
+    {
+        mCameraMode = FREE;
+        updatePitchYaw();
+        updateCameraFront();
+    }
+    if (glfwGetKey(mWindow, GLFW_KEY_2) == GLFW_PRESS)
+    {
+        mCameraMode = FOLLOW;
+        mCameraDistance = 3.0f;
     }
 }
 
@@ -153,7 +165,38 @@ void Camera::updateProjectionMatrix()
 
 void Camera::updateViewMatrix()
 {
-    mViewMatrix = glm::lookAt(mPos, mPos + mFront, mUp);
+    if (mCameraMode == FOLLOW)
+    {
+        mViewMatrix = glm::lookAt(mPos, mLookAt, mUp);
+    }
+    else 
+    {
+        mViewMatrix = glm::lookAt(mPos, mPos + mFront, mUp);
+    }
+}
+
+void Camera::updateOrbitCamPosition()
+{
+    mPos.x = mLookAt.x + mCameraDistance * sin(glm::radians(mPitch + 90.0f)) * cos(glm::radians(mYaw + 180.0f));
+    mPos.y = mLookAt.y + mCameraDistance * cos(glm::radians(mPitch + 90.0f));
+    mPos.z = mLookAt.z + mCameraDistance * sin(glm::radians(mPitch + 90.0f)) * sin(glm::radians(mYaw + 180.0f));
+}
+
+void Camera::updateLookAt()
+{
+    if (m_pBody) {
+        btTransform trans;
+        m_pBody->getMotionState()->getWorldTransform(trans);
+
+        btVector3 pos = trans.getOrigin();
+        mLookAt = glm::vec3(pos.getX(), pos.getY(), pos.getZ());
+    }
+}
+
+void Camera::updatePitchYaw()
+{
+    mPitch = glm::degrees(asin(mFront.y));
+    mYaw = glm::degrees(atan2(mFront.z, mFront.x));
 }
 
 void Camera::update(double dt)
@@ -162,6 +205,11 @@ void Camera::update(double dt)
     processInput();
     processMouseMovement();
     processMouseInput();
+    if (mCameraMode == FOLLOW) 
+    {
+        updateLookAt();
+        updateOrbitCamPosition();
+    }
 
     updateViewMatrix();
     updateProjectionMatrix();   
@@ -189,7 +237,12 @@ glm::vec3 Camera::getCameraFront() const
 
 glm::vec3 Camera::getCameraUp() const
 {
-    return mUp;
+    return glm::vec3(mViewMatrix[0][1], mViewMatrix[1][1], mViewMatrix[2][1]);
+}
+
+void Camera::setPBody(btRigidBody* pBody)
+{
+    m_pBody = pBody;
 }
 
 
