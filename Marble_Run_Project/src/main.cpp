@@ -246,14 +246,14 @@ void createShapes(RenderInfo& ri, Scene& scene)
     scene.addPhongShape(pyramid);
 
 
-    Shape* sphere = new Sphere(1.0, 20, 20);
+    Shape* sphere = new Sphere(1.0);
     sphere->setMaterial(material.brass);
     modelMatrix = glm::mat4(1.0f);
     modelMatrix = glm::translate(modelMatrix, glm::vec3(4.0f, 1.0f, 0.0f));
     sphere->setModelMatrix(modelMatrix);
     scene.addPhongShape(sphere);
 
-    Shape* sphere2 = new Sphere(0.5, 20, 20);
+    Shape* sphere2 = new Sphere(0.5);
     sphere2->setMaterial(material.obsidian);
     modelMatrix = glm::mat4(1.0f);
     modelMatrix = glm::translate(modelMatrix, glm::vec3(4.0f, 3.0f, 0.0f));

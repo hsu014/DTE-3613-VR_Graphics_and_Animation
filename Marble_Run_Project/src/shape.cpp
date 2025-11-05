@@ -689,7 +689,7 @@ void CompositePlane::fillBuffers()
 
 
 
-Sphere::Sphere(float radius = 1.0, int sectors = 10, int stacks = 10) : mRadius(radius), mSectors(sectors), mStacks(stacks)
+Sphere::Sphere(float radius, int sectors, int stacks) : mRadius(radius), mSectors(sectors), mStacks(stacks)
 {
     initBuffers();
     fillBuffers();

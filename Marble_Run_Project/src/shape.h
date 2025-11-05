@@ -70,7 +70,7 @@ private:
     float mSizeZ;
     
 public:
-    Box(float size_x, float size_y, float size_z);
+    Box(float size_x = 0.5f, float size_y = 0.5f, float size_z = 0.5f);
 	void fillBuffers() override;
     //void draw() override;
 };
@@ -82,7 +82,7 @@ private:
     float mSizeZ;
 
 public:
-    Pyramid(float size_x, float height, float size_z);
+    Pyramid(float size_x = 0.5f, float height = 1.0f, float size_z = 0.5f);
     void fillBuffers() override;
     //void draw() override;
 };
@@ -117,7 +117,7 @@ private:
     int mStacks;
 
 public:
-    Sphere(float radius, int sectors, int stacks);
+    Sphere(float radius = 1.0f, int sectors = 50, int stacks = 50);
     void fillBuffers() override;
     //void draw() override;
 };
