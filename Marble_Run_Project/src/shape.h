@@ -26,6 +26,7 @@ public:
     void useTexture(GLuint texture);
     void setMaterial(MaterialType mat);
     void setPBody(btRigidBody* pBody);
+    void castShadow(bool castShadow = true);
 
     virtual void fillBuffers() = 0;
     virtual void draw(GLuint shaderProgram);

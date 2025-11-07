@@ -16,6 +16,7 @@
 #include <BulletDynamics/Dynamics/btDynamicsWorld.h>
 #include <btBulletDynamicsCommon.h>
 
+
 void processInput(GLFWwindow* window, RenderInfo& ri);
 void initRenderInfo(RenderInfo& ri);
 void loadTextures(RenderInfo& ri);
@@ -73,27 +74,30 @@ int main()
 
     RenderInfo ri{};
     initRenderInfo(ri);
+
     Camera camera(window, 
         glm::vec3(0.0f, 1.0f, -10.0f),  // Pos
         glm::vec3(0.0f, 0.1f, 1.0f),    // Front
         glm::vec3(0.0f, 1.0f, 0.0f));   // Up
     ri.camera = &camera;
-    Scene scene = Scene();
+
+    Scene scene = Scene(window);
     
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 
     // Compile and link shaders
-    // TODO: Remove shader Programs from ri?
     GLuint shaderProgramBase = Utils::createShaderProgram("src/shader/vertexShader.glsl", "src/shader/fragmentShader.glsl");
     GLuint shaderProgramPhong = Utils::createShaderProgram("src/shader/vertexShaderPhong.glsl", "src/shader/fragmentShaderPhong.glsl");
     GLuint shaderProgramSkybox = Utils::createShaderProgram("src/shader/vertexShaderSkybox.glsl", "src/shader/fragmentShaderSkybox.glsl");
     GLuint shaderProgramParticle = Utils::createShaderProgram("src/shader/vertexShaderParticle.glsl", "src/shader/fragmentShaderParticle.glsl");
+    GLuint shaderProgramShadowMap = Utils::createShaderProgram("src/shader/vertexShaderShadow.glsl", "src/shader/fragmentShaderShadow.glsl");
     
-    scene.setShaders(shaderProgramBase, shaderProgramPhong, shaderProgramSkybox);
+    scene.setShaders(shaderProgramBase, shaderProgramPhong, shaderProgramSkybox, shaderProgramShadowMap);
     Skybox* skybox = new Skybox(ri.skyboxTexture["sky_42"]);
     scene.addSkybox(skybox);
     createLights(scene);
+    scene.updateLightSpaceMatrix();
 
     // Init bullet
     ri.bullet.pCollisionConfiguration = new btDefaultCollisionConfiguration();
@@ -115,6 +119,7 @@ int main()
     glDeleteProgram(shaderProgramPhong);
     glDeleteProgram(shaderProgramSkybox);
     glDeleteProgram(shaderProgramParticle);
+    glDeleteProgram(shaderProgramShadowMap);
 
     // Shutdown bullet
     delete ri.bullet.pWorld;
@@ -134,7 +139,6 @@ void processInput(GLFWwindow* window, RenderInfo& ri)
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
 }
-
 
 void initRenderInfo(RenderInfo& ri)
 {
@@ -189,7 +193,8 @@ void createLights(Scene& scene)
 
     // Directional
     DirectionalLight dirLight{};
-    dirLight.direction = glm::vec3(0.0f, -5.0f, 3.0f);
+    //dirLight.direction = glm::vec3(0.0f, -5.0f, 3.0f);
+    dirLight.direction = glm::vec3(0.2f, -1.0f, 0.8f);
 
     dirLight.ambient = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
     dirLight.diffuse = glm::vec4(0.6f, 0.6f, 0.6f, 1.0f);
@@ -199,7 +204,7 @@ void createLights(Scene& scene)
 
     // Point
     PointLight pointLight{};
-    pointLight.position = glm::vec3(-1.0f, 2.0f, 0.0f);
+    pointLight.position = glm::vec3(-4.0f, 2.0f, 6.0f);
 
     pointLight.ambient = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
     pointLight.diffuse = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
@@ -211,8 +216,8 @@ void createLights(Scene& scene)
 
     scene.addPointLight(pointLight, true);
 
-    pointLight.position = glm::vec3(-1.0f, 0.1f, 2.0f);
-    scene.addPointLight(pointLight, true);
+    // pointLight.position = glm::vec3(-1.0f, 0.1f, 2.0f);
+    // scene.addPointLight(pointLight, true);
 }
 
 
@@ -220,45 +225,57 @@ void createShapes(RenderInfo& ri, Scene& scene)
 {
     // Create shapes and put into scene
     glm::mat4 modelMatrix = glm::mat4(1.0f);
+    glm::vec3 middle_pos = glm::vec3(1.0f);
+    int num_x;
+    int num_y;
 
-    // Basic shape:
-    Shape* box = new Box(0.2, 0.2, 0.2);
-    box->useTexture(ri.texture["fire"]);
-    modelMatrix = glm::translate(modelMatrix, glm::vec3(0.0f, 2.0f, 0.0f));
+    // Boxes:
+    middle_pos = { 0.0, 3.0, 0.0 };
+    num_x = 10;
+    num_y = 4;
+    for (int i = 0; i < num_x; i++) {
+        for (int j = 0; j < num_y; j++) {
+            float x = middle_pos.x - (num_x / 2.0f) + i;
+            float y = middle_pos.y - (num_y / 2.0f) + j;
+            float z = middle_pos.z;
+
+            Shape* box = new Box(0.5, 0.5, 0.5);
+            box->useTexture(ri.texture["wood"]);
+            box->castShadow();
+            modelMatrix = glm::mat4(1.0f);
+            modelMatrix = glm::translate(modelMatrix, glm::vec3(x, y, z));
+            modelMatrix = glm::rotate(modelMatrix, glm::radians(i * 10.0f), { 0,1,0 });
+            box->setModelMatrix(modelMatrix);
+            scene.addPhongShape(box);
+        }
+    }
+
+  
+    Shape* box = new Box(2.0, 2.0, 2.0);
+    box->setMaterial(material.chrome);
+    box->useTexture(ri.texture["gray_brick"]);
+    box->castShadow();
+    modelMatrix = glm::mat4(1.0f);
+    modelMatrix = glm::translate(modelMatrix, glm::vec3(2.0f, 1.0f, 5.0f));
     box->setModelMatrix(modelMatrix);
-    scene.addBaseShape(box);
-
-    Shape* box2 = new Box(2.0, 2.0, 2.0);
-    box2->setMaterial(material.obsidian);
-    box2->useTexture(ri.texture["gray_brick"]);
-    //box2->setMaterial(ri.material["silver"]);
+    scene.addPhongShape(box);
+   
+    Shape* pyramid = new Pyramid(2.0, 2.0, 2.0);
+    pyramid->setMaterial(material.ruby);
+    pyramid->useTexture(ri.texture["gray_brick"]);
+    pyramid->castShadow();
     modelMatrix = glm::mat4(1.0f);
-    modelMatrix = glm::translate(modelMatrix, glm::vec3(2.0f, 1.5f, 5.0f));
-    box2->setModelMatrix(modelMatrix);
-    scene.addPhongShape(box2);
-
-    // Phong shape
-    Shape* pyramid = new Pyramid(1.0, 1.5, 1.0);
-    pyramid->setMaterial(material.polished_silver);
-    modelMatrix = glm::mat4(1.0f);
-    modelMatrix = glm::translate(modelMatrix, glm::vec3(-4.0f, 1.0f, 0.0f));
+    modelMatrix = glm::translate(modelMatrix, glm::vec3(-3.0f, 1.3f, -5.0f));
     pyramid->setModelMatrix(modelMatrix);
     scene.addPhongShape(pyramid);
 
-
-    Shape* sphere = new Sphere(1.0);
+    Shape* sphere = new Sphere(1.2);
     sphere->setMaterial(material.brass);
+    sphere->castShadow();
     modelMatrix = glm::mat4(1.0f);
-    modelMatrix = glm::translate(modelMatrix, glm::vec3(4.0f, 1.0f, 0.0f));
+    modelMatrix = glm::translate(modelMatrix, glm::vec3(0.0, 5.0, -2.2));
     sphere->setModelMatrix(modelMatrix);
     scene.addPhongShape(sphere);
-
-    Shape* sphere2 = new Sphere(0.5);
-    sphere2->setMaterial(material.obsidian);
-    modelMatrix = glm::mat4(1.0f);
-    modelMatrix = glm::translate(modelMatrix, glm::vec3(4.0f, 3.0f, 0.0f));
-    sphere2->setModelMatrix(modelMatrix);
-    scene.addPhongShape(sphere2);
 
 }
 
@@ -289,8 +306,8 @@ void testBulletShapes(RenderInfo& ri, Scene& scene)
     // Finally, add it to the world
     ri.bullet.pWorld->addRigidBody(groundRigidBody);
 
-    Shape* plane = new Plane(20, 20);
-    plane->setMaterial(material.emerald);
+    Shape* plane = new Plane(50, 50);
+    //plane->setMaterial(material.emerald);
     plane->useTexture(ri.texture["grass"]);
     scene.addPhongShape(plane);
 
@@ -301,7 +318,7 @@ void testBulletShapes(RenderInfo& ri, Scene& scene)
     glm::mat4 modelMatrix = glm::mat4(1.0f);
 
     btScalar mass = 1.0f;
-    btScalar radius = 0.2f;
+    btScalar radius = 1.2f;
 
     // 1. Create the collision shape
     btCollisionShape* sphereShape = new btSphereShape(radius);
@@ -313,7 +330,7 @@ void testBulletShapes(RenderInfo& ri, Scene& scene)
     // 3. Set the initial transform (position & rotation)
     btTransform startTransform;
     startTransform.setIdentity();
-    startTransform.setOrigin(btVector3(0, 2, 0));
+    startTransform.setOrigin(btVector3(-2, 2, 2));
 
     // 4. Create the motion state (keeps transform in sync)
     btDefaultMotionState* sphereMotionState = new btDefaultMotionState(startTransform);
@@ -330,7 +347,7 @@ void testBulletShapes(RenderInfo& ri, Scene& scene)
     sphereRigidBody->setFriction(0.8f);     // rolling resistance
     sphereRigidBody->setActivationState(DISABLE_DEACTIVATION);
     //sphereRigidBody->setLinearVelocity(btVector3(0.3f, 0.0f, 0.0f));
-    sphereRigidBody->setAngularVelocity(btVector3(0.0f, 0.0f, -3.0f));
+    sphereRigidBody->setAngularVelocity(btVector3(0.0f, 0.0f, -1.0f));
 
     ri.bullet.pWorld->addRigidBody(sphereRigidBody);
 
@@ -341,6 +358,7 @@ void testBulletShapes(RenderInfo& ri, Scene& scene)
     Shape* sphere = new Sphere(radius, 40, 40);
     sphere->setMaterial(material.brass);
     sphere->useTexture(ri.texture["wood"]);
+    sphere->castShadow();
     sphere->setPBody(sphereRigidBody);
     scene.addPhongShape(sphere);
 
@@ -354,6 +372,9 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 
 void animate(GLFWwindow* window, RenderInfo& ri, Scene& scene)
 {
+    double lastTime = glfwGetTime();
+    int frameCount = 0;
+
     while (!glfwWindowShouldClose(window))
     {
         ri.time.current = glfwGetTime();
@@ -363,15 +384,29 @@ void animate(GLFWwindow* window, RenderInfo& ri, Scene& scene)
         processInput(window, ri);
         ri.camera->update(ri.time.dt);
 
-        glClearColor(0.2f, 0.0f, 0.3f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
         drawScene(scene, *ri.camera);
 
         ri.bullet.pWorld->stepSimulation(float(ri.time.dt));
 
         glfwSwapBuffers(window);
         glfwPollEvents();
+
+        // --- FPS tracking ---
+        frameCount++;
+        //double currentTime = glfwGetTime();
+        if (ri.time.current - lastTime >= 1.0) // every 1 second
+        {
+            double fps = double(frameCount) / (ri.time.current - lastTime);
+            std::cout << "FPS: " << fps << std::endl;
+
+            // Optional: show FPS in window title
+            std::string title = "OpenGL App - FPS: " + std::to_string(int(fps));
+            glfwSetWindowTitle(window, title.c_str());
+
+            frameCount = 0;
+            lastTime = ri.time.current;
+        }
+
     }
 }
 

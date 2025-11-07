@@ -1,8 +1,61 @@
 #include "scene.h"
 
-Scene::Scene() {}
+Scene::Scene(GLFWwindow* window) : mWindow(window)
+{
+	initShadowMap();
+}
 
 Scene::~Scene() {}
+
+void Scene::initShadowMap()
+{
+	glGenFramebuffers(1, &FBO);
+	glGenTextures(1, &mShadowMap);
+
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, mShadowMap);
+
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, mSHADOW_WIDTH, mSHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+	float borderColor[] = { 1.0, 1.0, 1.0, 1.0 };
+	glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+
+	// attach depth texture as FBO's depth buffer
+	glBindFramebuffer(GL_FRAMEBUFFER, FBO);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, mShadowMap, 0);
+	glDrawBuffer(GL_NONE);
+	glReadBuffer(GL_NONE);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+		std::cout << "Framebuffer problem" << std::endl;
+	}
+	else std::cout << "Framebuffer ok" << std::endl;
+}
+
+void Scene::updateLightSpaceMatrix()
+{
+	glm::vec3 lightBoxPos = {0.0f, 0.0f, 0.0f};
+	glm::vec3 lightInvDir = glm::normalize(mLights.directional[0].direction * -1.0f);
+
+	if (lightInvDir.y == 1.0f) // Fix edge case
+	{
+		lightInvDir = glm::normalize(glm::vec3{ 0.0f, 1.0, -0.000000001 });
+	}
+
+	float orthoSize = 20.0f;
+
+	glm::mat4 lightProjection = glm::ortho(-orthoSize, orthoSize, -orthoSize, orthoSize, 1.0f, orthoSize*2.0f);
+
+	glm::mat4 lightView = glm::lookAt((lightInvDir * orthoSize) + lightBoxPos,	// position
+		lightBoxPos,															// target
+		glm::vec3(0.0f, 1.0f, 0.0f));											// up
+
+	mLightSpaceMatrix = lightProjection * lightView;
+}
 
 void Scene::update(glm::mat4 viewMatrix, glm::mat4 projectionMatrix, glm::vec3 cameraPos)
 {
@@ -20,13 +73,17 @@ void Scene::update(Camera& camera)
 	mCameraUp = camera.getCameraUp();
 	mCameraFront = camera.getCameraFront();
 	mCameraPos = camera.getCameraPos();
+
+	// if dir light moves:
+	// updateLightSpaceMatrix();
 }
 
-void Scene::setShaders(GLuint basicShader, GLuint phongShader, GLuint skyboxShader)
+void Scene::setShaders(GLuint basicShader, GLuint phongShader, GLuint skyboxShader, GLuint shadowMapShader)
 {
 	mBasicShader = basicShader;
 	mPhongShader = phongShader;
 	mSkyboxShader = skyboxShader;
+	mShadowMapShader = shadowMapShader;
 }
 
 void Scene::setParticleShaders(GLuint particleShader)
@@ -122,6 +179,11 @@ void Scene::prepareShaderPhong()
 		shaderSetFloat(shaderProgram, (std::string("pointLight[") + std::to_string(i) + "].linear").c_str(), pointLight.linear);
 		shaderSetFloat(shaderProgram, (std::string("pointLight[") + std::to_string(i) + "].quadratic").c_str(), pointLight.quadratic);
 	}
+
+	// Shadow map
+	shaderSetInt(shaderProgram, "ourTexture", 0);
+	shaderSetInt(shaderProgram, "shadowMap", 1);
+	shaderSetMat4(shaderProgram, "uLightSpaceMatrix", mLightSpaceMatrix);
 }
 
 void Scene::prepareShaderParticle()
@@ -134,12 +196,18 @@ void Scene::prepareShaderParticle()
 	shaderSetVec3(shaderProgram, "cameraFront", mCameraFront);
 }
 
+void Scene::prepareShaderShadowMap()
+{
+	GLuint shaderProgram = mShadowMapShader;
+	glUseProgram(shaderProgram);
+	shaderSetMat4(shaderProgram, "uLightSpaceMatrix", mLightSpaceMatrix);
+}
+
 void Scene::drawSkybox()
 {
 	if (mSkybox.size() >= 1 ) {
 		prepareShaderSkybox();
 		mSkybox[0]->draw(mSkyboxShader);
-
 	}
 	else {
 		std::cout << "Skybox doesn't exist\n";
@@ -156,15 +224,40 @@ void Scene::drawBaseShapes()
 
 void Scene::drawPhongShapes()
 {
+	// Shadow pass
+	prepareShaderShadowMap();
+	glViewport(0, 0, mSHADOW_WIDTH, mSHADOW_HEIGHT);
+	glBindFramebuffer(GL_FRAMEBUFFER, FBO);
+	glClear(GL_DEPTH_BUFFER_BIT);
+
+	for (Shape* shape : mPhongShapes) {
+		if (shape->mCastShadow) {
+			shape->draw(mShadowMapShader);
+		}
+	}
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	// Reset viewPort
+	int width, height;
+	glfwGetWindowSize(mWindow, &width, &height);
+	glViewport(0, 0, width, height);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	// Render scene
 	prepareShaderPhong();
 	for (Shape* shape : mPhongShapes) {
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, mShadowMap);
 		shape->draw(mPhongShader);
 	}
 }
 
 void Scene::draw()
 {
-	drawSkybox();
-	drawBaseShapes();
+	glClearColor(0.2f, 0.0f, 0.3f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
 	drawPhongShapes();
+	drawBaseShapes();
+	drawSkybox();
 }

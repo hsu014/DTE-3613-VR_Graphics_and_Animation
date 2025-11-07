@@ -19,13 +19,16 @@ private:
 	
 
 public:
-	Scene();
+	Scene(GLFWwindow* window);
 	~Scene();
 
+	void initShadowMap();
+
+	void updateLightSpaceMatrix();
 	void update(glm::mat4 viewMatrix, glm::mat4 projectionMatrix, glm::vec3 cameraPos);
 	void update(Camera& camera);
 
-	void setShaders(GLuint basicShader, GLuint phongShader, GLuint skyboxShader);
+	void setShaders(GLuint basicShader, GLuint phongShader, GLuint skyboxShader, GLuint shadowMapShader);
 	void setParticleShaders(GLuint particleShader);
 
 	void setAmbientLight(glm::vec4 color);
@@ -41,6 +44,7 @@ public:
 	void prepareShaderBasic();
 	void prepareShaderPhong();
 	void prepareShaderParticle();
+	void prepareShaderShadowMap();
 	//void prepareShaderEmitter();
 	
 	void drawSkybox();
@@ -50,9 +54,13 @@ public:
 
 	void draw();
 
+	GLFWwindow* mWindow;
+
 	GLuint mBasicShader;
 	GLuint mPhongShader;
 	GLuint mSkyboxShader;
+	GLuint mShadowMapShader;
+
 	GLuint mParticleShader;
 
 	glm::mat4 mViewMatrix;
@@ -66,7 +74,21 @@ public:
 	std::vector<Shape*> mPhongShapes;
 	std::vector<Skybox*> mSkybox;
 
+	// Shadow map
+	const GLuint mSHADOW_WIDTH = 2048;
+	const GLuint mSHADOW_HEIGHT = 2048;
+	GLuint FBO;
+	GLuint mShadowMap;
+	glm::mat4 mLightSpaceMatrix;
+
 };
+
+
+
+/*
+Shadow map
+  Must know screen size
+*/
 
 
 /*

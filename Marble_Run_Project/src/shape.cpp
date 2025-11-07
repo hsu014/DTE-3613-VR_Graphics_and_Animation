@@ -81,11 +81,14 @@ void Shape::setPBody(btRigidBody* pBody)
     m_pBody = pBody;
 }
 
+void Shape::castShadow(bool castShadow)
+{
+    mCastShadow = castShadow;
+}
+
 void Shape::draw(GLuint shaderProgram)
 {
     if (m_pBody) {
-        //mModelMatrix = glm::mat4(1.0f);
-        
         btTransform trans;
         m_pBody->getMotionState()->getWorldTransform(trans);
 
@@ -101,18 +104,15 @@ void Shape::draw(GLuint shaderProgram)
 
     if (mTexture)
     {
-        // set the texture wrapping parameters
+        shaderSetInt(shaderProgram, "useTexture", 1);
+        glActiveTexture(GL_TEXTURE0);
+
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
-
-        // set texture filtering parameters
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, mTexture);
-
-        shaderSetInt(shaderProgram, "useTexture", 1);
+        glBindTexture(GL_TEXTURE_2D, mTexture); 
     }
     else {
         shaderSetInt(shaderProgram, "useTexture", 0);
@@ -216,12 +216,14 @@ void Skybox::draw(GLuint shaderProgram)
 
     glEnable(GL_CULL_FACE);
     glFrontFace(GL_CCW);	// cube is CW, but we are viewing the inside
-    glDisable(GL_DEPTH_TEST);
+
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LEQUAL);
 
     glDrawArrays(GL_TRIANGLES, 0, 36);
 
     glDisable(GL_CULL_FACE);
-    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
 
     glBindVertexArray(0);
 }
