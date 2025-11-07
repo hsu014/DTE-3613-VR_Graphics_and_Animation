@@ -117,6 +117,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>C:\Users\hogne\Programmering\DTE-3613_VR_Graphics\Marble_Run_Project\src\ImGui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -133,6 +134,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>C:\Users\hogne\Programmering\DTE-3613_VR_Graphics\Marble_Run_Project\src\ImGui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -145,9 +147,16 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\camera.cpp" />
+    <ClCompile Include="src\ImGui\backends\imgui_impl_glfw.cpp" />
+    <ClCompile Include="src\ImGui\imgui.cpp" />
+    <ClCompile Include="src\ImGui\imgui_demo.cpp" />
+    <ClCompile Include="src\ImGui\imgui_draw.cpp" />
+    <ClCompile Include="src\ImGui\imgui_tables.cpp" />
+    <ClCompile Include="src\ImGui\imgui_widgets.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\particle_emitter.cpp" />
     <ClCompile Include="src\scene.cpp" />
+    <ClCompile Include="src\shadowMap.cpp" />
     <ClCompile Include="src\shape.cpp" />
     <ClCompile Include="src\Utils.cpp" />
   </ItemGroup>
@@ -156,6 +165,7 @@
     <ClInclude Include="src\particle_emitter.h" />
     <ClInclude Include="src\render_info.h" />
     <ClInclude Include="src\scene.h" />
+    <ClInclude Include="src\shadowMap.h" />
     <ClInclude Include="src\shape.h" />
     <ClInclude Include="src\structs.h" />
     <ClInclude Include="src\Utils.h" />
@@ -192,10 +202,12 @@
     <None Include="src\shader\fragmentShader.glsl" />
     <None Include="src\shader\fragmentShaderParticle.glsl" />
     <None Include="src\shader\fragmentShaderPhong.glsl" />
+    <None Include="src\shader\fragmentShaderShadow.glsl" />
     <None Include="src\shader\fragmentShaderSkybox.glsl" />
     <None Include="src\shader\vertexShader.glsl" />
     <None Include="src\shader\vertexShaderParticle.glsl" />
     <None Include="src\shader\vertexShaderPhong.glsl" />
+    <None Include="src\shader\vertexShaderShadow.glsl" />
     <None Include="src\shader\vertexShaderSkybox.glsl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
