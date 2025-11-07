@@ -75,8 +75,8 @@ public:
 	std::vector<Skybox*> mSkybox;
 
 	// Shadow map
-	const GLuint mSHADOW_WIDTH = 2048;
-	const GLuint mSHADOW_HEIGHT = 2048;
+	const GLuint mSHADOW_WIDTH = 8192;
+	const GLuint mSHADOW_HEIGHT = 8192;
 	GLuint FBO;
 	GLuint mShadowMap;
 	glm::mat4 mLightSpaceMatrix;

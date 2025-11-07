@@ -39,6 +39,7 @@ void Scene::initShadowMap()
 void Scene::updateLightSpaceMatrix()
 {
 	glm::vec3 lightBoxPos = {0.0f, 0.0f, 0.0f};
+	lightBoxPos = mCameraPos;
 	glm::vec3 lightInvDir = glm::normalize(mLights.directional[0].direction * -1.0f);
 
 	if (lightInvDir.y == 1.0f) // Fix edge case
@@ -46,7 +47,7 @@ void Scene::updateLightSpaceMatrix()
 		lightInvDir = glm::normalize(glm::vec3{ 0.0f, 1.0, -0.000000001 });
 	}
 
-	float orthoSize = 20.0f;
+	float orthoSize = 25.0f;
 
 	glm::mat4 lightProjection = glm::ortho(-orthoSize, orthoSize, -orthoSize, orthoSize, 1.0f, orthoSize*2.0f);
 
@@ -75,7 +76,7 @@ void Scene::update(Camera& camera)
 	mCameraPos = camera.getCameraPos();
 
 	// if dir light moves:
-	// updateLightSpaceMatrix();
+	updateLightSpaceMatrix();
 }
 
 void Scene::setShaders(GLuint basicShader, GLuint phongShader, GLuint skyboxShader, GLuint shadowMapShader)
