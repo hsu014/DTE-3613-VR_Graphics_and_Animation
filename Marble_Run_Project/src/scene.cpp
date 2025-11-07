@@ -58,15 +58,6 @@ void Scene::updateLightSpaceMatrix()
 	mLightSpaceMatrix = lightProjection * lightView;
 }
 
-void Scene::update(glm::mat4 viewMatrix, glm::mat4 projectionMatrix, glm::vec3 cameraPos)
-{
-	mViewMatrix = viewMatrix;
-	mProjectionMatrix = projectionMatrix;
-	mCameraUp = glm::vec3(mViewMatrix[0][1], mViewMatrix[1][1], mViewMatrix[2][1]);
-	mCameraFront = glm::vec3(mViewMatrix[0][2], mViewMatrix[1][2], mViewMatrix[2][2]);
-	mCameraPos = cameraPos;
-}
-
 void Scene::update(Camera& camera)
 {
 	mViewMatrix = camera.getViewMatrix();
@@ -74,6 +65,7 @@ void Scene::update(Camera& camera)
 	mCameraUp = camera.getCameraUp();
 	mCameraFront = camera.getCameraFront();
 	mCameraPos = camera.getCameraPos();
+	mDt = camera.mDt;
 
 	// if dir light moves:
 	updateLightSpaceMatrix();
@@ -88,7 +80,7 @@ void Scene::setShaders(GLuint basicShader, GLuint phongShader, GLuint skyboxShad
 	mShadowMapShader = shadowMapShader;
 }
 
-void Scene::setParticleShaders(GLuint particleShader)
+void Scene::setParticleShader(GLuint particleShader)
 {
 	mParticleShader = particleShader;
 }
@@ -131,6 +123,11 @@ void Scene::addBaseShape(Shape* shape)
 void Scene::addPhongShape(Shape* shape)
 {
 	mPhongShapes.push_back(shape);
+}
+
+void Scene::addEmitter(Emitter* emitter)
+{
+	mEmitters.push_back(emitter);
 }
 
 
@@ -196,8 +193,8 @@ void Scene::prepareShaderParticle()
 	glUseProgram(shaderProgram);
 	shaderSetMat4(shaderProgram, "uView", mViewMatrix);
 	shaderSetMat4(shaderProgram, "uProjection", mProjectionMatrix);
-	shaderSetVec3(shaderProgram, "cameraUp", mCameraUp);
-	shaderSetVec3(shaderProgram, "cameraFront", mCameraFront);
+	shaderSetVec3(shaderProgram, "uCameraUp", mCameraUp);
+	shaderSetVec3(shaderProgram, "uCameraFront", mCameraFront);
 }
 
 void Scene::prepareShaderShadowMap()
@@ -257,6 +254,15 @@ void Scene::drawPhongShapes()
 	}
 }
 
+void Scene::drawEmitters()
+{
+	prepareShaderParticle();
+	for (Emitter* emitter : mEmitters) {
+		emitter->updateParticles(mDt);
+		emitter->renderParticles(mParticleShader);
+	}
+}
+
 void Scene::draw()
 {
 	glClearColor(0.2f, 0.0f, 0.3f, 1.0f);
@@ -265,4 +271,6 @@ void Scene::draw()
 	drawPhongShapes();
 	drawBaseShapes();
 	drawSkybox();
+	drawEmitters();
+	
 }

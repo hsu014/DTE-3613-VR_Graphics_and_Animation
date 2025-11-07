@@ -21,7 +21,7 @@ struct RenderInfo {
     Bullet bullet;
 
     Camera* camera = nullptr;
-    //Scene scene;
+    // Scene scene;
     // Move to scene:
-    Emitter emitter;
+    // Emitter emitter;
 };

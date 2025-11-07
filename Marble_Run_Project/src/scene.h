@@ -14,9 +14,6 @@
 #include "camera.h"
 
 class Scene {
-private:
-	
-
 public:
 	Scene(GLFWwindow* window);
 	~Scene();
@@ -24,11 +21,10 @@ public:
 	void initShadowMap();
 
 	void updateLightSpaceMatrix();
-	void update(glm::mat4 viewMatrix, glm::mat4 projectionMatrix, glm::vec3 cameraPos);
 	void update(Camera& camera);
 
 	void setShaders(GLuint basicShader, GLuint phongShader, GLuint skyboxShader, GLuint shadowMapShader);
-	void setParticleShaders(GLuint particleShader);
+	void setParticleShader(GLuint particleShader);
 
 	void setAmbientLight(glm::vec4 color);
 	void addDirectionLight(DirectionalLight light);
@@ -37,29 +33,28 @@ public:
 	void addSkybox(Skybox* skybox);
 	void addBaseShape(Shape* shape);
 	void addPhongShape(Shape* shape);
-	//void addEmitter(Emitter* shape);
+	void addEmitter(Emitter* emitter);
 
 	void prepareShaderSkybox();
 	void prepareShaderBasic();
 	void prepareShaderPhong();
 	void prepareShaderParticle();
 	void prepareShaderShadowMap();
-	//void prepareShaderEmitter();
 	
 	void drawSkybox();
 	void drawBaseShapes();
 	void drawPhongShapes();
-	//void drawEmitters();
+	void drawEmitters();
 
 	void draw();
 
 	GLFWwindow* mWindow;
+	double mDt = 0.0;
 
 	GLuint mBasicShader;
 	GLuint mPhongShader;
 	GLuint mSkyboxShader;
 	GLuint mShadowMapShader;
-
 	GLuint mParticleShader;
 
 	glm::mat4 mViewMatrix;
@@ -71,6 +66,7 @@ public:
 	Light mLights;
 	std::vector<Shape*> mBasicShapes;
 	std::vector<Shape*> mPhongShapes;
+	std::vector<Emitter*> mEmitters;
 	std::vector<Skybox*> mSkybox;
 
 	// Shadow map

@@ -92,10 +92,12 @@ int main()
     GLuint shaderProgramBase = Utils::createShaderProgram("src/shader/vertexShader.glsl", "src/shader/fragmentShader.glsl");
     GLuint shaderProgramPhong = Utils::createShaderProgram("src/shader/vertexShaderPhong.glsl", "src/shader/fragmentShaderPhong.glsl");
     GLuint shaderProgramSkybox = Utils::createShaderProgram("src/shader/vertexShaderSkybox.glsl", "src/shader/fragmentShaderSkybox.glsl");
-    GLuint shaderProgramParticle = Utils::createShaderProgram("src/shader/vertexShaderParticle.glsl", "src/shader/fragmentShaderParticle.glsl");
     GLuint shaderProgramShadowMap = Utils::createShaderProgram("src/shader/vertexShaderShadow.glsl", "src/shader/fragmentShaderShadow.glsl");
+    GLuint shaderProgramParticle = Utils::createShaderProgram("src/shader/vertexShaderParticle.glsl", "src/shader/fragmentShaderParticle.glsl");
     
     scene.setShaders(shaderProgramBase, shaderProgramPhong, shaderProgramSkybox, shaderProgramShadowMap);
+    scene.setParticleShader(shaderProgramParticle);
+
     Skybox* skybox = new Skybox(ri.skyboxTexture["sky_42"]);
     scene.addSkybox(skybox);
     createLights(scene);
@@ -120,8 +122,8 @@ int main()
     glDeleteProgram(shaderProgramBase);
     glDeleteProgram(shaderProgramPhong);
     glDeleteProgram(shaderProgramSkybox);
-    glDeleteProgram(shaderProgramParticle);
     glDeleteProgram(shaderProgramShadowMap);
+    glDeleteProgram(shaderProgramParticle);
 
     // Shutdown bullet
     delete ri.bullet.pWorld;
@@ -279,6 +281,12 @@ void createShapes(RenderInfo& ri, Scene& scene)
     sphere->setModelMatrix(modelMatrix);
     scene.addPhongShape(sphere);
 
+    // Emitter
+    Emitter* flameEmitter = new FlameEmitter(100, 2.0f, 0.2f, 0.1f, ri.texture["particle"]);
+    flameEmitter->setPosition({5,0,0});
+
+    scene.addEmitter(flameEmitter);
+
 }
 
 void testBulletShapes(RenderInfo& ri, Scene& scene)
@@ -320,7 +328,7 @@ void testBulletShapes(RenderInfo& ri, Scene& scene)
     glm::mat4 modelMatrix = glm::mat4(1.0f);
 
     btScalar mass = 1.0f;
-    btScalar radius = 1.2f;
+    btScalar radius = 0.7f;
 
     // 1. Create the collision shape
     btCollisionShape* sphereShape = new btSphereShape(radius);
@@ -349,7 +357,7 @@ void testBulletShapes(RenderInfo& ri, Scene& scene)
     sphereRigidBody->setFriction(0.8f);     // rolling resistance
     sphereRigidBody->setActivationState(DISABLE_DEACTIVATION);
     //sphereRigidBody->setLinearVelocity(btVector3(0.3f, 0.0f, 0.0f));
-    sphereRigidBody->setAngularVelocity(btVector3(0.0f, 0.0f, -1.0f));
+    sphereRigidBody->setAngularVelocity(btVector3(0.0f, 0.0f, -3.0f));
 
     ri.bullet.pWorld->addRigidBody(sphereRigidBody);
 
@@ -363,6 +371,12 @@ void testBulletShapes(RenderInfo& ri, Scene& scene)
     sphere->castShadow();
     sphere->setPBody(sphereRigidBody);
     scene.addPhongShape(sphere);
+
+    // Emitter
+    Emitter* flameEmitter = new FlameEmitter(400, 1.0f, radius*1.2, 0.1f, ri.texture["particle"]);
+    flameEmitter->setPBody(sphereRigidBody);
+
+    scene.addEmitter(flameEmitter);
 
 }
 

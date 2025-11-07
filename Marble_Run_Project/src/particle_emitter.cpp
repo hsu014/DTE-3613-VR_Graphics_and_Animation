@@ -1,37 +1,27 @@
 #include "particle_emitter.h"
 
-
-Emitter::Emitter() { }
-
-Emitter::Emitter(
-    int particlesPerSecond=0, float particleLifetime=0, float radius=0, GLuint texture=0) :
+Emitter::Emitter(int particlesPerSecond, float particleLifetime, float radius, float particleSize, GLuint texture) :
     mNumNewParticles(particlesPerSecond), mParticleLifetime(particleLifetime),
-    mRadius(radius), mTexture(texture)
+    mSize(particleSize), mRadius(radius), mTexture(texture)
 {
-    mNumParticles = mNumNewParticles * mParticleLifetime * 1.5;
     initializeParticles();
 }
 
-Emitter::~Emitter()
+Emitter::~Emitter() 
 {
-}
-
-void Emitter::resetParticle(Particle& p)
-{
-    p.position = {0.0f, 0.0f, 0.0f };
-    p.velocity = {0.0f, 0.0f, 0.0f };
-    p.color = {1.0f, 1.0f, 1.0f, 1.0f };
-    p.life = 0.0f;
-    p.size = 1.0f;
+    if (VAO) glDeleteVertexArrays(1, &VAO);
+    if (VBO) glDeleteBuffers(2, VBO);
+    if (EBO) glDeleteBuffers(1, &EBO);
 }
 
 void Emitter::initializeParticles()
 {
+    mNumParticles = mNumNewParticles * mParticleLifetime * 1.5;
     mParticlesContainer.resize(mNumParticles, Particle());
 
     // Fill buffers
-    float size = 0.08f;
-    
+    float size = 0.1f;
+
     float vertices[] = {
          -size, -size, 0.0f,
           size, -size, 0.0f,
@@ -47,8 +37,8 @@ void Emitter::initializeParticles()
     };
 
     unsigned int indices[] = {
-        0, 1, 2,  // first Triangle
-        2, 3, 0   // second Triangle
+        0, 2, 1,  // first Triangle
+        2, 0, 3,  // second Triangle
     };
 
     glGenVertexArrays(1, &VAO);
@@ -75,7 +65,20 @@ void Emitter::initializeParticles()
 
     // Unbind VAO
     glBindVertexArray(0);
+}
 
+void Emitter::setPosition(glm::vec3 position)
+{
+    mPosition = position;
+}
+
+void Emitter::resetParticle(Particle& p)
+{
+    p.position = {0.0f, 0.0f, 0.0f };
+    p.velocity = {0.0f, 0.0f, 0.0f };
+    p.color = {1.0f, 1.0f, 1.0f, 1.0f };
+    p.life = 0.0f;
+    p.size = 1.0f;
 }
 
 int Emitter::findUnusedParticle()
@@ -97,56 +100,31 @@ int Emitter::findUnusedParticle()
 	return 0;
 }
 
-void Emitter::updateParticles(double dt)
+void Emitter::setPBody(btRigidBody* pBody)
 {
-    for (Particle& p : mParticlesContainer) {
-        p.life -= dt;
+    m_pBody = pBody;
 
-        if (p.life > 0.0) {
-            p.position += p.velocity * float(dt);
-            p.velocity.y += 0.5f * dt;  // upward acceleration
-            p.color.a = std::min(p.color.a, p.life / 2.0f);
-            p.size = std::min(p.size, p.life / 2.0f);
-            
-        }
-        else {
-            resetParticle(p);
-        }
-    }
-    
-    // Spawn new particles:
-    for (int i = 0; i < int(mNumNewParticles * dt); i++) {
-        int p_idx = findUnusedParticle();
-        Particle& p = mParticlesContainer[p_idx];
+    btTransform trans;
+    m_pBody->getMotionState()->getWorldTransform(trans);
 
-        float angle = glm::linearRand(0.0f, 2.0f * glm::pi<float>());
-        float distance = glm::linearRand(0.0f, mRadius);
-
-        p.position = {
-            cos(angle)* distance,
-            0.0f,
-            sin(angle) * distance
-        };
-
-        p.velocity = {
-            glm::linearRand(-0.2f, 0.2f),
-            glm::linearRand(0.2f, 1.0f),
-            glm::linearRand(-0.2f, 0.2f)
-        };
-        
-        p.color = {
-            glm::linearRand(0.7f, 1.0f),
-            glm::linearRand(0.1f, 0.7f),
-            0.0f,
-            0.4f
-        };
-        
-        p.life = mParticleLifetime;
-    }
+    btVector3 pos = trans.getOrigin();
+    mPosition = glm::vec3(pos.getX(), pos.getY(), pos.getZ());
 }
 
 void Emitter::renderParticles(GLuint shaderProgram)
 {
+    if (m_pBody) {
+        btTransform trans;
+        m_pBody->getMotionState()->getWorldTransform(trans);
+
+        btVector3 pos = trans.getOrigin();
+        mPosition = glm::vec3(pos.getX(), pos.getY(), pos.getZ());
+    }
+
+    // Activate texture
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, mTexture);
+
     // set the texture wrapping parameters
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -154,10 +132,6 @@ void Emitter::renderParticles(GLuint shaderProgram)
     // set texture filtering parameters
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    // Activate texture
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, mTexture);
 
     glBindVertexArray(VAO);
 
@@ -186,4 +160,55 @@ void Emitter::renderParticles(GLuint shaderProgram)
     glDepthMask(GL_TRUE);
     glDisable(GL_BLEND);
 
+}
+
+
+
+void FlameEmitter::updateParticles(double dt)
+{
+    for (Particle& p : mParticlesContainer) {
+        p.life -= dt;
+
+        if (p.life > 0.0) {
+            p.position += p.velocity * float(dt);
+            p.velocity.y += 0.5f * dt;  // upward acceleration
+            p.color.a = std::min(p.color.a, p.life / mParticleLifetime + 0.5f);
+            p.size = std::min(p.size, p.life / mParticleLifetime);
+        }
+        else {
+            resetParticle(p);
+        }
+    }
+
+    // Spawn new particles:
+    for (int i = 0; i < int(mNumNewParticles * dt); i++) {
+        int p_idx = findUnusedParticle();
+        Particle& p = mParticlesContainer[p_idx];
+
+        float angle = glm::linearRand(0.0f, 2.0f * glm::pi<float>());
+        float distance = glm::linearRand(0.0f, mRadius);
+
+        p.position = {
+            cos(angle) * distance,
+            0.0f,
+            sin(angle) * distance
+        };
+        
+        p.velocity = {
+            glm::linearRand(-0.2f, 0.2f), // x
+            glm::linearRand(0.2f, 2.0f),  // y
+            glm::linearRand(-0.2f, 0.2f)  // z
+        };
+
+        p.color = {
+            glm::linearRand(0.7f, 1.0f),
+            glm::linearRand(0.1f, 0.7f),
+            0.0f,
+            0.4f
+        };
+
+        // Same for all
+        p.life = mParticleLifetime;
+        p.position += mPosition;
+    }
 }

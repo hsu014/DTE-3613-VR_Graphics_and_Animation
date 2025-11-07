@@ -58,10 +58,10 @@ public:
 };
 
 class Skybox : public Shape {
-    public:
-        Skybox(GLuint texture);
-        void fillBuffers() override;
-        void draw(GLuint shaderProgram);
+public:
+    Skybox(GLuint texture);
+    void fillBuffers() override;
+    void draw(GLuint shaderProgram);
 };
 
 class Box : public Shape {

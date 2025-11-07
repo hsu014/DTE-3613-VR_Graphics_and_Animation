@@ -6,6 +6,9 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
+#include <BulletDynamics/Dynamics/btDynamicsWorld.h>
+#include <btBulletDynamicsCommon.h>
+
 #include "Utils.h"
 
 
@@ -21,34 +24,46 @@ struct Particle {
 };
 
 
-class Emitter
-{
-private:
-
+class Emitter {
 public:
-	std::vector<Particle> mParticlesContainer;
-	int mLastUsedParticle = 0;
-	int mNumParticles;
-	int mNumNewParticles;
-	double mParticleLifetime;
-	float mRadius;
-	GLuint mTexture;
+	//Emitter();
+	Emitter(int particlesPerSecond=0, float particleLifetime=0, float radius=0, float particleSize=0.1, GLuint texture=0);
+	~Emitter();
 
+	void initializeParticles();
+	void setPosition(glm::vec3 position);
+	void resetParticle(Particle& p);
+	int findUnusedParticle();
+	void setPBody(btRigidBody* pBody);
+
+	virtual void updateParticles(double dt) = 0;
+	void renderParticles(GLuint shaderProgram);
+
+	/// Variables
 	GLuint VAO;
 	GLuint VBO[2];
 	// 0 - position
 	// 1 - UV
 	GLuint EBO;
 
-	Emitter();
-	Emitter(int particlesPerSecond, float particleLifetime, float radius, GLuint texture);
-	~Emitter();
+	std::vector<Particle> mParticlesContainer;
+	int mLastUsedParticle = 0;
+	int mNumParticles;
+	int mNumNewParticles;
+	float mParticleLifetime;
+	float mRadius;
+	float mSize;
 
-	void resetParticle(Particle& p);
-	void initializeParticles();
-	int findUnusedParticle();
-	void updateParticles(double dt);
-	void renderParticles(GLuint shaderProgram);
+	GLuint mTexture;
+	glm::vec3 mPosition = glm::vec3(0.0f);
+	btRigidBody* m_pBody = nullptr;
+};
+
+class FlameEmitter : public Emitter {
+public:
+	using Emitter::Emitter;
+	//FlameEmitter(int particlesPerSecond = 0, float particleLifetime = 0, float radius = 0, float particleSize = 0.1, GLuint texture = 0);
+	void updateParticles(double dt) override;
 };
 
 

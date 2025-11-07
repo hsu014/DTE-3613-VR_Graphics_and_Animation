@@ -3,7 +3,7 @@
 Shape::~Shape()
 {
     if (VAO) glDeleteVertexArrays(1, &VAO);
-    if (VBO) glDeleteBuffers(2, VBO);
+    if (VBO) glDeleteBuffers(4, VBO);
     if (EBO) glDeleteBuffers(1, &EBO);
 }
 
@@ -96,7 +96,6 @@ void Shape::draw(GLuint shaderProgram)
         trans.getOpenGLMatrix(matrix);
         
         mModelMatrix = glm::make_mat4(matrix);
-
     }
 
     shaderSetMat4(shaderProgram, "uModel", mModelMatrix);
