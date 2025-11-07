@@ -41,8 +41,6 @@ void drawEmitter(RenderInfo& ri); // Move to scene later
 // settings 
 unsigned int SCR_WIDTH = 1600;
 unsigned int SCR_HEIGHT = 1200;
-// unsigned int SCR_WIDTH = 1100;
-// unsigned int SCR_HEIGHT = 800;
 
 const double CAMERA_SPEED = 4;
 const double CAMERA_ROT_SPEED = 8;

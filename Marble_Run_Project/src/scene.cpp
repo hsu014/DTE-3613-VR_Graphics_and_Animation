@@ -79,6 +79,7 @@ void Scene::update(Camera& camera)
 	updateLightSpaceMatrix();
 }
 
+
 void Scene::setShaders(GLuint basicShader, GLuint phongShader, GLuint skyboxShader, GLuint shadowMapShader)
 {
 	mBasicShader = basicShader;
@@ -91,6 +92,7 @@ void Scene::setParticleShaders(GLuint particleShader)
 {
 	mParticleShader = particleShader;
 }
+
 
 void Scene::setAmbientLight(glm::vec4 color)
 {
@@ -130,6 +132,7 @@ void Scene::addPhongShape(Shape* shape)
 {
 	mPhongShapes.push_back(shape);
 }
+
 
 void Scene::prepareShaderSkybox()
 {
@@ -203,6 +206,7 @@ void Scene::prepareShaderShadowMap()
 	glUseProgram(shaderProgram);
 	shaderSetMat4(shaderProgram, "uLightSpaceMatrix", mLightSpaceMatrix);
 }
+
 
 void Scene::drawSkybox()
 {

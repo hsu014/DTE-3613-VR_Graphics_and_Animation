@@ -7,7 +7,6 @@
 #include <vector>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-//#include <glm/gtc/type_ptr.hpp>
 
 #include "shape.h"
 #include "particle_emitter.h"
@@ -82,13 +81,6 @@ public:
 	glm::mat4 mLightSpaceMatrix;
 
 };
-
-
-
-/*
-Shadow map
-  Must know screen size
-*/
 
 
 /*

@@ -156,7 +156,6 @@
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\particle_emitter.cpp" />
     <ClCompile Include="src\scene.cpp" />
-    <ClCompile Include="src\shadowMap.cpp" />
     <ClCompile Include="src\shape.cpp" />
     <ClCompile Include="src\Utils.cpp" />
   </ItemGroup>
@@ -165,7 +164,6 @@
     <ClInclude Include="src\particle_emitter.h" />
     <ClInclude Include="src\render_info.h" />
     <ClInclude Include="src\scene.h" />
-    <ClInclude Include="src\shadowMap.h" />
     <ClInclude Include="src\shape.h" />
     <ClInclude Include="src\structs.h" />
     <ClInclude Include="src\Utils.h" />
