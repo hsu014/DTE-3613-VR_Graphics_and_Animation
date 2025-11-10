@@ -89,7 +89,7 @@ int main()
     glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 
     // Compile and link shaders
-    GLuint shaderProgramBase = Utils::createShaderProgram("src/shader/vertexShader.glsl", "src/shader/fragmentShader.glsl");
+    GLuint shaderProgramBase = Utils::createShaderProgram("src/shader/vertexShaderBase.glsl", "src/shader/fragmentShaderBase.glsl");
     GLuint shaderProgramPhong = Utils::createShaderProgram("src/shader/vertexShaderPhong.glsl", "src/shader/fragmentShaderPhong.glsl");
     GLuint shaderProgramSkybox = Utils::createShaderProgram("src/shader/vertexShaderSkybox.glsl", "src/shader/fragmentShaderSkybox.glsl");
     GLuint shaderProgramShadowMap = Utils::createShaderProgram("src/shader/vertexShaderShadow.glsl", "src/shader/fragmentShaderShadow.glsl");
@@ -282,10 +282,13 @@ void createShapes(RenderInfo& ri, Scene& scene)
     scene.addPhongShape(sphere);
 
     // Emitter
-    Emitter* flameEmitter = new FlameEmitter(100, 2.0f, 0.2f, 0.1f, ri.texture["particle"]);
-    flameEmitter->setPosition({5,0,0});
+    //Emitter* flameEmitter = new FlameEmitter(100, 2.0f, 0.5f, 0.1f, ri.texture["particle"]);
+    //flameEmitter->setPosition({5,0,0});
+    //scene.addEmitter(flameEmitter);
 
-    scene.addEmitter(flameEmitter);
+    //Emitter* smokeEmitter = new SmokeEmitter(100, 5.0f, 0.5f, 0.05f, ri.texture["particle"]);
+    //smokeEmitter->setPosition({ 5,0,0 });
+    //scene.addEmitter(smokeEmitter);
 
 }
 
@@ -353,8 +356,8 @@ void testBulletShapes(RenderInfo& ri, Scene& scene)
         sphereInertia);
 
     btRigidBody* sphereRigidBody = new btRigidBody(sphereRigidBodyCI);
-    sphereRigidBody->setRestitution(0.6f);  // bounciness
-    sphereRigidBody->setFriction(0.8f);     // rolling resistance
+    sphereRigidBody->setRestitution(0.6f);      // bounciness
+    sphereRigidBody->setFriction(0.8f);         // rolling resistance
     sphereRigidBody->setActivationState(DISABLE_DEACTIVATION);
     //sphereRigidBody->setLinearVelocity(btVector3(0.3f, 0.0f, 0.0f));
     sphereRigidBody->setAngularVelocity(btVector3(0.0f, 0.0f, -3.0f));
@@ -373,10 +376,13 @@ void testBulletShapes(RenderInfo& ri, Scene& scene)
     scene.addPhongShape(sphere);
 
     // Emitter
-    Emitter* flameEmitter = new FlameEmitter(400, 1.0f, radius*1.2, 0.1f, ri.texture["particle"]);
+    Emitter* flameEmitter = new FlameEmitter(400, 1.0f, radius * 1.2, 0.1f, ri.texture["particle"]);
     flameEmitter->setPBody(sphereRigidBody);
-
     scene.addEmitter(flameEmitter);
+
+    Emitter* smokeEmitter = new SmokeEmitter(200, 5.0f, radius * 1.2, 0.05f, ri.texture["particle"]);
+    smokeEmitter->setPBody(sphereRigidBody);
+    scene.addEmitter(smokeEmitter);
 
 }
 

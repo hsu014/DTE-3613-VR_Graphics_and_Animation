@@ -62,8 +62,13 @@ public:
 class FlameEmitter : public Emitter {
 public:
 	using Emitter::Emitter;
-	//FlameEmitter(int particlesPerSecond = 0, float particleLifetime = 0, float radius = 0, float particleSize = 0.1, GLuint texture = 0);
-	void updateParticles(double dt) override;
+	void updateParticles(float dt) override;
+};
+
+class SmokeEmitter : public Emitter {
+public:
+	using Emitter::Emitter;
+	void updateParticles(float dt) override;
 };
 
 

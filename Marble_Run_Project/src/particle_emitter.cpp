@@ -20,7 +20,7 @@ void Emitter::initializeParticles()
     mParticlesContainer.resize(mNumParticles, Particle());
 
     // Fill buffers
-    float size = 0.1f;
+    float size = 1.0f;
 
     float vertices[] = {
          -size, -size, 0.0f,
@@ -78,7 +78,7 @@ void Emitter::resetParticle(Particle& p)
     p.velocity = {0.0f, 0.0f, 0.0f };
     p.color = {1.0f, 1.0f, 1.0f, 1.0f };
     p.life = 0.0f;
-    p.size = 1.0f;
+    p.size = mSize;
 }
 
 int Emitter::findUnusedParticle()
@@ -150,7 +150,7 @@ void Emitter::renderParticles(GLuint shaderProgram)
 
             glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
-            active_p++;  
+            active_p++;
         }
     }
     // std::cout << active_p << " of " << mNumParticles << " active particles.\n";
@@ -164,16 +164,17 @@ void Emitter::renderParticles(GLuint shaderProgram)
 
 
 
-void FlameEmitter::updateParticles(double dt)
+void FlameEmitter::updateParticles(float dt)
 {
     for (Particle& p : mParticlesContainer) {
         p.life -= dt;
 
         if (p.life > 0.0) {
+            float lifeSpan = p.life / mParticleLifetime;    // % of life remaining, [1, 0]
             p.position += p.velocity * float(dt);
-            p.velocity.y += 0.5f * dt;  // upward acceleration
-            p.color.a = std::min(p.color.a, p.life / mParticleLifetime + 0.5f);
-            p.size = std::min(p.size, p.life / mParticleLifetime);
+            p.velocity.y += 0.5f * dt;
+            p.color.a = std::min(p.color.a, lifeSpan);
+            p.size = std::min(p.size, (lifeSpan * 2) * mSize);
         }
         else {
             resetParticle(p);
@@ -193,7 +194,7 @@ void FlameEmitter::updateParticles(double dt)
             0.0f,
             sin(angle) * distance
         };
-        
+
         p.velocity = {
             glm::linearRand(-0.2f, 0.2f), // x
             glm::linearRand(0.2f, 2.0f),  // y
@@ -207,8 +208,67 @@ void FlameEmitter::updateParticles(double dt)
             0.4f
         };
 
-        // Same for all
         p.life = mParticleLifetime;
         p.position += mPosition;
     }
+}
+
+
+
+void SmokeEmitter::updateParticles(float dt)
+{
+    for (Particle& p : mParticlesContainer) {
+        p.life -= dt;
+
+        if (p.life > 0.0) {
+            float lifeSpan = p.life / mParticleLifetime;    // % of life remaining, [1, 0]
+            float color = p.color.r;
+            color = std::max(color, (1.0f - lifeSpan - 0.1f));
+
+            p.position += p.velocity * float(dt);
+            p.velocity.y = std::max(p.velocity.y - 0.12f * dt, 0.01f);
+
+            p.color.r = color;
+            p.color.g = color;
+            p.color.b = color;
+            p.color.a = std::min(p.color.a, lifeSpan);
+            p.size = std::max(p.size, (1.0f - lifeSpan) * 4.0f * mSize);
+        }
+        else {
+            resetParticle(p);
+        }
+    }
+
+    // Spawn new particles:
+    for (int i = 0; i < int(mNumNewParticles * dt); i++) {
+        int p_idx = findUnusedParticle();
+        Particle& p = mParticlesContainer[p_idx];
+
+        float angle = glm::linearRand(0.0f, 2.0f * glm::pi<float>());
+        float distance = glm::linearRand(0.0f, mRadius);
+        float color = glm::linearRand(0.2f, 0.5f);
+
+        p.position = {
+            cos(angle) * distance,
+            0.0f,
+            sin(angle) * distance
+        };
+
+        p.velocity = {
+            glm::linearRand(-0.1f, 0.1f), // x
+            glm::linearRand(1.0f, 1.8f),  // y
+            glm::linearRand(-0.1f, 0.1f)  // z
+        };
+
+        p.color = {
+            color,
+            color,
+            color,
+            0.4f
+        };
+
+        p.life = mParticleLifetime;
+        p.position += mPosition;
+    }
+
 }
