@@ -526,6 +526,9 @@ void Pyramid::fillBuffers()
     fillNormalBuffer(normals);
     fillIndexBuffer(indices);
 
+    mVertices = vertices;
+    mIndices = indices;
+
     // Unbind VAO
     glBindVertexArray(0);
 }

@@ -44,6 +44,8 @@ public:
     GLuint mTexture;
     bool mCastShadow = false;
     bool mRecieveShadow = false;
+    std::vector<float> mVertices;
+    std::vector<unsigned int> mIndices;
 
     // Material
     glm::vec4 mAmbient = glm::vec4(1.0f);

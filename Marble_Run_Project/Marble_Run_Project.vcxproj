@@ -146,6 +146,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\bulletHelpers.cpp" />
     <ClCompile Include="src\camera.cpp" />
     <ClCompile Include="src\ImGui\backends\imgui_impl_glfw.cpp" />
     <ClCompile Include="src\ImGui\imgui.cpp" />
@@ -160,6 +161,7 @@
     <ClCompile Include="src\Utils.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\bulletHelpers.h" />
     <ClInclude Include="src\camera.h" />
     <ClInclude Include="src\particle_emitter.h" />
     <ClInclude Include="src\render_info.h" />

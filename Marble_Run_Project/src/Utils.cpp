@@ -221,3 +221,4 @@ void shaderSetInt(GLuint shaderProgram, const char* name, int value)
 {
 	glUniform1i(glGetUniformLocation(shaderProgram, name), value);
 }
+

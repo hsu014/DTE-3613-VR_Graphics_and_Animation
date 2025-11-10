@@ -12,6 +12,7 @@
 #include "render_info.h"
 #include "camera.h"
 #include "scene.h"
+#include "bulletHelpers.h"
 
 #include <BulletDynamics/Dynamics/btDynamicsWorld.h>
 #include <btBulletDynamicsCommon.h>
@@ -235,8 +236,8 @@ void createShapes(RenderInfo& ri, Scene& scene)
 
     // Boxes:
     middle_pos = { 0.0, 3.0, 0.0 };
-    num_x = 10;
-    num_y = 4;
+    num_x = 0;
+    num_y = 0;
     for (int i = 0; i < num_x; i++) {
         for (int j = 0; j < num_y; j++) {
             float x = middle_pos.x - (num_x / 2.0f) + i;
@@ -264,14 +265,14 @@ void createShapes(RenderInfo& ri, Scene& scene)
     box->setModelMatrix(modelMatrix);
     scene.addPhongShape(box);
    
-    Shape* pyramid = new Pyramid(2.0, 2.0, 2.0);
-    pyramid->setMaterial(material.ruby);
-    pyramid->useTexture(ri.texture["gray_brick"]);
-    pyramid->castShadow();
-    modelMatrix = glm::mat4(1.0f);
-    modelMatrix = glm::translate(modelMatrix, glm::vec3(-3.0f, 1.3f, -5.0f));
-    pyramid->setModelMatrix(modelMatrix);
-    scene.addPhongShape(pyramid);
+    //Shape* pyramid = new Pyramid(2.0, 2.0, 2.0);
+    //pyramid->setMaterial(material.ruby);
+    //pyramid->useTexture(ri.texture["gray_brick"]);
+    //pyramid->castShadow();
+    //modelMatrix = glm::mat4(1.0f);
+    //modelMatrix = glm::translate(modelMatrix, glm::vec3(-3.0f, 1.3f, -5.0f));
+    //pyramid->setModelMatrix(modelMatrix);
+    //scene.addPhongShape(pyramid);
 
     Shape* sphere = new Sphere(1.2);
     sphere->setMaterial(material.brass);
@@ -294,34 +295,18 @@ void createShapes(RenderInfo& ri, Scene& scene)
 
 void testBulletShapes(RenderInfo& ri, Scene& scene)
 {
-    // Plane normal pointing up (y-axis), and plane constant (distance from origin)
+    // Plane
+    btQuaternion q = quatFromYawPitchRoll(0.0f, 0.0f, 0.0f);
     btCollisionShape* groundShape = new btStaticPlaneShape(btVector3(0, 1, 0), 0);
+    btRigidBody* planeRigidBody = createStaticRigidBody(
+        groundShape, {0, 0, 0}, q, 0.6f, 0.5f);
 
-    // Default motion state: plane at world origin
-    btDefaultMotionState* groundMotionState =
-        new btDefaultMotionState(btTransform(btQuaternion(0, 0, 0, 1), btVector3(0, 0, 0)));
+    ri.bullet.pWorld->addRigidBody(planeRigidBody);
 
-    // Static body -> mass = 0
-    btRigidBody::btRigidBodyConstructionInfo groundRigidBodyCI(
-        0,                     // mass
-        groundMotionState,
-        groundShape,
-        btVector3(0, 0, 0));   // inertia (not used for static objects)
-
-    btRigidBody* groundRigidBody = new btRigidBody(groundRigidBodyCI);
-    groundRigidBody->setRestitution(0.6f);  // bounciness
-    groundRigidBody->setFriction(0.5f);     // rolling resistance
-    
-
-    // Optional: make sure it doesn’t get deactivated
-    //groundRigidBody->setActivationState(DISABLE_DEACTIVATION);
-
-    // Finally, add it to the world
-    ri.bullet.pWorld->addRigidBody(groundRigidBody);
-
-    Shape* plane = new Plane(50, 50);
+    Shape* plane = new Plane(100, 100);
     //plane->setMaterial(material.emerald);
     plane->useTexture(ri.texture["grass"]);
+    plane->setPBody(planeRigidBody);
     scene.addPhongShape(plane);
 
 
@@ -332,42 +317,15 @@ void testBulletShapes(RenderInfo& ri, Scene& scene)
 
     btScalar mass = 1.0f;
     btScalar radius = 0.7f;
+    btScalar restitution = 0.6f; 
+    btScalar friction = 0.8f;
 
-    // 1. Create the collision shape
-    btCollisionShape* sphereShape = new btSphereShape(radius);
-
-    // 2. Calculate the inertia for the given mass
-    btVector3 sphereInertia(0, 0, 0);
-    sphereShape->calculateLocalInertia(mass, sphereInertia);
-
-    // 3. Set the initial transform (position & rotation)
-    btTransform startTransform;
-    startTransform.setIdentity();
-    startTransform.setOrigin(btVector3(-2, 2, 2));
-
-    // 4. Create the motion state (keeps transform in sync)
-    btDefaultMotionState* sphereMotionState = new btDefaultMotionState(startTransform);
-
-    // 5. Construct the rigid body
-    btRigidBody::btRigidBodyConstructionInfo sphereRigidBodyCI(
-        mass,
-        sphereMotionState,
-        sphereShape,
-        sphereInertia);
-
-    btRigidBody* sphereRigidBody = new btRigidBody(sphereRigidBodyCI);
-    sphereRigidBody->setRestitution(0.6f);      // bounciness
-    sphereRigidBody->setFriction(0.8f);         // rolling resistance
-    sphereRigidBody->setActivationState(DISABLE_DEACTIVATION);
-    //sphereRigidBody->setLinearVelocity(btVector3(0.3f, 0.0f, 0.0f));
-    sphereRigidBody->setAngularVelocity(btVector3(0.0f, 0.0f, -3.0f));
+    btRigidBody* sphereRigidBody = createMarbleRigidBody(
+        mass, radius, { -2.0f, 4.0f, 0.0f }, restitution, friction);
 
     ri.bullet.pWorld->addRigidBody(sphereRigidBody);
-
-    // Use sphereRigidBody for followcam position
     ri.camera->setPBody(sphereRigidBody);
 
-    // Phong shape
     Shape* sphere = new Sphere(radius, 40, 40);
     sphere->setMaterial(material.brass);
     sphere->useTexture(ri.texture["wood"]);
@@ -375,7 +333,7 @@ void testBulletShapes(RenderInfo& ri, Scene& scene)
     sphere->setPBody(sphereRigidBody);
     scene.addPhongShape(sphere);
 
-    // Emitter
+    // Emitters
     Emitter* flameEmitter = new FlameEmitter(400, 1.0f, radius * 1.2, 0.1f, ri.texture["particle"]);
     flameEmitter->setPBody(sphereRigidBody);
     scene.addEmitter(flameEmitter);
@@ -383,6 +341,27 @@ void testBulletShapes(RenderInfo& ri, Scene& scene)
     Emitter* smokeEmitter = new SmokeEmitter(200, 5.0f, radius * 1.2, 0.05f, ri.texture["particle"]);
     smokeEmitter->setPBody(sphereRigidBody);
     scene.addEmitter(smokeEmitter);
+
+
+
+    // Test pyramid: 
+    Shape* pyramid = new Pyramid(10.0, 2.5, 10.0);
+    
+    // Rotate around z, y, x
+    q = quatFromYawPitchRoll(0.0f, 30.0f, 0.0f);
+    btTriangleMesh* mesh = createBtTriangleMesh(pyramid);
+    btRigidBody* pyramidRigidBody = createStaticRigidBody(
+        mesh, { -2.0, 1.0f, 0.1 }, q, 0.6f, 0.5f);
+
+    ri.bullet.pWorld->addRigidBody(pyramidRigidBody);
+
+    pyramid->setMaterial(material.ruby);
+    pyramid->useTexture(ri.texture["gray_brick"]);
+    pyramid->castShadow();
+    pyramid->setPBody(pyramidRigidBody);
+    scene.addPhongShape(pyramid);
+
+
 
 }
 
