@@ -36,7 +36,7 @@ public:
 	int findUnusedParticle();
 	void setPBody(btRigidBody* pBody);
 
-	virtual void updateParticles(double dt) = 0;
+	virtual void updateParticles(float dt) = 0;
 	void renderParticles(GLuint shaderProgram);
 
 	/// Variables

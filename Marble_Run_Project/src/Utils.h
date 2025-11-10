@@ -32,20 +32,6 @@ public:
 	static GLuint loadCubeMap(const char *mapDir);
 	static std::vector<std::vector<float>> loadHeightMap(const char* texImagePath);
 
-	static float* goldAmbient();
-	static float* goldDiffuse();
-	static float* goldSpecular();
-	static float goldShininess();
-
-	static float* silverAmbient();
-	static float* silverDiffuse();
-	static float* silverSpecular();
-	static float silverShininess();
-
-	static float* bronzeAmbient();
-	static float* bronzeDiffuse();
-	static float* bronzeSpecular();
-	static float bronzeShininess();
 };
 
 void shaderSetVec3(GLuint shaderProgram, const char* name, glm::vec3& value);

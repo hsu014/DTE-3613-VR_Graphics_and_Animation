@@ -180,7 +180,7 @@
     </Image>
   </ItemGroup>
   <ItemGroup>
-    <None Include="src\shader\fragmentShader.glsl">
+    <None Include="src\shader\fragmentShaderBase.glsl">
       <Filter>Resource Files\shader</Filter>
     </None>
     <None Include="src\shader\fragmentShaderParticle.glsl">
@@ -192,7 +192,7 @@
     <None Include="src\shader\fragmentShaderSkybox.glsl">
       <Filter>Resource Files\shader</Filter>
     </None>
-    <None Include="src\shader\vertexShader.glsl">
+    <None Include="src\shader\vertexShaderBase.glsl">
       <Filter>Resource Files\shader</Filter>
     </None>
     <None Include="src\shader\vertexShaderParticle.glsl">

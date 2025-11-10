@@ -143,10 +143,10 @@ float ShadowCalculation(vec4 fragPosLightSpace_, vec3 normal, vec3 lightDir)
 
     // Check if outside light frustum
     if (projCoords.z > 1.0) {
-        return 0.5;
+        return 0.0;
     }
     if (projCoords.z < 0.0) {
-        return 0.5;
+        return 0.0;
     }
 
     // Get closest depth from light's POV

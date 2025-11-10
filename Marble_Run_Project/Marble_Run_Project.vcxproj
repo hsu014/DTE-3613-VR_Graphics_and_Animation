@@ -197,12 +197,12 @@
     <Image Include="src\textures\skybox\sky_42\pz.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="src\shader\fragmentShader.glsl" />
+    <None Include="src\shader\fragmentShaderBase.glsl" />
     <None Include="src\shader\fragmentShaderParticle.glsl" />
     <None Include="src\shader\fragmentShaderPhong.glsl" />
     <None Include="src\shader\fragmentShaderShadow.glsl" />
     <None Include="src\shader\fragmentShaderSkybox.glsl" />
-    <None Include="src\shader\vertexShader.glsl" />
+    <None Include="src\shader\vertexShaderBase.glsl" />
     <None Include="src\shader\vertexShaderParticle.glsl" />
     <None Include="src\shader\vertexShaderPhong.glsl" />
     <None Include="src\shader\vertexShaderShadow.glsl" />
