@@ -36,12 +36,10 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void animate(GLFWwindow* window, RenderInfo& ri, Scene& scene);
 void drawScene(Scene& scene, Camera& camera);
 
-void drawEmitter(RenderInfo& ri); // Move to scene later
-
 
 // settings 
-unsigned int SCR_WIDTH = 1600;
-unsigned int SCR_HEIGHT = 1200;
+unsigned int SCR_WIDTH = 3000;
+unsigned int SCR_HEIGHT = 1800;
 
 const double CAMERA_SPEED = 4;
 const double CAMERA_ROT_SPEED = 8;
@@ -357,7 +355,7 @@ void testBulletShapes(RenderInfo& ri, Scene& scene)
     q = quatFromYawPitchRoll(0.0f, 30.0f, 0.0f);
     btTriangleMesh* pyramidMesh = createBtTriangleMesh(pyramid);
     btRigidBody* pyramidRigidBody = createStaticRigidBody(
-        pyramidMesh, { -10.0, 1.0f, 0.1 }, q, 0.6f, 0.5f);
+        pyramidMesh, { 21.0, 1.0f, 0.4 }, q, 0.6f, 0.5f);
 
     ri.bullet.pWorld->addRigidBody(pyramidRigidBody);
 
@@ -441,22 +439,3 @@ void drawScene(Scene& scene, Camera& camera)
 
 }
 
-void drawEmitter(RenderInfo& ri)
-{
-    /// Move functionality to scene
-
-    glm::mat4 modelMatrix = glm::mat4(1.0f);
-
-    // Translate
-    modelMatrix = glm::translate(modelMatrix, glm::vec3(-2.0f, 1.0f, 5.0f));
-
-    // Scale
-    modelMatrix = glm::scale(modelMatrix, glm::vec3(1.0f, 1.0f, 1.0f) * 1.0f);
-
-    //glm::mat4 modelViewMatrix = ri.viewMatrix * modelMatrix;
-
-    //prepareShaderParticle(ri.shaderProgram.particle, modelViewMatrix, ri);
-
-    //ri.emitter.updateParticles(ri.time.dt);
-    //ri.emitter.renderParticles(ri.shaderProgram.particle);
-}
