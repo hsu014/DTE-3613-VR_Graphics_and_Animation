@@ -278,18 +278,25 @@ void createShapes(RenderInfo& ri, Scene& scene)
     sphere->setMaterial(material.brass);
     sphere->castShadow();
     modelMatrix = glm::mat4(1.0f);
-    modelMatrix = glm::translate(modelMatrix, glm::vec3(0.0, 5.0, -2.2));
+    modelMatrix = glm::translate(modelMatrix, glm::vec3(-10.0, 5.0, -2.2));
     sphere->setModelMatrix(modelMatrix);
     scene.addPhongShape(sphere);
 
-    // Emitter
-    //Emitter* flameEmitter = new FlameEmitter(100, 2.0f, 0.5f, 0.1f, ri.texture["particle"]);
-    //flameEmitter->setPosition({5,0,0});
-    //scene.addEmitter(flameEmitter);
+    Shape* cylinder = new Cylinder(0.5f, 2.0f, 20);
+    cylinder->useTexture(ri.texture["chicken"]);
+    cylinder->castShadow();
+    modelMatrix = glm::mat4(1.0f);
+    modelMatrix = glm::translate(modelMatrix, glm::vec3(6.0f, 5.0f, 0.0f));
+    cylinder->setModelMatrix(modelMatrix);
+    scene.addPhongShape(cylinder);
 
-    //Emitter* smokeEmitter = new SmokeEmitter(100, 5.0f, 0.5f, 0.05f, ri.texture["particle"]);
-    //smokeEmitter->setPosition({ 5,0,0 });
-    //scene.addEmitter(smokeEmitter);
+    /*Shape* halfPipe = new HalfPipe(0.9f, 1.0f, 5.0f, 10);
+    halfPipe->useTexture(ri.texture["wood"]);
+    halfPipe->castShadow();
+    modelMatrix = glm::mat4(1.0f);
+    modelMatrix = glm::translate(modelMatrix, glm::vec3(0.0f, 5.0f, 0.0f));
+    halfPipe->setModelMatrix(modelMatrix);
+    scene.addPhongShape(halfPipe);*/
 
 }
 
@@ -311,17 +318,16 @@ void testBulletShapes(RenderInfo& ri, Scene& scene)
 
 
 
-
     // Test sphere
     glm::mat4 modelMatrix = glm::mat4(1.0f);
 
     btScalar mass = 1.0f;
-    btScalar radius = 0.7f;
+    btScalar radius = 0.3f;
     btScalar restitution = 0.6f; 
     btScalar friction = 0.8f;
 
     btRigidBody* sphereRigidBody = createMarbleRigidBody(
-        mass, radius, { -2.0f, 4.0f, 0.0f }, restitution, friction);
+        mass, radius, { 0.0f, 4.0f, 0.0f }, restitution, friction);
 
     ri.bullet.pWorld->addRigidBody(sphereRigidBody);
     ri.camera->setPBody(sphereRigidBody);
@@ -349,9 +355,9 @@ void testBulletShapes(RenderInfo& ri, Scene& scene)
     
     // Rotate around z, y, x
     q = quatFromYawPitchRoll(0.0f, 30.0f, 0.0f);
-    btTriangleMesh* mesh = createBtTriangleMesh(pyramid);
+    btTriangleMesh* pyramidMesh = createBtTriangleMesh(pyramid);
     btRigidBody* pyramidRigidBody = createStaticRigidBody(
-        mesh, { -2.0, 1.0f, 0.1 }, q, 0.6f, 0.5f);
+        pyramidMesh, { -10.0, 1.0f, 0.1 }, q, 0.6f, 0.5f);
 
     ri.bullet.pWorld->addRigidBody(pyramidRigidBody);
 
@@ -362,6 +368,22 @@ void testBulletShapes(RenderInfo& ri, Scene& scene)
     scene.addPhongShape(pyramid);
 
 
+
+    // Test half pipe
+    Shape* halfPipe = new HalfPipe(0.9f, 1.0f, 20.0f, 10);
+
+    // Rotate around z, y, x
+    q = quatFromYawPitchRoll(0.0f, 90.0f, 2.0f);
+    btTriangleMesh* halfPipeMesh = createBtTriangleMesh(halfPipe);
+    btRigidBody* halfPipeRigidBody = createStaticRigidBody(
+        halfPipeMesh, { 10.0, 2.3f, 0.4 }, q, 0.6f, 0.5f);
+
+    ri.bullet.pWorld->addRigidBody(halfPipeRigidBody);
+
+    halfPipe->useTexture(ri.texture["wood"]);
+    halfPipe->castShadow();
+    halfPipe->setPBody(halfPipeRigidBody);
+    scene.addPhongShape(halfPipe);
 
 }
 

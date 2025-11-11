@@ -238,9 +238,9 @@ Box::Box(float size_x, float size_y, float size_z) :
 
 void Box::fillBuffers()
 {
-    float x = mSizeX / 2;
-    float y = mSizeY / 2;
-    float z = mSizeZ / 2;
+    const float x = mSizeX / 2.0f;
+    const float y = mSizeY / 2.0f;
+    const float z = mSizeZ / 2.0f;
 
     std::vector<float> vertices = {
         // Front face
@@ -401,9 +401,9 @@ Pyramid::Pyramid(float size_x, float height, float size_z) :
 
 void Pyramid::fillBuffers()
 {
-    float x = mSizeX / 2;
-    float h = mHeight / 2;
-    float z = mSizeZ / 2;
+    const float x = mSizeX / 2.0f;
+    const float h = mHeight / 2.0f;
+    const float z = mSizeZ / 2.0f;
 
     std::vector<float> vertices = {
         // Side 1
@@ -544,8 +544,8 @@ Plane::Plane(float size_x, float size_z) :
 
 void Plane::fillBuffers()
 {
-    float x = mSizeX / 2;
-    float z = mSizeZ / 2;
+    const float x = mSizeX / 2.0f;
+    const float z = mSizeZ / 2.0f;
 
     std::vector<float> vertices = {  
              x, 0.0f, -z,
@@ -629,8 +629,8 @@ void CompositePlane::fillBuffers()
     std::vector<float> normals;
     std::vector<unsigned int> indices;
 
-    float x_to_z_ratio = static_cast<float>(mDepth) / mWidth;
-    float scale = 0.1f;
+    const float x_to_z_ratio = static_cast<float>(mDepth) / mWidth;
+    const float scale = 0.1f;
 
 
     for (int x = 0; x < mWidth; x++) {
@@ -693,7 +693,8 @@ void CompositePlane::fillBuffers()
 
 
 
-Sphere::Sphere(float radius, int sectors, int stacks) : mRadius(radius), mSectors(sectors), mStacks(stacks)
+Sphere::Sphere(float radius, int sectors, int stacks) : 
+    mRadius(radius), mSectors(sectors), mStacks(stacks)
 {
     initBuffers();
     fillBuffers();
@@ -705,31 +706,26 @@ void Sphere::fillBuffers()
     std::vector<float> colors;
     std::vector<float> textureUVs;
     std::vector<float> normals;
-
     std::vector<unsigned int> indices;
 
-    const float PI = acos(-1.0f);
     const float radius = mRadius;
 
     float x, y, z, xy;                              // vertex position
     float nx, ny, nz, lengthInv = 1.0f / radius;    // normal
     float u, v;                                     // texCoord
-    float cr = 1.0f, cg = 1.0f, cb = 1.0f;          // color
 
-    float sectorStep = 2 * PI / mSectors;
-    float stackStep = PI / mStacks;
+    const float sectorStep = 2 * PI / mSectors;
+    const float stackStep = PI / mStacks;
     float sectorAngle, stackAngle;
 
-    for (int i = 0; i <= mStacks; ++i)
-    {
+    for (int i = 0; i <= mStacks; ++i) {
         stackAngle = PI / 2 - i * stackStep;        // starting from pi/2 to -pi/2
         xy = radius * cosf(stackAngle);             // r * cos(u)
         z = radius * sinf(stackAngle);              // r * sin(u)
 
         // add (sectorCount+1) vertices per stack
         // the first and last vertices have same position and normal, but different tex coords
-        for (int j = 0; j <= mSectors; ++j)
-        {
+        for (int j = 0; j <= mSectors; ++j) {
             sectorAngle = j * sectorStep;           // starting from 0 to 2pi
 
             // vertex position
@@ -757,9 +753,7 @@ void Sphere::fillBuffers()
             textureUVs.push_back(v);
 
             // color
-            colors.push_back(cr);
-            colors.push_back(cg);
-            colors.push_back(cb);
+            colors.insert(colors.end(), { 1.0f, 1.0f, 1.0f });
         }
     }
 
@@ -769,24 +763,20 @@ void Sphere::fillBuffers()
     //  | /  |
     //  k2--k2+1
     unsigned int k1, k2;
-    for (int i = 0; i < mStacks; ++i)
-    {
+    for (int i = 0; i < mStacks; ++i) {
         k1 = i * (mSectors + 1);     // beginning of current stack
         k2 = k1 + mSectors + 1;      // beginning of next stack
 
-        for (int j = 0; j < mSectors; ++j, ++k1, ++k2)
-        {
+        for (int j = 0; j < mSectors; ++j, ++k1, ++k2) {
             // 2 triangles per sector excluding 1st and last stacks
-            if (i != 0)
-            {
+            if (i != 0) {
                 //addIndices(k1, k2, k1 + 1);   // k1---k2---k1+1
                 indices.push_back(k1);
                 indices.push_back(k2);
                 indices.push_back(k1 + 1);
             }
 
-            if (i != (mStacks - 1))
-            {
+            if (i != (mStacks - 1)) {
                 //addIndices(k1 + 1, k2, k2 + 1); // k1+1---k2---k2+1
                 indices.push_back(k1 + 1);
                 indices.push_back(k2);
@@ -817,3 +807,458 @@ void Sphere::fillBuffers()
 }
 
 
+
+Cylinder::Cylinder(float radius, float height, int sectors) : 
+    mRadius(radius), mHeight(height), mSectors(sectors)
+{
+    initBuffers();
+    fillBuffers();
+}
+
+void Cylinder::fillBuffers()
+{
+    std::vector<float> vertices;
+    std::vector<float> colors;
+    std::vector<float> textureUVs;
+    std::vector<float> normals;
+    std::vector<unsigned int> indices;
+
+    const float radius = mRadius;
+    const float h = mHeight / 2;
+
+    float x, z;                                     // vertex position
+    float nx, ny, nz;                               // normal
+    float u, v;                                     // texCoord
+
+    const float sectorStep = 2 * PI / mSectors;
+    float sectorAngle;
+
+    // Outer shell:
+    for (int i = 0; i <= mSectors; ++i) {
+        float sectorAngle = i * sectorStep;
+
+        float cosA = cosf(sectorAngle);
+        float sinA = sinf(sectorAngle);
+        x = radius * cosA;
+        z = radius * sinA;
+        nx = cosA;
+        ny = 0.0f;
+        nz = sinA;
+
+        // Top vertex
+        vertices.push_back(x);
+        vertices.push_back(h);
+        vertices.push_back(z);
+
+        normals.push_back(nx);
+        normals.push_back(ny);
+        normals.push_back(nz);
+
+        u = (float)i / mSectors;
+        v = 1.0f;
+        textureUVs.push_back(u);
+        textureUVs.push_back(v);
+
+        colors.insert(colors.end(), { 1.0f, 1.0f, 1.0f });
+
+        // Bottom vertex
+        vertices.push_back(x);
+        vertices.push_back(-h);
+        vertices.push_back(z);
+
+        normals.push_back(nx);
+        normals.push_back(ny);
+        normals.push_back(nz);
+
+        v = 0.0f;
+        textureUVs.push_back(u);
+        textureUVs.push_back(v);
+
+        colors.insert(colors.end(), { 1.0f, 1.0f, 1.0f });
+    }
+
+    for (int i = 0; i < mSectors; ++i) {
+        int k1 = i * 2;
+        int k2 = k1 + 2;
+
+        indices.push_back(k1);
+        indices.push_back(k2);
+        indices.push_back(k1 + 1);
+
+        indices.push_back(k2);
+        indices.push_back(k2 + 1);
+        indices.push_back(k1 + 1);
+    }
+
+    // Top circle:
+    int topCenterIndex = vertices.size() / 3;
+    vertices.push_back(0.0f); 
+    vertices.push_back(h); 
+    vertices.push_back(0.0f);
+
+    normals.push_back(0.0f); 
+    normals.push_back(1.0f); 
+    normals.push_back(0.0f);
+
+    textureUVs.push_back(0.5f); 
+    textureUVs.push_back(0.5f);
+
+    colors.insert(colors.end(), { 1.0f, 1.0f, 1.0f });
+
+    for (int i = 0; i <= mSectors; ++i) {
+        float sectorAngle = i * sectorStep;
+        float cosA = cosf(sectorAngle);
+        float sinA = sinf(sectorAngle);
+        x = radius * cosA;
+        z = radius * sinA;
+
+        vertices.push_back(x);
+        vertices.push_back(h);
+        vertices.push_back(z);
+
+        normals.push_back(0.0f);
+        normals.push_back(1.0f);
+        normals.push_back(0.0f);
+
+        textureUVs.push_back((cosA + 1.0f) * 0.5f);
+        textureUVs.push_back((sinA + 1.0f) * 0.5f);
+
+        colors.insert(colors.end(), { 1.0f, 1.0f, 1.0f });
+    }
+
+    for (int i = 0; i < mSectors; ++i) {
+        indices.push_back(topCenterIndex);
+        indices.push_back(topCenterIndex + i + 2);
+        indices.push_back(topCenterIndex + i + 1);
+    }
+
+    // Bottom circle:
+    int bottomCenterIndex = vertices.size() / 3;
+
+    vertices.push_back(0.0f); 
+    vertices.push_back(-h); 
+    vertices.push_back(0.0f);
+
+    normals.push_back(0.0f); 
+    normals.push_back(-1.0f); 
+    normals.push_back(0.0f);
+
+    textureUVs.push_back(0.5f); 
+    textureUVs.push_back(0.5f);
+
+    colors.insert(colors.end(), { 1.0f, 1.0f, 1.0f });
+
+    for (int i = 0; i <= mSectors; ++i) {
+        float sectorAngle = i * sectorStep;
+        float cosA = cos(sectorAngle);
+        float sinA = sin(sectorAngle);
+        x = radius * cosA;
+        z = radius * sinA;
+
+        vertices.push_back(x);
+        vertices.push_back(-h);
+        vertices.push_back(z);
+
+        normals.push_back(0.0f);
+        normals.push_back(-1.0f);
+        normals.push_back(0.0f);
+
+        textureUVs.push_back((cosA + 1.0f) * 0.5f);
+        textureUVs.push_back((sinA + 1.0f) * 0.5f);
+
+        colors.insert(colors.end(), { 1.0f, 1.0f, 1.0f });
+    }
+
+    for (int i = 0; i < mSectors; ++i) {
+        indices.push_back(bottomCenterIndex);
+        indices.push_back(bottomCenterIndex + i + 1);
+        indices.push_back(bottomCenterIndex + i + 2);
+    }
+
+    glBindVertexArray(VAO);
+
+    fillVertexBuffer(vertices);
+    fillColorBuffer(colors);
+    fillUVBuffer(textureUVs);
+    fillNormalBuffer(normals);
+    fillIndexBuffer(indices);
+
+    // Unbind VAO
+    glBindVertexArray(0);
+}
+
+
+
+HalfPipe::HalfPipe(float innerRadius, float outerRadius, float length, int sectors) :
+    mInnerRadius(innerRadius), mOuterRadius(outerRadius), mLength(length), mSectors(sectors)
+{
+    initBuffers();
+    fillBuffers();
+}
+
+void HalfPipe::fillBuffers()
+{
+    std::vector<float> vertices;
+    std::vector<float> colors;
+    std::vector<float> textureUVs;
+    std::vector<float> normals;
+    std::vector<unsigned int> indices;
+
+    const float rInner = mInnerRadius;
+    const float rOuter = mOuterRadius;
+    const float length = mLength / 2.0f;
+
+    float xIn, xOut, yIn, yOut;                     // vertex position
+    float nx, ny, nz;                               // normal
+    float u, v;                                     // texCoord
+    const float uvInner = rInner / rOuter;          // uv distance for inner curve [0 to 1]
+
+    const float sectorStep = PI / mSectors;
+    float sectorAngle;
+    unsigned int startIndex;
+
+    // Inner curve
+    startIndex = vertices.size() / 3;
+    nz = 0.0f;
+    for (int i = 0; i <= mSectors; ++i) {
+        float sectorAngle = PI + i * sectorStep;    // starting from pi to 2*pi
+
+        float cosA = cosf(sectorAngle);
+        float sinA = sinf(sectorAngle);
+        xIn = rInner * cosA;
+        yIn = rInner * sinA;
+        nx = -cosA;
+        ny = -sinA;
+
+        // front - back
+        vertices.push_back(xIn);
+        vertices.push_back(yIn);
+        vertices.push_back(-length);
+
+        vertices.push_back(xIn);
+        vertices.push_back(yIn);
+        vertices.push_back(length);
+
+        normals.insert(normals.end(), { nx, ny, nz, nx, ny, nz });
+
+        textureUVs.insert(textureUVs.end(), {
+        (cosA * uvInner + 1.0f) * 0.5f, 0.0f,
+        (sinA * uvInner + 1.0f) * 0.5f, 1.0f,
+            });
+
+        colors.insert(colors.end(), { 1.0f, 1.0f });
+    }
+    for (int i = 0; i < mSectors; ++i) {
+        int k1 = i * 2 + startIndex;
+        int k2 = k1 + 2;
+
+        indices.push_back(k1);
+        indices.push_back(k1 + 1);
+        indices.push_back(k2);
+
+        indices.push_back(k2);
+        indices.push_back(k1 + 1);
+        indices.push_back(k2 + 1);
+    }
+
+
+    // Outer curve
+    startIndex = vertices.size() / 3;
+    for (int i = 0; i <= mSectors; ++i) {
+        float sectorAngle = PI + i * sectorStep;
+    
+        float cosA = cosf(sectorAngle);
+        float sinA = sinf(sectorAngle);
+        xOut = rOuter * cosA;
+        yOut = rOuter * sinA;
+        nx = cosA;
+        ny = sinA;
+
+        // front - back
+        vertices.push_back(xOut);
+        vertices.push_back(yOut);
+        vertices.push_back(-length);
+
+        vertices.push_back(xOut);
+        vertices.push_back(yOut);
+        vertices.push_back(length);
+
+        normals.insert(normals.end(), { nx, ny, nz, nx, ny, nz });
+
+        textureUVs.insert(textureUVs.end(), {
+        (cosA + 1.0f) * 0.5f, 0.0f,
+        (sinA + 1.0f) * 0.5f, 1.0f,
+            });
+
+        colors.insert(colors.end(), { 1.0f, 1.0f });
+
+    }
+    for (int i = 0; i < mSectors; ++i) {
+        int k1 = i * 2 + startIndex;
+        int k2 = k1 + 2;
+
+        indices.push_back(k1);
+        indices.push_back(k2);
+        indices.push_back(k1 + 1);
+
+        indices.push_back(k2);
+        indices.push_back(k2 + 1);
+        indices.push_back(k1 + 1);
+    }
+
+    // Front face
+    startIndex = vertices.size() / 3;
+    nx = 0;
+    ny = 0;
+    nz = -1.0f;
+    for (int i = 0; i <= mSectors; ++i) {
+        float sectorAngle = PI + i * sectorStep;
+
+        float cosA = cosf(sectorAngle);
+        float sinA = sinf(sectorAngle);
+        xIn = rInner * cosA;
+        yIn = rInner * sinA;
+        xOut = rOuter * cosA;
+        yOut = rOuter * sinA;
+
+        // inner - outer
+        vertices.push_back(xIn);
+        vertices.push_back(yIn);
+        vertices.push_back(-length);
+
+        vertices.push_back(xOut);
+        vertices.push_back(yOut);
+        vertices.push_back(-length);
+
+        normals.insert(normals.end(), { nx, ny, nz, nx, ny, nz });
+
+        textureUVs.push_back((cosA * uvInner + 1.0f) * 0.5f);
+        textureUVs.push_back((sinA * uvInner + 1.0f) * 0.5f);
+        textureUVs.push_back((cosA + 1.0f) * 0.5f);
+        textureUVs.push_back((sinA + 1.0f) * 0.5f);
+
+        colors.insert(colors.end(), { 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f });
+    }
+    for (int i = 0; i < mSectors; ++i) {
+        int k1 = i * 2 + startIndex;
+        int k2 = k1 + 2;
+
+        indices.push_back(k1);
+        indices.push_back(k2);
+        indices.push_back(k1 + 1);
+
+        indices.push_back(k2);
+        indices.push_back(k2 + 1);
+        indices.push_back(k1 + 1);
+    }
+
+    // Back face
+    startIndex = vertices.size() / 3;
+    nx = 0;
+    ny = 0;
+    nz = 1.0f;
+    for (int i = 0; i <= mSectors; ++i) {
+        float sectorAngle = PI + i * sectorStep;
+
+        float cosA = cosf(sectorAngle);
+        float sinA = sinf(sectorAngle);
+        xIn = rInner * cosA;
+        yIn = rInner * sinA;
+        xOut = rOuter * cosA;
+        yOut = rOuter * sinA;
+
+        // inner - outer
+        vertices.push_back(xIn);
+        vertices.push_back(yIn);
+        vertices.push_back(length);
+
+        vertices.push_back(xOut);
+        vertices.push_back(yOut);
+        vertices.push_back(length);
+
+        normals.insert(normals.end(), { nx, ny, nz, nx, ny, nz });
+
+        textureUVs.push_back((cosA * uvInner + 1.0f) * 0.5f);
+        textureUVs.push_back((sinA * uvInner + 1.0f) * 0.5f);
+        textureUVs.push_back((cosA + 1.0f) * 0.5f);
+        textureUVs.push_back((sinA + 1.0f) * 0.5f);
+
+        colors.insert(colors.end(), { 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f });
+    }
+    for (int i = 0; i < mSectors; ++i) {
+        int k1 = i * 2 + startIndex;
+        int k2 = k1 + 2;
+
+        indices.push_back(k1);
+        indices.push_back(k1 + 1);
+        indices.push_back(k2);
+
+        indices.push_back(k2);
+        indices.push_back(k1 + 1);
+        indices.push_back(k2 + 1);
+    }
+
+    // Squares
+    startIndex = vertices.size() / 3;
+    nx = 0;
+    ny = 1.0f;
+    nz = 0;
+
+    vertices.insert(vertices.end(), { 
+        -rOuter, 0.0f, -length,
+        -rInner, 0.0f, -length,
+        -rInner, 0.0f, length,
+        -rOuter, 0.0f, length,
+
+        rInner, 0.0f, -length,
+        rOuter, 0.0f, -length,
+        rOuter, 0.0f, length,
+        rInner, 0.0f, length,
+        });
+
+    normals.insert(normals.end(), { 
+        nx, ny, nz,
+        nx, ny, nz,
+        nx, ny, nz,
+        nx, ny, nz,
+
+        nx, ny, nz,
+        nx, ny, nz,
+        nx, ny, nz,
+        nx, ny, nz,
+        });
+
+    textureUVs.insert(textureUVs.end(), {
+        1.0f, 0.0f,
+        uvInner, 0.0f,
+        uvInner, 1.0f,
+        1.0f, 1.0f,
+
+        1.0f - uvInner, 0.0f,
+        0.0f, 0.0f,
+        0.0f, 1.0f,
+        1.0f - uvInner, 1.0f,
+        });
+
+    indices.insert(indices.end(), {
+        startIndex, startIndex + 3, startIndex + 2,
+        startIndex, startIndex + 2, startIndex + 1,
+
+        startIndex+4, startIndex + 7, startIndex + 6,
+        startIndex+4, startIndex + 6, startIndex + 5,
+        });
+
+    glBindVertexArray(VAO);
+
+    fillVertexBuffer(vertices);
+    fillColorBuffer(colors);
+    fillUVBuffer(textureUVs);
+    fillNormalBuffer(normals);
+    fillIndexBuffer(indices);
+
+    mVertices = vertices;
+    mIndices = indices;
+
+    // Unbind VAO
+    glBindVertexArray(0);
+}

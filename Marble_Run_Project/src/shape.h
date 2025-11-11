@@ -11,6 +11,8 @@
 #include "structs.h"
 #include "Utils.h"
 
+const float PI = acos(-1.0f);
+
 class Shape {  	
 public:
     ~Shape();
@@ -63,7 +65,7 @@ class Skybox : public Shape {
 public:
     Skybox(GLuint texture);
     void fillBuffers() override;
-    void draw(GLuint shaderProgram);
+    void draw(GLuint shaderProgram) override;
 };
 
 class Box : public Shape {
@@ -75,7 +77,6 @@ private:
 public:
     Box(float size_x = 0.5f, float size_y = 0.5f, float size_z = 0.5f);
 	void fillBuffers() override;
-    //void draw() override;
 };
 
 class Pyramid : public Shape {
@@ -87,7 +88,6 @@ private:
 public:
     Pyramid(float size_x = 0.5f, float height = 1.0f, float size_z = 0.5f);
     void fillBuffers() override;
-    //void draw() override;
 };
 
 class Plane : public Shape {
@@ -122,5 +122,25 @@ private:
 public:
     Sphere(float radius = 1.0f, int sectors = 50, int stacks = 50);
     void fillBuffers() override;
-    //void draw() override;
+};
+
+class Cylinder : public Shape {
+private:
+    float mRadius;
+    float mHeight;
+    int mSectors;
+public:
+    Cylinder(float radius = 0.5f, float height = 1.0f, int sectors = 50);
+    void fillBuffers() override;
+};
+
+class HalfPipe : public Shape {
+private:
+    float mInnerRadius;
+    float mOuterRadius;
+    float mLength;
+    int mSectors;
+public:
+    HalfPipe(float innerRadius = 0.9f, float outerRadius = 1.0f, float length = 1.0f, int sectors = 10);
+    void fillBuffers() override;
 };
