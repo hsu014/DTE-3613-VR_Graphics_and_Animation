@@ -280,38 +280,6 @@ void Box::fillBuffers()
         -x, -y, -z,  
     };
 
-    std::vector<float> colors = {
-        1.0f, 0.0f, 0.0f,
-        1.0f, 0.4f, 0.0f,
-        1.0f, 0.7f, 0.0f,
-        1.0f, 0.4f, 0.0f,
-
-        1.0f, 0.0f, 0.0f,
-        1.0f, 0.4f, 0.0f,
-        1.0f, 0.7f, 0.0f,
-        1.0f, 0.4f, 0.0f,
-
-        1.0f, 0.4f, 0.0f,
-        1.0f, 0.0f, 0.0f,
-        1.0f, 0.4f, 0.0f,
-        1.0f, 0.7f, 0.0f,
-
-        1.0f, 0.4f, 0.0f,
-        1.0f, 0.0f, 0.0f,
-        1.0f, 0.4f, 0.0f,
-        1.0f, 0.7f, 0.0f,
-
-        1.0f, 0.4f, 0.0f,
-        1.0f, 0.7f, 0.0f,
-        1.0f, 0.4f, 0.0f,
-        1.0f, 0.7f, 0.0f,
-
-        1.0f, 0.0f, 0.0f,
-        1.0f, 0.4f, 0.0f,
-        1.0f, 0.0f, 0.0f,
-        1.0f, 0.4f, 0.0f,
-    };
-
     std::vector<float> textureUVs{
         1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0,
         1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0,
@@ -380,7 +348,6 @@ void Box::fillBuffers()
     glBindVertexArray(VAO);
 
     fillVertexBuffer(vertices);
-    fillColorBuffer(colors);
     fillUVBuffer(textureUVs);
     fillNormalBuffer(normals);
     fillIndexBuffer(indices);
@@ -431,29 +398,6 @@ void Pyramid::fillBuffers()
          x, -h,  z,
         -x, -h,  z,
         -x, -h, -z,
-    };
-
-    std::vector<float> colors{
-         0.0f, 0.0f, 1.0f,
-         0.0f, 1.0f, 0.0f,
-         1.0f, 0.0f, 0.0f,
-
-         0.0f, 1.0f, 0.0f,
-         0.0f, 0.0f, 1.0f,
-         1.0f, 0.0f, 0.0f,
-
-         0.0f, 0.0f, 1.0f,
-         0.0f, 1.0f, 0.0f,
-         1.0f, 0.0f, 0.0f,
-
-         0.0f, 1.0f, 0.0f,
-         0.0f, 0.0f, 1.0f,
-         1.0f, 0.0f, 0.0f,
-
-         0.0f, 1.0f, 0.0f,
-         0.0f, 0.0f, 1.0f,
-         0.0f, 1.0f, 0.0f,
-         0.0f, 0.0f, 1.0f,
     };
 
     std::vector<float> textureUVs = {
@@ -521,7 +465,6 @@ void Pyramid::fillBuffers()
     glBindVertexArray(VAO);
 
     fillVertexBuffer(vertices);
-    fillColorBuffer(colors);
     fillUVBuffer(textureUVs);
     fillNormalBuffer(normals);
     fillIndexBuffer(indices);
@@ -554,13 +497,6 @@ void Plane::fillBuffers()
             -x, 0.0f, -z,
     };
 
-    std::vector<float> colors{
-         1.0f, 1.0f, 1.0f,
-         1.0f, 1.0f, 1.0f,
-         1.0f, 1.0f, 1.0f,
-         1.0f, 1.0f, 1.0f,
-    };
-
     std::vector<float> textureUVs = {
         0.0, 0.0,
         0.0, 1.0,
@@ -583,7 +519,6 @@ void Plane::fillBuffers()
     glBindVertexArray(VAO);
 
     fillVertexBuffer(vertices);
-    fillColorBuffer(colors);
     fillUVBuffer(textureUVs);
     fillNormalBuffer(normals);
     fillIndexBuffer(indices);
@@ -624,7 +559,6 @@ CompositePlane::CompositePlane(
 void CompositePlane::fillBuffers()
 {
     std::vector<float> vertices;
-    std::vector<float> colors;
     std::vector<float> textureUVs;
     std::vector<float> normals;
     std::vector<unsigned int> indices;
@@ -647,12 +581,6 @@ void CompositePlane::fillBuffers()
             vertices.push_back(u - 0.5f);
             vertices.push_back(height);
             vertices.push_back((v - 0.5f) * x_to_z_ratio);
-
-            // color
-            float c = 1.0f; // (static_cast<float>(x + z)) / (mWidth + mDepth);
-            colors.push_back(c);
-            colors.push_back(c);
-            colors.push_back(c);
 
             // UV
             textureUVs.push_back(1-u); // Mirror texture the correct way
@@ -682,7 +610,6 @@ void CompositePlane::fillBuffers()
     glBindVertexArray(VAO);
 
     fillVertexBuffer(vertices);
-    fillColorBuffer(colors);
     fillUVBuffer(textureUVs);
     fillNormalBuffer(normals);
     fillIndexBuffer(indices);
@@ -703,7 +630,6 @@ Sphere::Sphere(float radius, int sectors, int stacks) :
 void Sphere::fillBuffers()
 {
     std::vector<float> vertices;
-    std::vector<float> colors;
     std::vector<float> textureUVs;
     std::vector<float> normals;
     std::vector<unsigned int> indices;
@@ -751,9 +677,6 @@ void Sphere::fillBuffers()
 
             textureUVs.push_back(u);
             textureUVs.push_back(v);
-
-            // color
-            colors.insert(colors.end(), { 1.0f, 1.0f, 1.0f });
         }
     }
 
@@ -782,22 +705,12 @@ void Sphere::fillBuffers()
                 indices.push_back(k2);
                 indices.push_back(k2 + 1);
             }
-
-            // vertical lines for all stacks
-            //lineIndices.push_back(k1);
-            //lineIndices.push_back(k2);
-            //if (i != 0)  // horizontal lines except 1st stack
-            //{
-            //    lineIndices.push_back(k1);
-            //    lineIndices.push_back(k1 + 1);
-            //}
         }
     }
 
     glBindVertexArray(VAO);
 
     fillVertexBuffer(vertices);
-    fillColorBuffer(colors);
     fillUVBuffer(textureUVs);
     fillNormalBuffer(normals);
     fillIndexBuffer(indices);
@@ -818,7 +731,6 @@ Cylinder::Cylinder(float radius, float height, int sectors) :
 void Cylinder::fillBuffers()
 {
     std::vector<float> vertices;
-    std::vector<float> colors;
     std::vector<float> textureUVs;
     std::vector<float> normals;
     std::vector<unsigned int> indices;
@@ -845,36 +757,17 @@ void Cylinder::fillBuffers()
         ny = 0.0f;
         nz = sinA;
 
-        // Top vertex
-        vertices.push_back(x);
-        vertices.push_back(h);
-        vertices.push_back(z);
+        // Top - bottom
+        vertices.insert(vertices.end(), {
+            x, h, z,
+            x, -h, z
+            });
 
-        normals.push_back(nx);
-        normals.push_back(ny);
-        normals.push_back(nz);
+        normals.insert(normals.end(), { nx, ny, nz, nx, ny, nz });
 
         u = (float)i / mSectors;
-        v = 1.0f;
-        textureUVs.push_back(u);
-        textureUVs.push_back(v);
+        textureUVs.insert(textureUVs.end(), { u, 1.0f, u, 0.0f });
 
-        colors.insert(colors.end(), { 1.0f, 1.0f, 1.0f });
-
-        // Bottom vertex
-        vertices.push_back(x);
-        vertices.push_back(-h);
-        vertices.push_back(z);
-
-        normals.push_back(nx);
-        normals.push_back(ny);
-        normals.push_back(nz);
-
-        v = 0.0f;
-        textureUVs.push_back(u);
-        textureUVs.push_back(v);
-
-        colors.insert(colors.end(), { 1.0f, 1.0f, 1.0f });
     }
 
     for (int i = 0; i < mSectors; ++i) {
@@ -903,8 +796,6 @@ void Cylinder::fillBuffers()
     textureUVs.push_back(0.5f); 
     textureUVs.push_back(0.5f);
 
-    colors.insert(colors.end(), { 1.0f, 1.0f, 1.0f });
-
     for (int i = 0; i <= mSectors; ++i) {
         float sectorAngle = i * sectorStep;
         float cosA = cosf(sectorAngle);
@@ -922,8 +813,6 @@ void Cylinder::fillBuffers()
 
         textureUVs.push_back((cosA + 1.0f) * 0.5f);
         textureUVs.push_back((sinA + 1.0f) * 0.5f);
-
-        colors.insert(colors.end(), { 1.0f, 1.0f, 1.0f });
     }
 
     for (int i = 0; i < mSectors; ++i) {
@@ -946,8 +835,6 @@ void Cylinder::fillBuffers()
     textureUVs.push_back(0.5f); 
     textureUVs.push_back(0.5f);
 
-    colors.insert(colors.end(), { 1.0f, 1.0f, 1.0f });
-
     for (int i = 0; i <= mSectors; ++i) {
         float sectorAngle = i * sectorStep;
         float cosA = cos(sectorAngle);
@@ -965,8 +852,6 @@ void Cylinder::fillBuffers()
 
         textureUVs.push_back((cosA + 1.0f) * 0.5f);
         textureUVs.push_back((sinA + 1.0f) * 0.5f);
-
-        colors.insert(colors.end(), { 1.0f, 1.0f, 1.0f });
     }
 
     for (int i = 0; i < mSectors; ++i) {
@@ -978,7 +863,6 @@ void Cylinder::fillBuffers()
     glBindVertexArray(VAO);
 
     fillVertexBuffer(vertices);
-    fillColorBuffer(colors);
     fillUVBuffer(textureUVs);
     fillNormalBuffer(normals);
     fillIndexBuffer(indices);
@@ -999,7 +883,6 @@ HalfPipe::HalfPipe(float innerRadius, float outerRadius, float length, int secto
 void HalfPipe::fillBuffers()
 {
     std::vector<float> vertices;
-    std::vector<float> colors;
     std::vector<float> textureUVs;
     std::vector<float> normals;
     std::vector<unsigned int> indices;
@@ -1045,8 +928,6 @@ void HalfPipe::fillBuffers()
         (cosA * uvInner + 1.0f) * 0.5f, 0.0f,
         (sinA * uvInner + 1.0f) * 0.5f, 1.0f,
             });
-
-        colors.insert(colors.end(), { 1.0f, 1.0f });
     }
     for (int i = 0; i < mSectors; ++i) {
         int k1 = i * 2 + startIndex;
@@ -1089,9 +970,6 @@ void HalfPipe::fillBuffers()
         (cosA + 1.0f) * 0.5f, 0.0f,
         (sinA + 1.0f) * 0.5f, 1.0f,
             });
-
-        colors.insert(colors.end(), { 1.0f, 1.0f });
-
     }
     for (int i = 0; i < mSectors; ++i) {
         int k1 = i * 2 + startIndex;
@@ -1136,8 +1014,6 @@ void HalfPipe::fillBuffers()
         textureUVs.push_back((sinA * uvInner + 1.0f) * 0.5f);
         textureUVs.push_back((cosA + 1.0f) * 0.5f);
         textureUVs.push_back((sinA + 1.0f) * 0.5f);
-
-        colors.insert(colors.end(), { 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f });
     }
     for (int i = 0; i < mSectors; ++i) {
         int k1 = i * 2 + startIndex;
@@ -1182,8 +1058,6 @@ void HalfPipe::fillBuffers()
         textureUVs.push_back((sinA * uvInner + 1.0f) * 0.5f);
         textureUVs.push_back((cosA + 1.0f) * 0.5f);
         textureUVs.push_back((sinA + 1.0f) * 0.5f);
-
-        colors.insert(colors.end(), { 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f });
     }
     for (int i = 0; i < mSectors; ++i) {
         int k1 = i * 2 + startIndex;
@@ -1251,7 +1125,6 @@ void HalfPipe::fillBuffers()
     glBindVertexArray(VAO);
 
     fillVertexBuffer(vertices);
-    fillColorBuffer(colors);
     fillUVBuffer(textureUVs);
     fillNormalBuffer(normals);
     fillIndexBuffer(indices);

@@ -3,7 +3,6 @@
 out vec4 fragColor;
 
 in vec3 fragPos;
-in vec3 color;
 in vec2 texCoord;
 in vec3 normal;
 in vec4 fragPosLightSpace;
@@ -71,7 +70,7 @@ void main() {
         }
 
     // ambient light
-    result += vec3(ambientLight);
+    result += vec3(ambientLight) * vec3(material.ambient);
 
     if (useTexture == 1) {
         fragColor = texture(ourTexture, texCoord) * vec4(result, 1.0f);
