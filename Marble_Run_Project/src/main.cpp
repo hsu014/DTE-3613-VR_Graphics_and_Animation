@@ -368,7 +368,7 @@ void testBulletShapes(RenderInfo& ri, Scene& scene)
 
 
     // Test half pipe
-    Shape* halfPipe = new HalfPipe(0.9f, 1.0f, 20.5f, 10);
+    Shape* halfPipe = new HalfPipe(0.6f, 1.0f, 20.5f, 10);
 
     // Rotate around z, y, x
     q = quatFromYawPitchRoll(0.0f, 90.0f, 2.0f);
@@ -382,6 +382,38 @@ void testBulletShapes(RenderInfo& ri, Scene& scene)
     halfPipe->castShadow();
     halfPipe->setPBody(halfPipeRigidBody);
     scene.addPhongShape(halfPipe);
+
+
+
+    // Test half pipe track
+    std::vector<TrackSupport> supports;
+    supports.push_back({
+        0.0f, 2.0f, 0.0f,   // x, y, z
+        0.0f,              // angle
+        0.4f,               // inner r
+        1.0f                // outer r
+        });
+
+    supports.push_back({
+        0.0f, 2.0f, 3.0f,
+        0.0f, // TODO fix angle
+        0.8f,
+        1.0f
+        });
+
+    supports.push_back({
+        -1.0f, 2.0f, 5.0f,
+        35.0f, // TODO fix angle
+        0.6f,
+        1.0f
+        });
+
+    Shape* track = new HalfPipeTrack(supports);
+
+    track->useTexture(ri.texture["wood"]);
+    track->castShadow();
+    //track->setPBody(trackRigidBody);
+    scene.addPhongShape(track);
 
 }
 

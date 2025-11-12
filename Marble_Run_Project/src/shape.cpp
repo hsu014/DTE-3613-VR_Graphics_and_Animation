@@ -897,11 +897,9 @@ void HalfPipe::fillBuffers()
 
     float xIn, xOut, yIn, yOut;                     // vertex position
     float nx, ny, nz;                               // normal
-    float u, v;                                     // texCoord
     const float uvInner = rInner / rOuter;          // uv distance for inner curve [0 to 1]
 
     const float sectorStep = PI / mSectors;
-    float sectorAngle;
     unsigned int startIndex;
 
     // Inner curve
@@ -1109,13 +1107,13 @@ void HalfPipe::fillBuffers()
     textureUVs.insert(textureUVs.end(), {
         1.0f, 0.0f,
         uvInner, 0.0f,
-        uvInner, 1.0f,
-        1.0f, 1.0f,
+        uvInner, 1.0f * uvRepeat,
+        1.0f, 1.0f * uvRepeat,
 
         1.0f - uvInner, 0.0f,
         0.0f, 0.0f,
-        0.0f, 1.0f,
-        1.0f - uvInner, 1.0f,
+        0.0f, 1.0f * uvRepeat,
+        1.0f - uvInner, 1.0f * uvRepeat,
         });
 
     indices.insert(indices.end(), {
@@ -1125,6 +1123,344 @@ void HalfPipe::fillBuffers()
         startIndex+4, startIndex + 7, startIndex + 6,
         startIndex+4, startIndex + 6, startIndex + 5,
         });
+
+    glBindVertexArray(VAO);
+
+    fillVertexBuffer(vertices);
+    fillUVBuffer(textureUVs);
+    fillNormalBuffer(normals);
+    fillIndexBuffer(indices);
+
+    mVertices = vertices;
+    mIndices = indices;
+
+    // Unbind VAO
+    glBindVertexArray(0);
+}
+
+
+
+HalfPipeTrack::HalfPipeTrack(std::vector<TrackSupport> supports, int sectors) :
+    mSupports(supports), mSectors(sectors)
+{
+    initBuffers();
+    fillBuffers();
+}
+
+void HalfPipeTrack::fillBuffers()
+{
+    if (mSupports.size() < 2) {
+        return;
+    }
+
+    std::vector<float> vertices;
+    std::vector<float> textureUVs;
+    std::vector<float> normals;
+    std::vector<unsigned int> indices;
+
+    int uvRepeat = 1; // std::max(int(mLength / (2 * mOuterRadius)), 1);
+
+    float rInner1, rInner2;
+    float rOuter1, rOuter2;
+
+    float xIn1, xOut1, yIn1, yOut1, zIn1, zOut1;        // vertex position for s1
+    float xIn2, xOut2, yIn2, yOut2, zIn2, zOut2;        // vertex position for s2
+    float nx, ny, nz;                                   // normal
+    float uvInner1, uvInner2;                           // uv distance for inner curve [0 to 1]
+
+    const float sectorStep = PI / mSectors;
+    float sectorAngle;
+    unsigned int startIndex;
+
+    // Segments
+    for (int sIdx = 0; sIdx < mSupports.size() - 1; sIdx++) {
+        TrackSupport s1 = mSupports[sIdx];
+        TrackSupport s2 = mSupports[sIdx + 1];
+
+        float cosR1 = cosf(glm::radians(s1.angle));
+        float cosR2 = cosf(glm::radians(s2.angle));
+        float sinR1 = sinf(glm::radians(s1.angle));
+        float sinR2 = sinf(glm::radians(s2.angle));
+
+        rInner1 = s1.innerRadius;
+        rInner2 = s2.innerRadius;
+        rOuter1 = s1.outerRadius;
+        rOuter2 = s2.outerRadius;
+
+        uvInner1 = rInner1 / rOuter1;
+        uvInner2 = rInner2 / rOuter2;
+
+        // Inner curve
+        startIndex = vertices.size() / 3;
+        for (int i = 0; i <= mSectors; ++i) {
+            float sectorAngle = PI + i * sectorStep;    // starting from pi to 2*pi
+
+            float cosA = cosf(sectorAngle);
+            float sinA = sinf(sectorAngle);
+
+            xIn1 = s1.x + (rInner1 * cosA * cosR1);
+            yIn1 = s1.y + (rInner1 * sinA);
+            zIn1 = s1.z + (rInner1 * cosA * sinR1);
+
+            xIn2 = s2.x + (rInner2 * cosA * cosR2);
+            yIn2 = s2.y + (rInner2 * sinA);
+            zIn2 = s2.z + (rInner2 * cosA * sinR2);
+
+            nx = -cosA * cosR1;
+            ny = -sinA;
+            nz = -cosA * sinR1;
+
+            vertices.insert(vertices.end(), { 
+                xIn1, yIn1, zIn1,
+                xIn2, yIn2, zIn2,
+            });
+
+            normals.insert(normals.end(), { nx, ny, nz, nx, ny, nz });
+
+            textureUVs.insert(textureUVs.end(), {
+                (cosA * uvInner1 + 1.0f) * 0.5f, 0.0f,
+                (sinA * uvInner2 + 1.0f) * 0.5f, 1.0f * uvRepeat,
+            });
+        }
+        for (int i = 0; i < mSectors; ++i) {
+            int k1 = i * 2 + startIndex;
+            int k2 = k1 + 2;
+
+            indices.push_back(k1);
+            indices.push_back(k1 + 1);
+            indices.push_back(k2);
+
+            indices.push_back(k2);
+            indices.push_back(k1 + 1);
+            indices.push_back(k2 + 1);
+        }
+
+        // Outer curve
+        startIndex = vertices.size() / 3;
+        for (int i = 0; i <= mSectors; ++i) {
+            float sectorAngle = PI + i * sectorStep;    // starting from pi to 2*pi
+
+            float cosA = cosf(sectorAngle);
+            float sinA = sinf(sectorAngle);
+
+            xOut1 = s1.x + (rOuter1 * cosA * cosR1);
+            yOut1 = s1.y + (rOuter1 * sinA);
+            zOut1 = s1.z + (rOuter1 * cosA * sinR1);
+
+            xOut2 = s2.x + (rOuter2 * cosA * cosR2);
+            yOut2 = s2.y + (rOuter2 * sinA);
+            zOut2 = s2.z + (rOuter2 * cosA * sinR2);
+
+            nx = cosA * cosR1;
+            ny = sinA;
+            nz = cosA * sinR1;
+
+            vertices.insert(vertices.end(), {
+                xOut1, yOut1, zOut1,
+                xOut2, yOut2, zOut2,
+            });
+
+            normals.insert(normals.end(), { nx, ny, nz, nx, ny, nz });
+
+            textureUVs.insert(textureUVs.end(), {
+                (cosA + 1.0f) * 0.5f, 0.0f,
+                (sinA + 1.0f) * 0.5f, 1.0f * uvRepeat,
+            });
+        }
+        for (int i = 0; i < mSectors; ++i) {
+            int k1 = i * 2 + startIndex;
+            int k2 = k1 + 2;
+
+            indices.push_back(k1);
+            indices.push_back(k2);
+            indices.push_back(k1 + 1);
+
+            indices.push_back(k2);
+            indices.push_back(k2 + 1);
+            indices.push_back(k1 + 1);
+        }
+
+        // Squares
+        startIndex = vertices.size() / 3;
+        nx = 0;
+        ny = 1.0f;
+        nz = 0;
+
+        vertices.insert(vertices.end(), {
+            s1.x + (-rOuter1 * cosR1),
+            s1.y, 
+            s1.z + (-rOuter1 * sinR1),
+            s1.x + (-rInner1 * cosR1),
+            s1.y,
+            s1.z + (-rInner1 * sinR1),
+            s2.x + (-rInner2 * cosR2),
+            s2.y,
+            s2.z + (-rInner2 * sinR2),
+            s2.x + (-rOuter2 * cosR2),
+            s2.y,
+            s2.z + (-rOuter2 * sinR2),
+
+            s1.x + (rInner1 * cosR1), 
+            s1.y, 
+            s1.z + (rInner1 * sinR1),
+            s1.x + (rOuter1 * cosR1), 
+            s1.y,
+            s1.z + (rOuter1 * sinR1),
+            s2.x + (rOuter2 * cosR2), 
+            s2.y, 
+            s2.z + (rOuter2 * sinR2),
+            s2.x + (rInner2 * cosR2), 
+            s2.y, 
+            s2.z + (rInner2 * sinR2),
+        });
+
+        normals.insert(normals.end(), {
+           nx, ny, nz,
+           nx, ny, nz,
+           nx, ny, nz,
+           nx, ny, nz,
+
+           nx, ny, nz,
+           nx, ny, nz,
+           nx, ny, nz,
+           nx, ny, nz,
+        });
+
+        textureUVs.insert(textureUVs.end(), {
+            1.0f, 0.0f,
+            uvInner1, 0.0f,
+            uvInner2, 1.0f * uvRepeat,
+            1.0f, 1.0f * uvRepeat,
+
+            1.0f - uvInner1, 0.0f,
+            0.0f, 0.0f,
+            0.0f, 1.0f * uvRepeat,
+            1.0f - uvInner2, 1.0f * uvRepeat,
+        });
+
+        indices.insert(indices.end(), {
+            startIndex, startIndex + 3, startIndex + 2,
+            startIndex, startIndex + 2, startIndex + 1,
+
+            startIndex + 4, startIndex + 7, startIndex + 6,
+            startIndex + 4, startIndex + 6, startIndex + 5,
+        });
+    }
+
+    // Front face
+    TrackSupport s1 = mSupports.front();
+    float cosR1 = cosf(glm::radians(s1.angle));
+    float sinR1 = sinf(glm::radians(s1.angle));
+
+    rInner1 = s1.innerRadius;
+    rOuter1 = s1.outerRadius;
+
+    nx = -sinR1;
+    ny = 0;
+    nz = -cosR1;
+
+    uvInner1 = rInner1 / rOuter1;
+    
+    startIndex = vertices.size() / 3;
+    for (int i = 0; i <= mSectors; ++i) {
+        float sectorAngle = PI + i * sectorStep;
+
+        float cosA = cosf(sectorAngle);
+        float sinA = sinf(sectorAngle);
+
+        xIn1 = s1.x + (rInner1 * cosA * cosR1);
+        yIn1 = s1.y + (rInner1 * sinA);
+        zIn1 = s1.z + (rInner1 * cosA * sinR1);
+
+        xOut1 = s1.x + (rOuter1 * cosA * cosR1);
+        yOut1 = s1.y + (rOuter1 * sinA);
+        zOut1 = s1.z + (rOuter1 * cosA * sinR1);
+
+        vertices.insert(vertices.end(), {
+            xIn1, yIn1, zIn1,
+            xOut1, yOut1, zOut1,
+        });
+
+        normals.insert(normals.end(), { nx, ny, nz, nx, ny, nz });
+
+        textureUVs.insert(textureUVs.end(), {
+            (cosA * uvInner1 + 1.0f) * 0.5f,
+            (sinA * uvInner1 + 1.0f) * 0.5f,
+            (cosA + 1.0f) * 0.5f,
+            (sinA + 1.0f) * 0.5f,
+        });
+
+        for (int i = 0; i < mSectors; ++i) {
+            int k1 = i * 2 + startIndex;
+            int k2 = k1 + 2;
+
+            indices.push_back(k1);
+            indices.push_back(k2);
+            indices.push_back(k1 + 1);
+
+            indices.push_back(k2);
+            indices.push_back(k2 + 1);
+            indices.push_back(k1 + 1);
+        }
+
+    }
+
+    // Back face
+    TrackSupport s2 = mSupports.back();
+    float cosR2 = cosf(glm::radians(s2.angle));
+    float sinR2 = sinf(glm::radians(s2.angle));
+
+    rInner2 = s2.innerRadius;
+    rOuter2 = s2.outerRadius;
+
+    nx = sinR2;
+    ny = 0;
+    nz = cosR2;
+
+    uvInner2 = rInner2 / rOuter2;
+
+    startIndex = vertices.size() / 3;
+    for (int i = 0; i <= mSectors; ++i) {
+        float sectorAngle = PI + i * sectorStep;
+
+        float cosA = cosf(sectorAngle);
+        float sinA = sinf(sectorAngle);
+
+        xIn2 = s2.x + (rInner2 * cosA * cosR2);
+        yIn2 = s2.y + (rInner2 * sinA);
+        zIn2 = s2.z + (rInner2 * cosA * sinR2);
+
+        xOut2 = s2.x + (rOuter2 * cosA * cosR2);
+        yOut2 = s2.y + (rOuter2 * sinA);
+        zOut2 = s2.z + (rOuter2 * cosA * sinR2);
+
+        vertices.insert(vertices.end(), {
+            xIn2, yIn2, zIn2,
+            xOut2, yOut2, zOut2,
+            });
+
+        normals.insert(normals.end(), { nx, ny, nz, nx, ny, nz });
+
+        textureUVs.insert(textureUVs.end(), {
+            (cosA * uvInner2 + 1.0f) * 0.5f,
+            (sinA * uvInner2 + 1.0f) * 0.5f,
+            (cosA + 1.0f) * 0.5f,
+            (sinA + 1.0f) * 0.5f,
+            });
+
+        for (int i = 0; i < mSectors; ++i) {
+            int k1 = i * 2 + startIndex;
+            int k2 = k1 + 2;
+
+            indices.push_back(k1);
+            indices.push_back(k1 + 1);
+            indices.push_back(k2);
+
+            indices.push_back(k2);
+            indices.push_back(k1 + 1);
+            indices.push_back(k2 + 1);
+        }
+    }
 
     glBindVertexArray(VAO);
 

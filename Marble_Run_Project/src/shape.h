@@ -144,3 +144,12 @@ public:
     HalfPipe(float innerRadius = 0.9f, float outerRadius = 1.0f, float length = 1.0f, int sectors = 10);
     void fillBuffers() override;
 };
+
+class HalfPipeTrack : public Shape {
+private:
+    std::vector<TrackSupport> mSupports;
+    int mSectors;
+public:
+    HalfPipeTrack(std::vector<TrackSupport> supports, int sectors = 10);
+    void fillBuffers() override;
+};

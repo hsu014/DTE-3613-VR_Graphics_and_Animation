@@ -15,6 +15,14 @@ struct Time {
     double dt;
 };
 
+struct TrackSupport {
+    float x, y, z;
+    // Degrees of rotation around y-axis. Starting along x-axis?
+    float angle; 
+    float innerRadius;
+    float outerRadius;
+};
+
 struct AmbientLight {
     glm::vec4 color;
 };
