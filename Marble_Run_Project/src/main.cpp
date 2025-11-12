@@ -259,7 +259,7 @@ void createShapes(RenderInfo& ri, Scene& scene)
     box->useTexture(ri.texture["gray_brick"]);
     box->castShadow();
     modelMatrix = glm::mat4(1.0f);
-    modelMatrix = glm::translate(modelMatrix, glm::vec3(2.0f, 1.0f, 5.0f));
+    modelMatrix = glm::translate(modelMatrix, glm::vec3(-10.0f, 1.0f, 5.0f));
     box->setModelMatrix(modelMatrix);
     scene.addPhongShape(box);
    
@@ -280,21 +280,21 @@ void createShapes(RenderInfo& ri, Scene& scene)
     sphere->setModelMatrix(modelMatrix);
     scene.addPhongShape(sphere);
 
-    Shape* cylinder = new Cylinder(0.5f, 2.0f, 20);
-    cylinder->useTexture(ri.texture["chicken"]);
-    cylinder->castShadow();
-    modelMatrix = glm::mat4(1.0f);
-    modelMatrix = glm::translate(modelMatrix, glm::vec3(6.0f, 5.0f, 0.0f));
-    cylinder->setModelMatrix(modelMatrix);
-    scene.addPhongShape(cylinder);
+    //Shape* cylinder = new Cylinder(0.5f, 2.0f, 20);
+    //cylinder->useTexture(ri.texture["gray_brick"]);
+    //cylinder->castShadow();
+    //modelMatrix = glm::mat4(1.0f);
+    //modelMatrix = glm::translate(modelMatrix, glm::vec3(6.0f, 5.0f, 0.0f));
+    //cylinder->setModelMatrix(modelMatrix);
+    //scene.addPhongShape(cylinder);
 
-    /*Shape* halfPipe = new HalfPipe(0.9f, 1.0f, 5.0f, 10);
-    halfPipe->useTexture(ri.texture["wood"]);
-    halfPipe->castShadow();
-    modelMatrix = glm::mat4(1.0f);
-    modelMatrix = glm::translate(modelMatrix, glm::vec3(0.0f, 5.0f, 0.0f));
-    halfPipe->setModelMatrix(modelMatrix);
-    scene.addPhongShape(halfPipe);*/
+    //Shape* halfPipe = new HalfPipe(0.9f, 1.0f, 5.0f, 10);
+    //halfPipe->useTexture(ri.texture["wood"]);
+    //halfPipe->castShadow();
+    //modelMatrix = glm::mat4(1.0f);
+    //modelMatrix = glm::translate(modelMatrix, glm::vec3(0.0f, 5.0f, 0.0f));
+    //halfPipe->setModelMatrix(modelMatrix);
+    //scene.addPhongShape(halfPipe);
 
 }
 
@@ -368,7 +368,7 @@ void testBulletShapes(RenderInfo& ri, Scene& scene)
 
 
     // Test half pipe
-    Shape* halfPipe = new HalfPipe(0.9f, 1.0f, 20.0f, 10);
+    Shape* halfPipe = new HalfPipe(0.9f, 1.0f, 20.5f, 10);
 
     // Rotate around z, y, x
     q = quatFromYawPitchRoll(0.0f, 90.0f, 2.0f);

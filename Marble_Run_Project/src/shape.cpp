@@ -106,8 +106,8 @@ void Shape::draw(GLuint shaderProgram)
         shaderSetInt(shaderProgram, "useTexture", 1);
         glActiveTexture(GL_TEXTURE0);
 
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
@@ -735,6 +735,8 @@ void Cylinder::fillBuffers()
     std::vector<float> normals;
     std::vector<unsigned int> indices;
 
+    int uvRepeat = std::max(int(mHeight / (2 * mRadius)), 1);
+
     const float radius = mRadius;
     const float h = mHeight / 2;
 
@@ -766,7 +768,7 @@ void Cylinder::fillBuffers()
         normals.insert(normals.end(), { nx, ny, nz, nx, ny, nz });
 
         u = (float)i / mSectors;
-        textureUVs.insert(textureUVs.end(), { u, 1.0f, u, 0.0f });
+        textureUVs.insert(textureUVs.end(), { u, 1.0f * uvRepeat, u, 0.0f });
 
     }
 
@@ -887,6 +889,8 @@ void HalfPipe::fillBuffers()
     std::vector<float> normals;
     std::vector<unsigned int> indices;
 
+    int uvRepeat = std::max(int(mLength / (2*mOuterRadius)), 1);
+
     const float rInner = mInnerRadius;
     const float rOuter = mOuterRadius;
     const float length = mLength / 2.0f;
@@ -926,7 +930,7 @@ void HalfPipe::fillBuffers()
 
         textureUVs.insert(textureUVs.end(), {
         (cosA * uvInner + 1.0f) * 0.5f, 0.0f,
-        (sinA * uvInner + 1.0f) * 0.5f, 1.0f,
+        (sinA * uvInner + 1.0f) * 0.5f, 1.0f * uvRepeat,
             });
     }
     for (int i = 0; i < mSectors; ++i) {
@@ -968,7 +972,7 @@ void HalfPipe::fillBuffers()
 
         textureUVs.insert(textureUVs.end(), {
         (cosA + 1.0f) * 0.5f, 0.0f,
-        (sinA + 1.0f) * 0.5f, 1.0f,
+        (sinA + 1.0f) * 0.5f, 1.0f * uvRepeat,
             });
     }
     for (int i = 0; i < mSectors; ++i) {
