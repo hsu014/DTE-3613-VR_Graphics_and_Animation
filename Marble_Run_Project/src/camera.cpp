@@ -85,7 +85,7 @@ void Camera::processInput()
     if (glfwGetKey(mWindow, GLFW_KEY_2) == GLFW_PRESS)
     {
         mCameraMode = FOLLOW;
-        mCameraDistance = 3.0f;
+        mCameraDistance = 8.0f;
     }
 }
 

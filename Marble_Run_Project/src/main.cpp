@@ -13,6 +13,7 @@
 #include "camera.h"
 #include "scene.h"
 #include "bulletHelpers.h"
+#include "trackSupportGenerator.h"
 
 #include <BulletDynamics/Dynamics/btDynamicsWorld.h>
 #include <btBulletDynamicsCommon.h>
@@ -325,7 +326,7 @@ void testBulletShapes(RenderInfo& ri, Scene& scene)
     btScalar friction = 0.8f;
 
     btRigidBody* sphereRigidBody = createMarbleRigidBody(
-        mass, radius, { 0.0f, 4.0f, 0.0f }, restitution, friction);
+        mass, radius, { 0.0f, 11.0f, 0.0f }, restitution, friction);
 
     ri.bullet.pWorld->addRigidBody(sphereRigidBody);
     ri.camera->setPBody(sphereRigidBody);
@@ -387,32 +388,36 @@ void testBulletShapes(RenderInfo& ri, Scene& scene)
 
     // Test half pipe track
     std::vector<TrackSupport> supports;
-    supports.push_back({
-        0.0f, 2.0f, 0.0f,   // x, y, z
-        0.0f,              // angle
-        0.4f,               // inner r
-        1.0f                // outer r
-        });
 
-    supports.push_back({
-        0.0f, 2.0f, 3.0f,
-        0.0f, // TODO fix angle
-        0.8f,
-        1.0f
-        });
+    TrackSupportGenerator trackGenerator = TrackSupportGenerator();
+    trackGenerator.newTrack(0.0f, 10.0f, -1.0f, 0.0f);
+    trackGenerator.forward(4.0f, -1.0f);
+    trackGenerator.turn(-45.0f, 4.0f, 4);
 
-    supports.push_back({
-        -1.0f, 2.0f, 5.0f,
-        35.0f, // TODO fix angle
-        0.6f,
-        1.0f
-        });
+    trackGenerator.forward(1.0f, 0.0f);
+    trackGenerator.forward(1.0f, -1.0f, 0.6f, 1.0f);
+    trackGenerator.forward(1.0f, 0.0f, 0.6f, 1.0f);
+    trackGenerator.forward(1.0f, 0.0f, 0.9f, 1.0f);
+    trackGenerator.turn(180.0f, 4.0f, 8);
 
+    trackGenerator.forward(4.0f, -3.0f);
+    trackGenerator.turn(45.0f, 4.0f, 4);
+
+    trackGenerator.forward(8.0f, 0.0f);
+
+    supports = trackGenerator.getSupports();
     Shape* track = new HalfPipeTrack(supports);
+
+    q = quatFromYawPitchRoll(0.0f, 0.0f, 0.0f);
+    btTriangleMesh* trackMesh = createBtTriangleMesh(track);
+    btRigidBody* trackRigidBody = createStaticRigidBody(
+        trackMesh, { 0, 0, 0 }, q, 0.6f, 0.5f);
+
+    ri.bullet.pWorld->addRigidBody(trackRigidBody);
 
     track->useTexture(ri.texture["wood"]);
     track->castShadow();
-    //track->setPBody(trackRigidBody);
+    track->setPBody(trackRigidBody);
     scene.addPhongShape(track);
 
 }
@@ -450,7 +455,7 @@ void animate(GLFWwindow* window, RenderInfo& ri, Scene& scene)
         if (ri.time.current - lastTime >= 1.0) // every 1 second
         {
             double fps = double(frameCount) / (ri.time.current - lastTime);
-            std::cout << "FPS: " << fps << std::endl;
+            //std::cout << "FPS: " << fps << std::endl;
 
             // Optional: show FPS in window title
             std::string title = "OpenGL App - FPS: " + std::to_string(int(fps));
