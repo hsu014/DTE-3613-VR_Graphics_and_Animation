@@ -191,6 +191,9 @@ void loadTextures(RenderInfo& ri)
 
     ri.texture["chicken"] = Utils::loadTexture("src/textures/mc_chicken.jpeg");
     ri.texture["particle"] = Utils::loadTexture("src/textures/particle.png");
+    ri.texture["particle_star1"] = Utils::loadTexture("src/textures/particle_star1.png");
+    ri.texture["particle_star2"] = Utils::loadTexture("src/textures/particle_star2.png");
+    ri.texture["particle_star3"] = Utils::loadTexture("src/textures/particle_star3.png");
     ri.texture["grass"] = Utils::loadTexture("src/textures/grass.png");
 
     ri.texture["bark"] = Utils::loadTexture("src/textures/bark.png");
@@ -404,7 +407,7 @@ void testBulletShapes(RenderInfo& ri, Scene& scene)
     smokeEmitter->setPBody(sphereRigidBody);
     scene.addEmitter(smokeEmitter);*/
 
-    Emitter* trailEmitter = new TrailEmitter(0.1f, 10.0f, radius * 0.5f, ri.texture["particle"]);
+    Emitter* trailEmitter = new TrailEmitter(0.1f, 10.0f, radius * 0.5f, ri.texture["particle_star1"]);
     trailEmitter->setPBody(sphereRigidBody);
     scene.addEmitter(trailEmitter);
 
