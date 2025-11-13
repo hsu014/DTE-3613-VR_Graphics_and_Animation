@@ -34,7 +34,7 @@ void TrackSupportGenerator::forward(
 }
 
 void TrackSupportGenerator::turn(
-	float angle, float radius, int sections, float innerR, float outerR)
+	float angle, float radius, float dHeight, int sections, float innerR, float outerR)
 {
 	// Creates [sections] new supports. Previous support acting as first point in turn.
 	TrackSupport last = mSupports.back();
@@ -43,6 +43,7 @@ void TrackSupportGenerator::turn(
 	float startAngle = glm::radians(last.angle);
 	float turnAngle = glm::radians(angle);
 	float sectionStep = turnAngle / sections;
+	float sectionHeightStep = dHeight / (sections + 1);
 	int turnCW = 1;		// Turn is clockwise
 
 	glm::vec3 dir = glm::vec3(-sinf(startAngle), 0.0f, cosf(startAngle));
@@ -58,9 +59,10 @@ void TrackSupportGenerator::turn(
 
 	for (int i = 1; i <= sections; i++) {
 		float sectionAngle = startAngle + i * sectionStep;
+		float sectionHeight = i * sectionHeightStep;
 
 		x = turnCenter.x + cosf(sectionAngle) * radius * turnCW;
-		y = last.y;
+		y = last.y + sectionHeight;
 		z = turnCenter.z + sinf(sectionAngle) * radius * turnCW;
 
 		mSupports.push_back({

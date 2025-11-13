@@ -637,8 +637,9 @@ void Sphere::fillBuffers()
     const float radius = mRadius;
 
     float x, y, z, xy;                              // vertex position
-    float nx, ny, nz, lengthInv = 1.0f / radius;    // normal
-    float u, v;                                     // texCoord
+    float nx, ny, nz;                               // normal
+    float lengthInv = 1.0f / radius;
+    float u, v;
 
     const float sectorStep = 2 * PI / mSectors;
     const float stackStep = PI / mStacks;
@@ -691,16 +692,12 @@ void Sphere::fillBuffers()
         k2 = k1 + mSectors + 1;      // beginning of next stack
 
         for (int j = 0; j < mSectors; ++j, ++k1, ++k2) {
-            // 2 triangles per sector excluding 1st and last stacks
             if (i != 0) {
-                //addIndices(k1, k2, k1 + 1);   // k1---k2---k1+1
                 indices.push_back(k1);
                 indices.push_back(k2);
                 indices.push_back(k1 + 1);
             }
-
             if (i != (mStacks - 1)) {
-                //addIndices(k1 + 1, k2, k2 + 1); // k1+1---k2---k2+1
                 indices.push_back(k1 + 1);
                 indices.push_back(k2);
                 indices.push_back(k2 + 1);
@@ -1158,7 +1155,7 @@ void HalfPipeTrack::fillBuffers()
     std::vector<float> normals;
     std::vector<unsigned int> indices;
 
-    int uvRepeat = 1; // std::max(int(mLength / (2 * mOuterRadius)), 1);
+    int uvRepeat = 1;
 
     float rInner1, rInner2;
     float rOuter1, rOuter2;
@@ -1189,6 +1186,10 @@ void HalfPipeTrack::fillBuffers()
 
         uvInner1 = rInner1 / rOuter1;
         uvInner2 = rInner2 / rOuter2;
+
+        float length = std::sqrt(std::pow(s2.x - s1.x, 2) + std::pow(s2.y - s1.y, 2) + std::pow(s2.z - s1.z, 2));
+
+        uvRepeat = std::max(int(length / (rOuter1 + rOuter2)), 1);
 
         // Inner curve
         startIndex = vertices.size() / 3;
