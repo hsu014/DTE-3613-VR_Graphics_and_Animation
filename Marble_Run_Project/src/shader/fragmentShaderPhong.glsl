@@ -51,9 +51,9 @@ uniform Material material;
 
 
 // function prototypes
-vec3 CalcDirLight(DirectionalLight light, vec3 normal, vec3 viewDir, vec4 fragPosLightSpace);
+vec3 CalcDirLight(DirectionalLight light, vec3 normal, vec3 viewDir);
 vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir);
-float ShadowCalculation(vec4 fragPosLightSpace, vec3 normal, vec3 lightDir);
+float ShadowCalculation(vec3 normal, vec3 lightDir);
 
 
 void main() {
@@ -62,7 +62,7 @@ void main() {
     vec3 viewDir = normalize(uViewPos - fragPos);
 
 	// Directional lighting
-    vec3 result = CalcDirLight(dirLight, norm, viewDir, fragPosLightSpace);
+    vec3 result = CalcDirLight(dirLight, norm, viewDir);
 
 	// Point lights
     for(int i = 0; i < numPointLights; i++) {
@@ -82,7 +82,7 @@ void main() {
 
 
 
-vec3 CalcDirLight(DirectionalLight light, vec3 normal, vec3 viewDir, vec4 fragPosLightSpace_)
+vec3 CalcDirLight(DirectionalLight light, vec3 normal, vec3 viewDir)
 {
     vec3 lightDir = normalize(-light.direction);
     
@@ -99,7 +99,7 @@ vec3 CalcDirLight(DirectionalLight light, vec3 normal, vec3 viewDir, vec4 fragPo
 	vec3 specular = vec3(light.specular) * spec * vec3(material.specular);
     
     // shadow factor
-    float shadow = ShadowCalculation(fragPosLightSpace_, normal, lightDir);
+    float shadow = ShadowCalculation(normal, lightDir);
 
     return ambient + (1.0 - shadow) * (diffuse + specular);
 }
@@ -134,7 +134,7 @@ vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
 
 
 
-float ShadowCalculation(vec4 fragPosLightSpace_, vec3 normal, vec3 lightDir)
+float ShadowCalculation(vec3 normal, vec3 lightDir)
 {
     // Perspective divide
     vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;  // [-1, 1]
