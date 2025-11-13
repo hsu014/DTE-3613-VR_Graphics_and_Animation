@@ -70,6 +70,7 @@ public:
 	std::vector<Skybox*> mSkybox;
 
 	// Shadow map
+	float mShadowAreaSize = 100;
 	const GLuint mSHADOW_WIDTH = 8192;
 	const GLuint mSHADOW_HEIGHT = 8192;
 	GLuint FBO;

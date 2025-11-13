@@ -47,7 +47,7 @@ void Scene::updateLightSpaceMatrix()
 		lightInvDir = glm::normalize(glm::vec3{ 0.0f, 1.0, -0.000000001 });
 	}
 
-	float orthoSize = 25.0f;
+	float orthoSize = mShadowAreaSize / 2;
 
 	glm::mat4 lightProjection = glm::ortho(-orthoSize, orthoSize, -orthoSize, orthoSize, 1.0f, orthoSize*2.0f);
 
