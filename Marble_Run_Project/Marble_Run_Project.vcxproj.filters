@@ -184,13 +184,37 @@
     <Image Include="src\textures\skybox\sky_42\pz.png">
       <Filter>Resource Files\textures\skybox\sky_42</Filter>
     </Image>
-    <Image Include="src\textures\fire.png">
-      <Filter>Resource Files\textures</Filter>
-    </Image>
     <Image Include="src\textures\mc_chicken.jpeg">
       <Filter>Resource Files\textures</Filter>
     </Image>
     <Image Include="src\textures\particle.png">
+      <Filter>Resource Files\textures</Filter>
+    </Image>
+    <Image Include="src\textures\bark.png">
+      <Filter>Resource Files\textures</Filter>
+    </Image>
+    <Image Include="src\textures\galvanized_blue.jpg">
+      <Filter>Resource Files\textures</Filter>
+    </Image>
+    <Image Include="src\textures\grass.png">
+      <Filter>Resource Files\textures</Filter>
+    </Image>
+    <Image Include="src\textures\gray_brick.jpg">
+      <Filter>Resource Files\textures</Filter>
+    </Image>
+    <Image Include="src\textures\ivy.png">
+      <Filter>Resource Files\textures</Filter>
+    </Image>
+    <Image Include="src\textures\lava.png">
+      <Filter>Resource Files\textures</Filter>
+    </Image>
+    <Image Include="src\textures\pebbles.png">
+      <Filter>Resource Files\textures</Filter>
+    </Image>
+    <Image Include="src\textures\rock.png">
+      <Filter>Resource Files\textures</Filter>
+    </Image>
+    <Image Include="src\textures\wood.png">
       <Filter>Resource Files\textures</Filter>
     </Image>
   </ItemGroup>

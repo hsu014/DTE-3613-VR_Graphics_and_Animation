@@ -188,12 +188,27 @@ void loadTextures(RenderInfo& ri)
     ri.texture["heightmap_2"] = Utils::loadTexture("src/textures/heightmaps/heightmap_2.png");
     ri.texture["heightmap_3"] = Utils::loadTexture("src/textures/heightmaps/heightmap_3.png");
     ri.texture["heightmap_4"] = Utils::loadTexture("src/textures/heightmaps/heightmap_4.png");
+
     ri.texture["chicken"] = Utils::loadTexture("src/textures/mc_chicken.jpeg");
     ri.texture["particle"] = Utils::loadTexture("src/textures/particle.png");
-    ri.texture["fire"] = Utils::loadTexture("src/textures/fire.png");
-    ri.texture["wood"] = Utils::loadTexture("src/textures/wood.png");
-    ri.texture["gray_brick"] = Utils::loadTexture("src/textures/gray_brick.jpg");
     ri.texture["grass"] = Utils::loadTexture("src/textures/grass.png");
+
+    ri.texture["bark"] = Utils::loadTexture("src/textures/bark.png");
+    ri.texture["fire"] = Utils::loadTexture("src/textures/fire.png");
+    ri.texture["galvanized_blue"] = Utils::loadTexture("src/textures/galvanized_blue.jpg");
+    ri.texture["gray_brick"] = Utils::loadTexture("src/textures/gray_brick.jpg");
+    ri.texture["ice"] = Utils::loadTexture("src/textures/ice.jpg");
+    ri.texture["ivy"] = Utils::loadTexture("src/textures/ivy.png");
+    ri.texture["lava"] = Utils::loadTexture("src/textures/lava.png");
+    ri.texture["leaf"] = Utils::loadTexture("src/textures/leaf.png");
+    ri.texture["pebbles"] = Utils::loadTexture("src/textures/pebbles.png");
+    ri.texture["pebbles2"] = Utils::loadTexture("src/textures/pebbles2.png");
+    ri.texture["rock"] = Utils::loadTexture("src/textures/rock.png");
+    ri.texture["tile"] = Utils::loadTexture("src/textures/tile.png");
+    ri.texture["tile2"] = Utils::loadTexture("src/textures/tile2.png");
+    ri.texture["water"] = Utils::loadTexture("src/textures/water.png");
+    ri.texture["wood"] = Utils::loadTexture("src/textures/wood.png");
+    
 }
 
 void loadSkyboxTextures(RenderInfo& ri)
@@ -213,9 +228,6 @@ void loadHeightmaps(RenderInfo& ri)
         std::make_shared<std::vector<std::vector<float>>>(Utils::loadHeightMap("src/textures/heightmaps/heightmap_3.png"));
     ri.heightMap["heightmap_4"] =
         std::make_shared<std::vector<std::vector<float>>>(Utils::loadHeightMap("src/textures/heightmaps/heightmap_4.png"));
-    ri.heightMap["chicken"] =
-        std::make_shared<std::vector<std::vector<float>>>(Utils::loadHeightMap("src/textures/heightmaps/mc_chicken.jpeg"));
-
 }
 
 void createLights(Scene& scene)
@@ -262,21 +274,38 @@ void createShapes(RenderInfo& ri, Scene& scene)
     int num_y;
 
     // Boxes:
-    middle_pos = { 0.0, 3.0, 0.0 };
-    num_x = 0;
-    num_y = 0;
+    middle_pos = { 0.0f, 5.0f, -4.0f };
+    std::vector<GLuint> tex = {
+        ri.texture["bark"],
+        ri.texture["fire"],
+        ri.texture["galvanized_blue"], 
+        ri.texture["gray_brick"],
+        ri.texture["ice"],
+        ri.texture["ivy"],
+        ri.texture["lava"],
+        ri.texture["leaf"],
+        ri.texture["pebbles"],
+        ri.texture["pebbles2"],
+        ri.texture["rock"],
+        ri.texture["tile"],
+        ri.texture["tile2"],
+        ri.texture["water"],
+    };
+    num_x = tex.size();
+    num_y = 1;
     for (int i = 0; i < num_x; i++) {
         for (int j = 0; j < num_y; j++) {
             float x = middle_pos.x - (num_x / 2.0f) + i;
             float y = middle_pos.y - (num_y / 2.0f) + j;
             float z = middle_pos.z;
 
-            Shape* box = new Box(0.5, 0.5, 0.5);
-            box->useTexture(ri.texture["wood"]);
+            Shape* box = new Sphere(0.4f);
+            //Shape* box = new Box(0.5f, 0.5f, 0.5f);
+            box->useTexture(tex[i]);
             box->castShadow();
             modelMatrix = glm::mat4(1.0f);
             modelMatrix = glm::translate(modelMatrix, glm::vec3(x, y, z));
-            modelMatrix = glm::rotate(modelMatrix, glm::radians(i * 10.0f), { 0,1,0 });
+            modelMatrix = glm::rotate(modelMatrix, glm::radians(90.0f), { 1,0,0 });
             box->setModelMatrix(modelMatrix);
             scene.addPhongShape(box);
         }
@@ -302,7 +331,8 @@ void createShapes(RenderInfo& ri, Scene& scene)
     //scene.addPhongShape(pyramid);
 
     Shape* sphere = new Sphere(1.2);
-    sphere->setMaterial(material.brass);
+    //sphere->setMaterial(material.brass);
+    sphere->useTexture(ri.texture["lava"]);
     sphere->castShadow();
     modelMatrix = glm::mat4(1.0f);
     modelMatrix = glm::translate(modelMatrix, glm::vec3(-10.0, 5.0, -2.2));
