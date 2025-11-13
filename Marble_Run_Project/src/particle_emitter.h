@@ -30,7 +30,8 @@ public:
 	Emitter(int particlesPerSecond=0, float particleLifetime=0, float radius=0, float particleSize=0.1, GLuint texture=0);
 	~Emitter();
 
-	void initializeParticles();
+	virtual void initializeParticles();
+	void fillBuffers();
 	void setPosition(glm::vec3 position);
 	void resetParticle(Particle& p);
 	int findUnusedParticle();
@@ -69,6 +70,17 @@ class SmokeEmitter : public Emitter {
 public:
 	using Emitter::Emitter;
 	void updateParticles(float dt) override;
+};
+
+class TrailEmitter : public Emitter {	
+public:
+	TrailEmitter(float timeBetween = 0.1, float particleLifetime = 0, float particleSize = 0.1, GLuint texture = 0);
+	void initializeParticles() override;
+	void updateParticles(float dt) override;
+
+	float mTimeBetweenParticles;
+	float mTimeSinceLast;
+	glm::vec4 mColor;
 };
 
 

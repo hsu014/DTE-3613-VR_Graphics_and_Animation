@@ -19,7 +19,11 @@ void Emitter::initializeParticles()
     mNumParticles = mNumNewParticles * mParticleLifetime * 1.5;
     mParticlesContainer.resize(mNumParticles, Particle());
 
-    // Fill buffers
+    fillBuffers(); 
+}
+
+void Emitter::fillBuffers()
+{
     float size = 1.0f;
 
     float vertices[] = {
@@ -271,4 +275,62 @@ void SmokeEmitter::updateParticles(float dt)
         p.position += mPosition;
     }
 
+}
+
+
+
+TrailEmitter::TrailEmitter(float timeBetween, float particleLifetime, float particleSize, GLuint texture)
+{
+    mTimeBetweenParticles = timeBetween;
+    mTimeSinceLast = timeBetween;
+    mParticleLifetime = particleLifetime;
+    mSize = particleSize;
+    mTexture = texture;
+
+    mColor = glm::vec4{1.0f, 0.0f, 0.0f, 0.5f };
+
+    initializeParticles();
+}
+
+void TrailEmitter::initializeParticles()
+{
+    mNumParticles = mParticleLifetime / mTimeBetweenParticles * 1.1;
+    mParticlesContainer.resize(mNumParticles, Particle());
+
+    fillBuffers();
+}
+
+void TrailEmitter::updateParticles(float dt)
+{
+    for (Particle& p : mParticlesContainer) {
+        p.life -= dt;
+
+        if (p.life > 0.0) {
+            float lifeSpan = p.life / mParticleLifetime;    // % of life remaining, [1, 0]
+
+            p.color.a = std::min(p.color.a, lifeSpan);
+        }
+        else {
+            resetParticle(p);
+        }
+    }
+
+    // Spawn new particles:
+    if (mTimeSinceLast >= mTimeBetweenParticles) {
+        mTimeSinceLast -= mTimeBetweenParticles;
+
+        int p_idx = findUnusedParticle();
+        Particle& p = mParticlesContainer[p_idx];
+
+        p.color = {
+            mColor.r,
+            mColor.g,
+            mColor.b,
+            mColor.a
+        };
+
+        p.life = mParticleLifetime;
+        p.position += mPosition;
+    }
+    mTimeSinceLast += dt;
 }

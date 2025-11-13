@@ -370,10 +370,13 @@ void testBulletShapes(RenderInfo& ri, Scene& scene)
     flameEmitter->setPBody(sphereRigidBody);
     scene.addEmitter(flameEmitter);
 
-    Emitter* smokeEmitter = new SmokeEmitter(200, 3.0f, radius * 1.2, radius * 0.1f, ri.texture["particle"]);
+    /*Emitter* smokeEmitter = new SmokeEmitter(200, 3.0f, radius * 1.2, radius * 0.3f, ri.texture["particle"]);
     smokeEmitter->setPBody(sphereRigidBody);
-    scene.addEmitter(smokeEmitter);
+    scene.addEmitter(smokeEmitter);*/
 
+    Emitter* trailEmitter = new TrailEmitter(0.1f, 10.0f, radius * 0.5f, ri.texture["particle"]);
+    trailEmitter->setPBody(sphereRigidBody);
+    scene.addEmitter(trailEmitter);
 
 
     // Test pyramid: 
@@ -422,8 +425,8 @@ void testBulletShapes(RenderInfo& ri, Scene& scene)
     trackGenerator.turn(-45.0f, 4.0f, 0.0f, 4);
 
     trackGenerator.forward(1.0f, 0.0f);
-    trackGenerator.forward(4.0f, -1.0f, 0.6f, 1.0f);
-    trackGenerator.forward(2.0f, 0.0f, 0.6f, 1.0f);
+    trackGenerator.forward(3.0f, -0.5f, 0.6f, 1.0f);
+    trackGenerator.forward(3.0f, -0.5f, 0.8f, 1.0f);
     trackGenerator.forward(1.0f, 0.0f, 0.9f, 1.0f);
     trackGenerator.turn(180.0f, 4.0f, 0.0f, 8);
 
@@ -474,8 +477,8 @@ void animate(GLFWwindow* window, RenderInfo& ri, Scene& scene)
         if (paused) {
             ri.time.dt = 0.0;
         }
-        ri.bullet.pWorld->stepSimulation(float(ri.time.dt));
         drawScene(scene, *ri.camera, ri.time.dt);
+        ri.bullet.pWorld->stepSimulation(float(ri.time.dt));
 
         // FPS 
         frameCount++;
