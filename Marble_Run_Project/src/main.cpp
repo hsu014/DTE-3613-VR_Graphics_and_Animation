@@ -6,6 +6,9 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include <BulletDynamics/Dynamics/btDynamicsWorld.h>
+#include <btBulletDynamicsCommon.h>
+
 #include "Utils.h"
 #include "shape.h"
 #include "particle_emitter.h"
@@ -14,9 +17,6 @@
 #include "scene.h"
 #include "bulletHelpers.h"
 #include "trackSupportGenerator.h"
-
-#include <BulletDynamics/Dynamics/btDynamicsWorld.h>
-#include <btBulletDynamicsCommon.h>
 
 #include "imgui.h"
 #include "backends/imgui_impl_glfw.h"
@@ -40,10 +40,7 @@ void drawScene(Scene& scene, Camera& camera);
 
 // settings 
 unsigned int SCR_WIDTH = 3000;
-unsigned int SCR_HEIGHT = 1800;
-
-const double CAMERA_SPEED = 4;
-const double CAMERA_ROT_SPEED = 8;
+unsigned int SCR_HEIGHT = 1600;
 
 Utils util = Utils();
 Material material{};
@@ -310,7 +307,6 @@ void testBulletShapes(RenderInfo& ri, Scene& scene)
     ri.bullet.pWorld->addRigidBody(planeRigidBody);
 
     Shape* plane = new Plane(100, 100);
-    //plane->setMaterial(material.emerald);
     plane->useTexture(ri.texture["grass"]);
     plane->setPBody(planeRigidBody);
     scene.addPhongShape(plane);
@@ -321,7 +317,7 @@ void testBulletShapes(RenderInfo& ri, Scene& scene)
     glm::mat4 modelMatrix = glm::mat4(1.0f);
 
     btScalar mass = 1.0f;
-    btScalar radius = 0.3f;
+    btScalar radius = 0.1f;
     btScalar restitution = 0.6f; 
     btScalar friction = 0.8f;
 
@@ -339,13 +335,13 @@ void testBulletShapes(RenderInfo& ri, Scene& scene)
     scene.addPhongShape(sphere);
 
     // Emitters
-    Emitter* flameEmitter = new FlameEmitter(400, 1.0f, radius * 1.2, 0.1f, ri.texture["particle"]);
+    /*Emitter* flameEmitter = new FlameEmitter(400, 0.7f, radius * 1.2, radius * 0.2f, ri.texture["particle"]);
     flameEmitter->setPBody(sphereRigidBody);
     scene.addEmitter(flameEmitter);
 
-    Emitter* smokeEmitter = new SmokeEmitter(200, 5.0f, radius * 1.2, 0.05f, ri.texture["particle"]);
+    Emitter* smokeEmitter = new SmokeEmitter(200, 3.0f, radius * 1.2, radius * 0.1f, ri.texture["particle"]);
     smokeEmitter->setPBody(sphereRigidBody);
-    scene.addEmitter(smokeEmitter);
+    scene.addEmitter(smokeEmitter);*/
 
 
 
@@ -392,18 +388,24 @@ void testBulletShapes(RenderInfo& ri, Scene& scene)
     TrackSupportGenerator trackGenerator = TrackSupportGenerator();
     trackGenerator.newTrack(0.0f, 10.0f, -1.0f, 0.0f);
     trackGenerator.forward(4.0f, -1.0f);
-    trackGenerator.turn(-45.0f, 4.0f, 4);
+    trackGenerator.turn(-45.0f, 4.0f, 0.0f, 4);
 
     trackGenerator.forward(1.0f, 0.0f);
-    trackGenerator.forward(1.0f, -1.0f, 0.6f, 1.0f);
-    trackGenerator.forward(1.0f, 0.0f, 0.6f, 1.0f);
+    trackGenerator.forward(4.0f, -1.0f, 0.6f, 1.0f);
+    trackGenerator.forward(2.0f, 0.0f, 0.6f, 1.0f);
     trackGenerator.forward(1.0f, 0.0f, 0.9f, 1.0f);
-    trackGenerator.turn(180.0f, 4.0f, 8);
+    trackGenerator.turn(180.0f, 4.0f, 0.0f, 8);
 
-    trackGenerator.forward(4.0f, -3.0f);
-    trackGenerator.turn(45.0f, 4.0f, 4);
+    trackGenerator.forward(4.0f, -0.5f);
+    trackGenerator.turn(765.0f, 4.0f, -6.0f, 50);
 
-    trackGenerator.forward(8.0f, 0.0f);
+    trackGenerator.forward(15.0f, 0.0f);
+    trackGenerator.forward(2.0f, 0.5f);
+    trackGenerator.forward(0.1f, -0.5f);
+    trackGenerator.forward(6.0f, 0.0f);
+    trackGenerator.turn(-180.0f, 10.0f, 0.0f, 16);
+
+    trackGenerator.forward(8.0f, -0.4f, 0.5f, 0.6f);
 
     supports = trackGenerator.getSupports();
     Shape* track = new HalfPipeTrack(supports);
@@ -458,8 +460,8 @@ void animate(GLFWwindow* window, RenderInfo& ri, Scene& scene)
             //std::cout << "FPS: " << fps << std::endl;
 
             // Optional: show FPS in window title
-            std::string title = "OpenGL App - FPS: " + std::to_string(int(fps));
-            glfwSetWindowTitle(window, title.c_str());
+            // std::string title = "OpenGL App - FPS: " + std::to_string(int(fps));
+            // glfwSetWindowTitle(window, title.c_str());
 
             frameCount = 0;
             lastTime = ri.time.current;
