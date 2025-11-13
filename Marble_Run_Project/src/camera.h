@@ -42,7 +42,7 @@ public:
 	
 	// Variables
 	GLFWwindow* mWindow;
-	float mCameraSpeed = 4.0f;
+	float mCameraSpeed = 7.0f;
 	float mMouseSensitivity = 0.1f;
 	float mZoomSensitivity = 3.0f;
 

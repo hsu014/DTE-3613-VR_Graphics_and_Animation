@@ -15,52 +15,41 @@ void Camera::processInput()
     float zoomAmount = static_cast<float>(mZoomSensitivity * mDt);
 
     // Move camera
-    if (mCameraMode == FREE)
-    {
-        if (glfwGetKey(mWindow, GLFW_KEY_W) == GLFW_PRESS)
-        {
+    if (mCameraMode == FREE) {
+        if (glfwGetKey(mWindow, GLFW_KEY_W) == GLFW_PRESS) {
             glm::vec3 forward = mFront;
             forward.y = 0.0f;
             mPos += glm::normalize(forward) * moveAmount;
         }
-        if (glfwGetKey(mWindow, GLFW_KEY_S) == GLFW_PRESS)
-        {
+        if (glfwGetKey(mWindow, GLFW_KEY_S) == GLFW_PRESS) {
             glm::vec3 forward = mFront;
             forward.y = 0.0f;
             mPos -= glm::normalize(forward) * moveAmount;
         }
-        if (glfwGetKey(mWindow, GLFW_KEY_A) == GLFW_PRESS)
-        {
+        if (glfwGetKey(mWindow, GLFW_KEY_A) == GLFW_PRESS) {
             mPos -= glm::normalize(glm::cross(mFront, mUp)) * moveAmount;
         }
-        if (glfwGetKey(mWindow, GLFW_KEY_D) == GLFW_PRESS)
-        {
+        if (glfwGetKey(mWindow, GLFW_KEY_D) == GLFW_PRESS) {
             mPos += glm::normalize(glm::cross(mFront, mUp)) * moveAmount;
         }
-        if (glfwGetKey(mWindow, GLFW_KEY_SPACE) == GLFW_PRESS)
-        {
+        if (glfwGetKey(mWindow, GLFW_KEY_SPACE) == GLFW_PRESS) {
             mPos[1] += moveAmount;
         }
-        if (glfwGetKey(mWindow, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
-        {
+        if (glfwGetKey(mWindow, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
             mPos[1] -= moveAmount;
         }
     }
 
     // Controll follow cam
-    if (mCameraMode == FOLLOW)
-    {
-        if (glfwGetKey(mWindow, GLFW_KEY_W) == GLFW_PRESS)
-        {
+    if (mCameraMode == FOLLOW) {
+        if (glfwGetKey(mWindow, GLFW_KEY_W) == GLFW_PRESS) {
             mCameraDistance -= zoomAmount;
             if (mCameraDistance < 0.1f) mCameraDistance = 0.1f;
         }
-        if (glfwGetKey(mWindow, GLFW_KEY_S) == GLFW_PRESS)
-        {
+        if (glfwGetKey(mWindow, GLFW_KEY_S) == GLFW_PRESS) {
             mCameraDistance += zoomAmount;
         }
-        if (glfwGetKey(mWindow, GLFW_KEY_SPACE) == GLFW_PRESS)
-        {
+        if (glfwGetKey(mWindow, GLFW_KEY_SPACE) == GLFW_PRESS) {
             mCameraMode = FREE;
             updatePitchYaw();
             updateCameraFront();
@@ -68,24 +57,25 @@ void Camera::processInput()
     }
 
     // Release mouse
-    if (glfwGetKey(mWindow, GLFW_KEY_BACKSPACE) == GLFW_PRESS)
-    {
+    if (glfwGetKey(mWindow, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
         mMouseLocked = false;
         mFirstMouse = true;
         glfwSetInputMode(mWindow, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
     }
 
     // Select camera mode
-    if (glfwGetKey(mWindow, GLFW_KEY_1) == GLFW_PRESS)
-    {
+    if (glfwGetKey(mWindow, GLFW_KEY_1) == GLFW_PRESS) {
         mCameraMode = FREE;
         updatePitchYaw();
         updateCameraFront();
+
+        captureMouse();
     }
-    if (glfwGetKey(mWindow, GLFW_KEY_2) == GLFW_PRESS)
-    {
+    if (glfwGetKey(mWindow, GLFW_KEY_2) == GLFW_PRESS) {
         mCameraMode = FOLLOW;
         mCameraDistance = 8.0f;
+
+        captureMouse();
     }
 }
 
@@ -96,8 +86,7 @@ void Camera::processMouseMovement()
     double xpos, ypos;
     glfwGetCursorPos(mWindow, &xpos, &ypos);
 
-    if (mFirstMouse)
-    {
+    if (mFirstMouse) {
         mLastX = xpos;
         mLastY = ypos;
         mFirstMouse = false;
@@ -122,23 +111,22 @@ void Camera::processMouseMovement()
 
 void Camera::processMouseInput()
 {
-    if (glfwGetMouseButton(mWindow, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
-    {
-        if (!mMouseLocked) {
-            captureMouse();
-            mMouseLocked = true;
-        }
-    }
+    //if (glfwGetMouseButton(mWindow, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
+    //    //captureMouse();
+    //}
 
 }
 
 void Camera::captureMouse()
 {
-    int width, height;
-    glfwGetWindowSize(mWindow, &width, &height);
-    glfwSetCursorPos(mWindow, width / 2.0, height / 2.0);
+    if (!mMouseLocked) {
+        mMouseLocked = true;
+        int width, height;
+        glfwGetWindowSize(mWindow, &width, &height);
+        glfwSetCursorPos(mWindow, width / 2.0, height / 2.0);
 
-    glfwSetInputMode(mWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        glfwSetInputMode(mWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    }
 }
 
 void Camera::updateCameraFront()
@@ -205,8 +193,7 @@ void Camera::update(double dt)
     processInput();
     processMouseMovement();
     processMouseInput();
-    if (mCameraMode == FOLLOW) 
-    {
+    if (mCameraMode == FOLLOW) {
         updateLookAt();
         updateOrbitCamPosition();
     }

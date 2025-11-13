@@ -23,6 +23,7 @@
 #include "backends/imgui_impl_opengl3.h"
 
 
+void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window, RenderInfo& ri);
 void initRenderInfo(RenderInfo& ri);
 void loadTextures(RenderInfo& ri);
@@ -32,15 +33,15 @@ void createLights(Scene& scene);
 void createShapes(RenderInfo& ri, Scene& scene);
 void testBulletShapes(RenderInfo& ri, Scene& scene);
 
-void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-
 void animate(GLFWwindow* window, RenderInfo& ri, Scene& scene);
-void drawScene(Scene& scene, Camera& camera);
+void drawScene(Scene& scene, Camera& camera, double dt);
 
 
 // settings 
 unsigned int SCR_WIDTH = 3000;
 unsigned int SCR_HEIGHT = 1600;
+bool paused = true;
+bool pPressedLastFrame = false;
 
 Utils util = Utils();
 Material material{};
@@ -113,6 +114,17 @@ int main()
     createShapes(ri, scene);
     testBulletShapes(ri, scene);
 
+    // Setup Dear ImGui context
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+    ImGui::StyleColorsDark();
+
+    // Initialize ImGui for GLFW + OpenGL3
+    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    ImGui_ImplOpenGL3_Init("#version 330");
+
     animate(window, ri, scene);
 
     // Delete used resources
@@ -129,16 +141,35 @@ int main()
     delete ri.bullet.pDispatcher;
     delete ri.bullet.pCollisionConfiguration;
 
+    // Cleanup
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
+
+    glfwDestroyWindow(window);
     glfwTerminate();
 
     return 0;
 }
 
+void framebuffer_size_callback(GLFWwindow* window, int width, int height)
+{
+    SCR_WIDTH = width;
+    SCR_HEIGHT = height;
+    glViewport(0, 0, width, height);
+}
 
 void processInput(GLFWwindow* window, RenderInfo& ri)
 {
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+    if (glfwGetKey(window, GLFW_KEY_BACKSPACE) == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, true);
+    }
+
+    int pState = glfwGetKey(window, GLFW_KEY_P);
+    if (pState == GLFW_PRESS && !pPressedLastFrame) {
+        paused = !paused; 
+    }
+    pPressedLastFrame = (pState == GLFW_PRESS);
 }
 
 void initRenderInfo(RenderInfo& ri)
@@ -335,13 +366,13 @@ void testBulletShapes(RenderInfo& ri, Scene& scene)
     scene.addPhongShape(sphere);
 
     // Emitters
-    /*Emitter* flameEmitter = new FlameEmitter(400, 0.7f, radius * 1.2, radius * 0.2f, ri.texture["particle"]);
+    Emitter* flameEmitter = new FlameEmitter(400, 0.7f, radius * 1.2, radius * 0.2f, ri.texture["particle"]);
     flameEmitter->setPBody(sphereRigidBody);
     scene.addEmitter(flameEmitter);
 
     Emitter* smokeEmitter = new SmokeEmitter(200, 3.0f, radius * 1.2, radius * 0.1f, ri.texture["particle"]);
     smokeEmitter->setPBody(sphereRigidBody);
-    scene.addEmitter(smokeEmitter);*/
+    scene.addEmitter(smokeEmitter);
 
 
 
@@ -425,15 +456,11 @@ void testBulletShapes(RenderInfo& ri, Scene& scene)
 }
 
 
-void framebuffer_size_callback(GLFWwindow* window, int width, int height)
-{
-    glViewport(0, 0, width, height);
-}
-
 void animate(GLFWwindow* window, RenderInfo& ri, Scene& scene)
 {
     double lastTime = glfwGetTime();
     int frameCount = 0;
+    double fps = 0.0;
 
     while (!glfwWindowShouldClose(window))
     {
@@ -444,36 +471,50 @@ void animate(GLFWwindow* window, RenderInfo& ri, Scene& scene)
         processInput(window, ri);
         ri.camera->update(ri.time.dt);
 
-        drawScene(scene, *ri.camera);
-
+        if (paused) {
+            ri.time.dt = 0.0;
+        }
         ri.bullet.pWorld->stepSimulation(float(ri.time.dt));
+        drawScene(scene, *ri.camera, ri.time.dt);
 
-        glfwSwapBuffers(window);
-        glfwPollEvents();
-
-        // --- FPS tracking ---
+        // FPS 
         frameCount++;
-        //double currentTime = glfwGetTime();
-        if (ri.time.current - lastTime >= 1.0) // every 1 second
-        {
-            double fps = double(frameCount) / (ri.time.current - lastTime);
-            //std::cout << "FPS: " << fps << std::endl;
-
-            // Optional: show FPS in window title
-            // std::string title = "OpenGL App - FPS: " + std::to_string(int(fps));
-            // glfwSetWindowTitle(window, title.c_str());
-
+        if (ri.time.current - lastTime >= 1.0) {
+            fps = double(frameCount) / (ri.time.current - lastTime);
             frameCount = 0;
             lastTime = ri.time.current;
         }
 
+        // ImGui
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+        ImGui::SetNextWindowPos(ImVec2(SCR_WIDTH - 90, 10));
+        ImGui::SetNextWindowBgAlpha(0.3f);
+
+        ImGui::Begin("FPS Overlay", nullptr,
+            ImGuiWindowFlags_NoDecoration |
+            ImGuiWindowFlags_AlwaysAutoResize |
+            ImGuiWindowFlags_NoSavedSettings |
+            ImGuiWindowFlags_NoFocusOnAppearing |
+            ImGuiWindowFlags_NoNav);
+        ImGui::Text("FPS: %.1f", fps);
+        ImGui::End();
+
+        // Render ImGui
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+        glfwSwapBuffers(window);
+        glfwPollEvents();
+
     }
 }
 
-void drawScene(Scene& scene, Camera& camera)
+void drawScene(Scene& scene, Camera& camera, double dt)
 {
     // Draw shapes in scene
-    scene.update(camera);
+    scene.update(camera, dt);
     scene.draw();
 
 }

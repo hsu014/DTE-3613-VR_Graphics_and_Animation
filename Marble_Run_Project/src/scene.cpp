@@ -58,14 +58,14 @@ void Scene::updateLightSpaceMatrix()
 	mLightSpaceMatrix = lightProjection * lightView;
 }
 
-void Scene::update(Camera& camera)
+void Scene::update(Camera& camera, double dt)
 {
 	mViewMatrix = camera.getViewMatrix();
 	mProjectionMatrix = camera.getProjectionMatrix();
 	mCameraUp = camera.getCameraUp();
 	mCameraFront = camera.getCameraFront();
 	mCameraPos = camera.getCameraPos();
-	mDt = camera.mDt;
+	mDt = dt;
 
 	// if dir light moves:
 	updateLightSpaceMatrix();

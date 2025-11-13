@@ -21,7 +21,7 @@ public:
 	void initShadowMap();
 
 	void updateLightSpaceMatrix();
-	void update(Camera& camera);
+	void update(Camera& camera, double dt);
 
 	void setShaders(GLuint basicShader, GLuint phongShader, GLuint skyboxShader, GLuint shadowMapShader);
 	void setParticleShader(GLuint particleShader);

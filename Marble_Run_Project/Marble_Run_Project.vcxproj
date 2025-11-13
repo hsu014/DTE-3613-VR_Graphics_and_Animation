@@ -149,6 +149,7 @@
     <ClCompile Include="src\bulletHelpers.cpp" />
     <ClCompile Include="src\camera.cpp" />
     <ClCompile Include="src\ImGui\backends\imgui_impl_glfw.cpp" />
+    <ClCompile Include="src\ImGui\backends\imgui_impl_opengl3.cpp" />
     <ClCompile Include="src\ImGui\imgui.cpp" />
     <ClCompile Include="src\ImGui\imgui_demo.cpp" />
     <ClCompile Include="src\ImGui\imgui_draw.cpp" />
