@@ -32,6 +32,9 @@ void loadHeightmaps(RenderInfo& ri);
 void createLights(Scene& scene);
 
 void createTorch(RenderInfo& ri, Scene& scene, glm::vec3 pos);
+void createGround(RenderInfo& ri, Scene& scene);
+void createSpheres(RenderInfo& ri, Scene& scene);
+void createHaltPipeTrack(RenderInfo& ri, Scene& scene, std::vector<TrackSupport>& supports);
 void createPlinko(RenderInfo& ri, Scene& scene, glm::vec3 pos, float angle);
 void createWorld(RenderInfo& ri, Scene& scene);
 
@@ -117,7 +120,8 @@ int main()
 
     // Create shapes
     createShapes(ri, scene);
-    testBulletShapes(ri, scene);
+    //testBulletShapes(ri, scene);
+    createWorld(ri, scene);
 
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
@@ -276,6 +280,76 @@ void createTorch(RenderInfo& ri, Scene& scene, glm::vec3 pos)
 {
 }
 
+void createGround(RenderInfo& ri, Scene& scene)
+{
+    btQuaternion q = quatFromYawPitchRoll(0.0f, 0.0f, 0.0f);
+    btCollisionShape* groundShape = new btStaticPlaneShape(btVector3(0, 1, 0), 0);
+    btRigidBody* planeRigidBody = createStaticRigidBody(
+        groundShape, { 0, 0, 0 }, q, 0.6f, 0.5f);
+
+    ri.bullet.pWorld->addRigidBody(planeRigidBody);
+
+    Shape* plane = new Plane(100, 100);
+    plane->useTexture(ri.texture["grass"]);
+    plane->castShadow(false);
+    plane->setPBody(planeRigidBody);
+    scene.addPhongShape(plane);
+}
+
+void createSpheres(RenderInfo& ri, Scene& scene)
+{
+    btScalar mass = 1.0f;
+    btScalar radius = 0.1f;
+    btScalar restitution = 0.6f;
+    btScalar friction = 0.8f;
+
+    btRigidBody* sphereRigidBody = createMarbleRigidBody(
+        mass, radius, { 0.0f, 13.0f, 0.0f }, restitution, friction);
+
+    // sphereRigidBody->setLinearVelocity(btVector3(10.0f, 0.0f, 0.0f)); // temp
+
+    ri.bullet.pWorld->addRigidBody(sphereRigidBody);
+    ri.camera->setPBody(sphereRigidBody);
+
+    Shape* sphere = new Sphere(radius, 40, 40);
+    sphere->setMaterial(material.brass);
+    sphere->useTexture(ri.texture["lava"]);
+    sphere->setPBody(sphereRigidBody);
+    scene.addPhongShape(sphere);
+
+    // Emitters
+    Emitter* trailEmitter = new TrailEmitter(0.1f, 10.0f, radius * 0.5f, ri.texture["particle_star1"]);
+    trailEmitter->setPBody(sphereRigidBody);
+    scene.addEmitter(trailEmitter);
+
+    //Emitter* flameEmitter = new FlameEmitter(400, 0.7f, radius * 1.2, radius * 0.2f, ri.texture["particle"]);
+    //flameEmitter->setPBody(sphereRigidBody);
+    //scene.addEmitter(flameEmitter);
+
+    //Emitter* smokeEmitter = new SmokeEmitter(200, 3.0f, radius * 1.2, radius * 0.3f, ri.texture["particle"]);
+    //smokeEmitter->setPBody(sphereRigidBody);
+    //scene.addEmitter(smokeEmitter);
+
+}
+
+void createHaltPipeTrack(RenderInfo& ri, Scene& scene, std::vector<TrackSupport>& supports)
+{
+    Shape* track = new HalfPipeTrack(supports);
+
+    btQuaternion q = quatFromYawPitchRoll(0.0f, 0.0f, 0.0f);
+    btTriangleMesh* trackMesh = createBtTriangleMesh(track);
+    btRigidBody* trackRigidBody = createStaticRigidBody(
+        trackMesh,
+        { 0, 0, 0 },
+        q, 0.6f, 0.5f);
+
+    ri.bullet.pWorld->addRigidBody(trackRigidBody);
+
+    track->useTexture(ri.texture["wood"]);
+    track->setPBody(trackRigidBody);
+    scene.addPhongShape(track);
+}
+
 void createPlinko(RenderInfo& ri, Scene& scene, glm::vec3 pos, float angle)
 {
     float length = 8.0f;
@@ -384,6 +458,48 @@ void createPlinko(RenderInfo& ri, Scene& scene, glm::vec3 pos, float angle)
     ri.bullet.pWorld->addRigidBody(body);
 }
 
+void createWorld(RenderInfo& ri, Scene& scene)
+{
+    createGround(ri, scene);
+    createSpheres(ri, scene);
+
+    glm::vec3 nextPos = { 0.0f, 10.0f, -1.0f };
+    float nextAngle = 0.0f;
+    std::vector<TrackSupport> supports;
+    TrackSupportGenerator trackGenerator = TrackSupportGenerator();
+
+    // Track 1
+    trackGenerator.newTrack(
+        nextPos.x, nextPos.y, nextPos.z,
+        nextAngle);
+    trackGenerator.forward(4.0f, -1.0f);
+    trackGenerator.turn(-45.0f, 4.0f, 0.0f, 4);
+
+    trackGenerator.forward(1.0f, 0.0f);
+
+    supports = trackGenerator.getSupports();
+    createHaltPipeTrack(ri, scene, supports);
+
+    // Plinko
+    nextPos = trackGenerator.nextModuleCenter(8.0f, 10.0f);
+    nextAngle = supports.back().angle;
+    createPlinko(ri, scene, { nextPos.x, nextPos.y, nextPos.z }, nextAngle);
+
+    // Track 2
+    nextPos = trackGenerator.nextModuleCenter(16.0f, 10.0f);
+    trackGenerator.newTrack(
+        nextPos.x, nextPos.y, nextPos.z,
+        nextAngle,
+        1.9f, 2.0f);
+    trackGenerator.forward(4.0f, -1.0f, 0.9f, 1.0f);
+    trackGenerator.turn(45.0f, 3.0f, 0.0f, 4);
+    trackGenerator.turn(180.0f, 5.0f, -2.0f, 16);
+
+    supports = trackGenerator.getSupports();
+    createHaltPipeTrack(ri, scene, supports);
+}
+
+
 
 void createShapes(RenderInfo& ri, Scene& scene)
 {
@@ -473,135 +589,38 @@ void createShapes(RenderInfo& ri, Scene& scene)
 
 void testBulletShapes(RenderInfo& ri, Scene& scene)
 {
-    // Plinko
-    createPlinko(ri, scene, { 0.0f, 1.0f, -10.0f }, -20.0f);
-
-    // Plane
-    btQuaternion q = quatFromYawPitchRoll(0.0f, 0.0f, 0.0f);
-    btCollisionShape* groundShape = new btStaticPlaneShape(btVector3(0, 1, 0), 0);
-    btRigidBody* planeRigidBody = createStaticRigidBody(
-        groundShape, {0, 0, 0}, q, 0.6f, 0.5f);
-
-    ri.bullet.pWorld->addRigidBody(planeRigidBody);
-
-    Shape* plane = new Plane(100, 100);
-    plane->useTexture(ri.texture["grass"]);
-    plane->castShadow(false);
-    plane->setPBody(planeRigidBody);
-    scene.addPhongShape(plane);
-
-
-
-    // Test sphere
-    glm::mat4 modelMatrix = glm::mat4(1.0f);
-
-    btScalar mass = 1.0f;
-    btScalar radius = 0.1f;
-    btScalar restitution = 0.6f; 
-    btScalar friction = 0.8f;
-
-    btRigidBody* sphereRigidBody = createMarbleRigidBody(
-        mass, radius, { 0.0f, 2.0f, -14.0f }, restitution, friction);
-
-    sphereRigidBody->setLinearVelocity(btVector3(10.0f, 0.0f, 0.0f)); // temp
-
-    ri.bullet.pWorld->addRigidBody(sphereRigidBody);
-    ri.camera->setPBody(sphereRigidBody);
-
-    Shape* sphere = new Sphere(radius, 40, 40);
-    sphere->setMaterial(material.brass);
-    sphere->useTexture(ri.texture["wood"]);
-    sphere->setPBody(sphereRigidBody);
-    scene.addPhongShape(sphere);
-
-    // Emitters
-    //Emitter* flameEmitter = new FlameEmitter(400, 0.7f, radius * 1.2, radius * 0.2f, ri.texture["particle"]);
-    //flameEmitter->setPBody(sphereRigidBody);
-    //scene.addEmitter(flameEmitter);
-
-    //Emitter* smokeEmitter = new SmokeEmitter(200, 3.0f, radius * 1.2, radius * 0.3f, ri.texture["particle"]);
-    //smokeEmitter->setPBody(sphereRigidBody);
-    //scene.addEmitter(smokeEmitter);
-
-    Emitter* trailEmitter = new TrailEmitter(0.1f, 10.0f, radius * 0.5f, ri.texture["particle_star1"]);
-    trailEmitter->setPBody(sphereRigidBody);
-    scene.addEmitter(trailEmitter);
-
-
     // Test pyramid: 
-    Shape* pyramid = new Pyramid(10.0, 2.5, 10.0);
+    //Shape* pyramid = new Pyramid(10.0, 2.5, 10.0);
     
-    // Rotate around z, y, x
-    q = quatFromYawPitchRoll(0.0f, 30.0f, 0.0f);
-    btTriangleMesh* pyramidMesh = createBtTriangleMesh(pyramid);
-    btRigidBody* pyramidRigidBody = createStaticRigidBody(
-        pyramidMesh, { 25.0, 1.0f, 0.4 }, q, 0.6f, 0.5f);
+    //// Rotate around z, y, x
+    //q = quatFromYawPitchRoll(0.0f, 30.0f, 0.0f);
+    //btTriangleMesh* pyramidMesh = createBtTriangleMesh(pyramid);
+    //btRigidBody* pyramidRigidBody = createStaticRigidBody(
+    //    pyramidMesh, { 25.0, 1.0f, 0.4 }, q, 0.6f, 0.5f);
 
-    ri.bullet.pWorld->addRigidBody(pyramidRigidBody);
+    //ri.bullet.pWorld->addRigidBody(pyramidRigidBody);
 
-    pyramid->setMaterial(material.ruby);
-    pyramid->useTexture(ri.texture["gray_brick"]);
-    pyramid->setPBody(pyramidRigidBody);
-    scene.addPhongShape(pyramid);
+    //pyramid->setMaterial(material.ruby);
+    //pyramid->useTexture(ri.texture["gray_brick"]);
+    //pyramid->setPBody(pyramidRigidBody);
+    //scene.addPhongShape(pyramid);
 
 
 
     // Test half pipe
-    Shape* halfPipe = new HalfPipe(0.6f, 1.0f, 20.5f, 10);
+    //Shape* halfPipe = new HalfPipe(0.6f, 1.0f, 20.5f, 10);
 
-    // Rotate around z, y, x
-    q = quatFromYawPitchRoll(0.0f, 90.0f, 2.0f);
-    btTriangleMesh* halfPipeMesh = createBtTriangleMesh(halfPipe);
-    btRigidBody* halfPipeRigidBody = createStaticRigidBody(
-        halfPipeMesh, { 13.0, 2.3f, 0.4 }, q, 0.6f, 0.5f);
+    //// Rotate around z, y, x
+    //q = quatFromYawPitchRoll(0.0f, 90.0f, 2.0f);
+    //btTriangleMesh* halfPipeMesh = createBtTriangleMesh(halfPipe);
+    //btRigidBody* halfPipeRigidBody = createStaticRigidBody(
+    //    halfPipeMesh, { 13.0, 2.3f, 0.4 }, q, 0.6f, 0.5f);
 
-    ri.bullet.pWorld->addRigidBody(halfPipeRigidBody);
+    //ri.bullet.pWorld->addRigidBody(halfPipeRigidBody);
 
-    halfPipe->useTexture(ri.texture["wood"]);
-    halfPipe->setPBody(halfPipeRigidBody);
-    scene.addPhongShape(halfPipe);
-
-
-
-    // Test half pipe track
-    //std::vector<TrackSupport> supports;
-
-    //TrackSupportGenerator trackGenerator = TrackSupportGenerator();
-    //trackGenerator.newTrack(0.0f, 12.0f, -1.0f, 0.0f);
-    //trackGenerator.forward(4.0f, -1.0f);
-    //trackGenerator.turn(-45.0f, 4.0f, 0.0f, 4);
-
-    //trackGenerator.forward(1.0f, 0.0f);
-    //trackGenerator.forward(3.0f, -0.5f, 0.6f, 1.0f);
-    //trackGenerator.forward(3.0f, -0.5f, 0.8f, 1.0f);
-    //trackGenerator.forward(1.0f, 0.0f, 0.9f, 1.0f);
-    //trackGenerator.turn(180.0f, 4.0f, 0.0f, 8);
-
-    //trackGenerator.forward(4.0f, -0.5f);
-    //trackGenerator.turn(765.0f, 4.0f, -6.0f, 50);
-
-    //trackGenerator.forward(15.0f, 0.0f);
-    //trackGenerator.forward(2.0f, 0.5f);
-    //trackGenerator.forward(0.1f, -0.5f);
-    //trackGenerator.forward(6.0f, 0.0f);
-    //trackGenerator.turn(-180.0f, 10.0f, 0.0f, 16);
-
-    //trackGenerator.forward(8.0f, -0.4f, 0.5f, 0.6f);
-
-    //supports = trackGenerator.getSupports();
-    //Shape* track = new HalfPipeTrack(supports);
-
-    //q = quatFromYawPitchRoll(0.0f, 0.0f, 0.0f);
-    //btTriangleMesh* trackMesh = createBtTriangleMesh(track);
-    //btRigidBody* trackRigidBody = createStaticRigidBody(
-    //    trackMesh, { 0, 0, 0 }, q, 0.6f, 0.5f);
-
-    //ri.bullet.pWorld->addRigidBody(trackRigidBody);
-
-    //track->useTexture(ri.texture["wood"]);
-    //track->setPBody(trackRigidBody);
-    //scene.addPhongShape(track);
-
+    //halfPipe->useTexture(ri.texture["wood"]);
+    //halfPipe->setPBody(halfPipeRigidBody);
+    //scene.addPhongShape(halfPipe);
 }
 
 

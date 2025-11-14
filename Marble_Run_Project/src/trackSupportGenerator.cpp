@@ -78,3 +78,22 @@ std::vector<TrackSupport> TrackSupportGenerator::getSupports()
 {
 	return mSupports;
 }
+
+glm::vec3 TrackSupportGenerator::nextModuleCenter(float moduleLength, float moduleTilt)
+{
+	TrackSupport& last = mSupports.back();
+
+	float a = glm::radians(last.angle);
+	float len = moduleLength / 2.0f;
+	float tilt = glm::radians(moduleTilt);
+
+	float x = (-sinf(a) * len) * cosf(tilt);
+	float y = -len * sinf(tilt);
+	float z = (cosf(a) * len) * cosf(tilt);
+
+	x += last.x;
+	y += (last.y - last.outerRadius);
+	z += last.z;
+
+	return glm::vec3(x, y, z);
+}
