@@ -54,7 +54,7 @@ public:
     glm::vec4 mAmbient = glm::vec4(1.0f);
     glm::vec4 mDiffuse = glm::vec4(1.0f);
     glm::vec4 mSpecular = glm::vec4(1.0f);
-    float mShininess = 10.0f;
+    float mShininess = 1.0f;
 
     glm::mat4 mModelMatrix = glm::mat4(1.0f);
 

@@ -62,11 +62,18 @@ struct Bullet {
 };
 
 struct MaterialType {
-    glm::vec4 ambient;
-    glm::vec4 diffuse;
-    glm::vec4 specular;
-    float shininess;
+    glm::vec4 ambient = glm::vec4(1.0f);
+    glm::vec4 diffuse = glm::vec4(1.0f);
+    glm::vec4 specular = glm::vec4(1.0f);
+    float shininess = 10.0f;
 };
+
+//struct MaterialType {
+//    glm::vec4 ambient;
+//    glm::vec4 diffuse;
+//    glm::vec4 specular;
+//    float shininess;
+//};
 
 struct Material {
     MaterialType brass = { 
@@ -161,3 +168,12 @@ struct Material {
     };
 };
 
+struct SphereInfo {
+    MaterialType material;
+    GLuint texture;
+    float radius = 0.1f;
+    float mass = 1.0f;
+    float restitution = 0.6f;
+    float friction = 0.8f;
+    bool player = false;
+};

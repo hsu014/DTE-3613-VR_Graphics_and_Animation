@@ -298,6 +298,12 @@ void createGround(RenderInfo& ri, Scene& scene)
 
 void createSpheres(RenderInfo& ri, Scene& scene)
 {
+    SphereInfo info = SphereInfo();
+
+    if (info.texture) {
+        std::cout << "Texture" << std::endl;
+    }
+
     btScalar mass = 1.0f;
     btScalar radius = 0.1f;
     btScalar restitution = 0.6f;
@@ -528,22 +534,51 @@ void createShapes(RenderInfo& ri, Scene& scene)
         ri.texture["water"],
     };
     num_x = tex.size();
-    num_y = 1;
     for (int i = 0; i < num_x; i++) {
-        for (int j = 0; j < num_y; j++) {
-            float x = middle_pos.x - (num_x / 2.0f) + i;
-            float y = middle_pos.y - (num_y / 2.0f) + j;
-            float z = middle_pos.z;
+        float x = middle_pos.x - (num_x / 2.0f) + i;
+        float y = middle_pos.y;
+        float z = middle_pos.z;
 
-            Shape* box = new Sphere(0.4f);
-            //Shape* box = new Box(0.5f, 0.5f, 0.5f);
-            box->useTexture(tex[i]);
-            modelMatrix = glm::mat4(1.0f);
-            modelMatrix = glm::translate(modelMatrix, glm::vec3(x, y, z));
-            modelMatrix = glm::rotate(modelMatrix, glm::radians(90.0f), { 1,0,0 });
-            box->setModelMatrix(modelMatrix);
-            scene.addPhongShape(box);
-        }
+        Shape* sphere = new Sphere(0.4f);
+        sphere->useTexture(tex[i]);
+        modelMatrix = glm::mat4(1.0f);
+        modelMatrix = glm::translate(modelMatrix, glm::vec3(x, y, z));
+        modelMatrix = glm::rotate(modelMatrix, glm::radians(90.0f), { 1,0,0 });
+        sphere->setModelMatrix(modelMatrix);
+        scene.addPhongShape(sphere);
+    }
+
+    std::vector<MaterialType> materials = {
+        material.brass,
+        material.bronze,
+        material.chrome,
+        material.copper,
+        material.emerald,
+        material.gold,
+        material.obsidian,
+        material.perl,
+        material.polished_bronze,
+        material.polished_copper,
+        material.polished_gold,
+        material.polished_silver,
+        material.ruby,
+        material.silver,
+        material.tin
+    };
+    middle_pos = { 0.0f, 5.0f, -1.0f };
+    num_x = materials.size();
+    for (int i = 0; i < num_x; i++) {
+        float x = middle_pos.x - (num_x / 2.0f) + i;
+        float y = middle_pos.y;
+        float z = middle_pos.z;
+
+        Shape* sphere = new Sphere(0.4f);
+        sphere->setMaterial(materials[i]);
+        modelMatrix = glm::mat4(1.0f);
+        modelMatrix = glm::translate(modelMatrix, glm::vec3(x, y, z));
+        modelMatrix = glm::rotate(modelMatrix, glm::radians(90.0f), { 1,0,0 });
+        sphere->setModelMatrix(modelMatrix);
+        scene.addPhongShape(sphere);
     }
 
   
