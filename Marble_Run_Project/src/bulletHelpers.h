@@ -21,3 +21,7 @@ btRigidBody* createStaticRigidBody(
 	btCollisionShape* shape, btVector3 origin = btVector3(0.0, 0.0, 0.0),
 	btQuaternion rotation = btQuaternion(0, 0, 0, 1), btScalar rest = 0.5f, btScalar fric = 0.8f);
 
+btRigidBody* createStaticRigidBody(
+	btCompoundShape* compound, btVector3 origin = btVector3(0.0, 0.0, 0.0),
+	btQuaternion rotation = btQuaternion(0, 0, 0, 1), btScalar rest = 0.5f, btScalar fric = 0.8f);
+

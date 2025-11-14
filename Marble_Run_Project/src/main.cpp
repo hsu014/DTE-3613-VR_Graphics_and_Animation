@@ -30,6 +30,11 @@ void loadTextures(RenderInfo& ri);
 void loadSkyboxTextures(RenderInfo& ri);
 void loadHeightmaps(RenderInfo& ri);
 void createLights(Scene& scene);
+
+void createTorch(RenderInfo& ri, Scene& scene, glm::vec3 pos);
+void createPlinko(RenderInfo& ri, Scene& scene, glm::vec3 pos, float angle);
+void createWorld(RenderInfo& ri, Scene& scene);
+
 void createShapes(RenderInfo& ri, Scene& scene);
 void testBulletShapes(RenderInfo& ri, Scene& scene);
 
@@ -267,6 +272,118 @@ void createLights(Scene& scene)
     // scene.addPointLight(pointLight, true);
 }
 
+void createTorch(RenderInfo& ri, Scene& scene, glm::vec3 pos)
+{
+}
+
+void createPlinko(RenderInfo& ri, Scene& scene, glm::vec3 pos, float angle)
+{
+    float length = 8.0f;
+    float width = 4.0f;
+    float height = 0.5f;
+    float thicknes = 0.1f;
+    float radius = 0.05f;
+    float tilt = 10.0f;
+
+    glm::mat4 modelMatrix = glm::mat4(1.0f);
+    glm::mat4 modelMatrixLocal = glm::mat4(1.0f);   // local offset
+    btTransform tLocal;                             // local offset bt
+    btCompoundShape* compound = new btCompoundShape();
+
+    // Global offset
+    modelMatrix = glm::translate(modelMatrix, pos);
+    modelMatrix = glm::rotate(modelMatrix, glm::radians(-angle), { 0.0f, 1.0f, 0.0f });
+    modelMatrix = glm::rotate(modelMatrix, glm::radians(tilt), { 1.0f, 0.0f, 0.0f });
+
+    // base board
+    Shape* box1 = new Box(width, thicknes, length);
+    modelMatrixLocal = glm::mat4(1.0f);
+    box1->setModelMatrix(modelMatrix * modelMatrixLocal);
+    box1->useTexture(ri.texture["wood"]);
+    scene.addPhongShape(box1);
+
+    btCollisionShape* btBox1 = new btBoxShape(btVector3(width / 2.0f, thicknes / 2.0f, length / 2.0f));
+    tLocal.setIdentity();
+    tLocal.setOrigin(btVector3(0, 0, 0));
+    compound->addChildShape(tLocal, btBox1);
+
+
+    // right wall
+    Shape* box2 = new Box(thicknes, height, length);
+    modelMatrixLocal = glm::mat4(1.0f);
+    modelMatrixLocal = glm::translate(modelMatrixLocal, { 
+        (width/2.0f - thicknes/2.0f), (height/2.0f + thicknes / 2.0f), 0.0f
+        });
+
+    box2->setModelMatrix(modelMatrix * modelMatrixLocal);
+    box2->useTexture(ri.texture["wood"]);
+    scene.addPhongShape(box2);
+
+    btCollisionShape* btBox2 = new btBoxShape(btVector3(thicknes / 2.0f, height / 2.0f, length / 2.0f));
+    tLocal.setIdentity();
+    tLocal.setOrigin(btVector3((width / 2.0f - thicknes / 2.0f), (height / 2.0f + thicknes / 2.0f), 0.0f));
+    compound->addChildShape(tLocal, btBox2);
+
+
+    // left wall
+    Shape* box3 = new Box(thicknes, height, length);
+    modelMatrixLocal = glm::mat4(1.0f);
+    modelMatrixLocal = glm::translate(modelMatrixLocal, {
+        -(width / 2.0f - thicknes / 2.0f), (height / 2.0f + thicknes / 2.0f), 0.0f
+        });
+
+    box3->setModelMatrix(modelMatrix * modelMatrixLocal);
+    box3->useTexture(ri.texture["wood"]);
+    scene.addPhongShape(box3);
+
+    btCollisionShape* btBox3 = new btBoxShape(btVector3(thicknes / 2.0f, height / 2.0f, length / 2.0f));
+    tLocal.setIdentity();
+    tLocal.setOrigin(btVector3(-(width / 2.0f - thicknes / 2.0f), (height / 2.0f + thicknes / 2.0f), 0.0f));
+    compound->addChildShape(tLocal, btBox3);
+
+    // pillar obstacles
+    int numRows = 10;
+    int pillarsPerRow = 7;
+    float pillarDist = 0.6;
+    float xOffsetEven = -(pillarDist * (pillarsPerRow - 1)) / 2.0;
+    float xOffsetOdd = -(pillarDist * (pillarsPerRow - 2)) / 2.0;
+    float xOffset;
+    float zOffset = -(pillarDist * (numRows - 1)) / 2.0;
+    float xPos, zPos;
+    float yPos = (height / 2.0f + thicknes / 2.0f);
+
+    for (int i = 0; i < numRows; i++) {
+        if (i % 2 == 0) {
+            xOffset = xOffsetEven;
+        }
+        else {
+            xOffset = xOffsetOdd;
+        }
+        for (int j = 0; j < pillarsPerRow-(i % 2); j++) {
+            Shape* pillar = new Cylinder(radius, height, 20);
+            xPos = xOffset + (j * pillarDist);
+            zPos = zOffset + (i * pillarDist);
+
+            modelMatrixLocal = glm::mat4(1.0f);
+            modelMatrixLocal = glm::translate(modelMatrixLocal, { xPos, yPos, zPos });
+
+            pillar->setModelMatrix(modelMatrix * modelMatrixLocal);
+            pillar->setMaterial(material.chrome);
+            scene.addPhongShape(pillar);
+
+            btCollisionShape* btPillar = new btCylinderShape({ radius, height / 2.0f , radius });
+            tLocal.setIdentity();
+            tLocal.setOrigin(btVector3(xPos, yPos, zPos));
+            compound->addChildShape(tLocal, btPillar);
+        }
+    }
+
+    // Add to bullet world
+    btQuaternion q = quatFromYawPitchRoll(0.0f, -angle, tilt);
+    btRigidBody* body = createStaticRigidBody(compound, { pos.x, pos.y, pos.z }, q, 0.6f, 0.5f);
+    ri.bullet.pWorld->addRigidBody(body);
+}
+
 
 void createShapes(RenderInfo& ri, Scene& scene)
 {
@@ -305,7 +422,6 @@ void createShapes(RenderInfo& ri, Scene& scene)
             Shape* box = new Sphere(0.4f);
             //Shape* box = new Box(0.5f, 0.5f, 0.5f);
             box->useTexture(tex[i]);
-            box->castShadow();
             modelMatrix = glm::mat4(1.0f);
             modelMatrix = glm::translate(modelMatrix, glm::vec3(x, y, z));
             modelMatrix = glm::rotate(modelMatrix, glm::radians(90.0f), { 1,0,0 });
@@ -315,36 +431,32 @@ void createShapes(RenderInfo& ri, Scene& scene)
     }
 
   
-    Shape* box = new Box(2.0, 2.0, 2.0);
-    box->setMaterial(material.chrome);
-    box->useTexture(ri.texture["gray_brick"]);
-    box->castShadow();
-    modelMatrix = glm::mat4(1.0f);
-    modelMatrix = glm::translate(modelMatrix, glm::vec3(-10.0f, 1.0f, 5.0f));
-    box->setModelMatrix(modelMatrix);
-    scene.addPhongShape(box);
+    //Shape* box = new Box(2.0, 2.0, 2.0);
+    //box->setMaterial(material.chrome);
+    //box->useTexture(ri.texture["gray_brick"]);
+    //modelMatrix = glm::mat4(1.0f);
+    //modelMatrix = glm::translate(modelMatrix, glm::vec3(-10.0f, 1.0f, 5.0f));
+    //box->setModelMatrix(modelMatrix);
+    //scene.addPhongShape(box);
    
     //Shape* pyramid = new Pyramid(2.0, 2.0, 2.0);
     //pyramid->setMaterial(material.ruby);
     //pyramid->useTexture(ri.texture["gray_brick"]);
-    //pyramid->castShadow();
     //modelMatrix = glm::mat4(1.0f);
     //modelMatrix = glm::translate(modelMatrix, glm::vec3(-3.0f, 1.3f, -5.0f));
     //pyramid->setModelMatrix(modelMatrix);
     //scene.addPhongShape(pyramid);
 
-    Shape* sphere = new Sphere(1.2);
-    //sphere->setMaterial(material.brass);
-    sphere->useTexture(ri.texture["lava"]);
-    sphere->castShadow();
-    modelMatrix = glm::mat4(1.0f);
-    modelMatrix = glm::translate(modelMatrix, glm::vec3(-10.0, 5.0, -2.2));
-    sphere->setModelMatrix(modelMatrix);
-    scene.addPhongShape(sphere);
+    //Shape* sphere = new Sphere(1.2);
+    ////sphere->setMaterial(material.brass);
+    //sphere->useTexture(ri.texture["lava"]);
+    //modelMatrix = glm::mat4(1.0f);
+    //modelMatrix = glm::translate(modelMatrix, glm::vec3(-10.0, 5.0, -2.2));
+    //sphere->setModelMatrix(modelMatrix);
+    //scene.addPhongShape(sphere);
 
     //Shape* cylinder = new Cylinder(0.5f, 2.0f, 20);
     //cylinder->useTexture(ri.texture["gray_brick"]);
-    //cylinder->castShadow();
     //modelMatrix = glm::mat4(1.0f);
     //modelMatrix = glm::translate(modelMatrix, glm::vec3(6.0f, 5.0f, 0.0f));
     //cylinder->setModelMatrix(modelMatrix);
@@ -352,7 +464,6 @@ void createShapes(RenderInfo& ri, Scene& scene)
 
     //Shape* halfPipe = new HalfPipe(0.9f, 1.0f, 5.0f, 10);
     //halfPipe->useTexture(ri.texture["wood"]);
-    //halfPipe->castShadow();
     //modelMatrix = glm::mat4(1.0f);
     //modelMatrix = glm::translate(modelMatrix, glm::vec3(0.0f, 5.0f, 0.0f));
     //halfPipe->setModelMatrix(modelMatrix);
@@ -362,6 +473,9 @@ void createShapes(RenderInfo& ri, Scene& scene)
 
 void testBulletShapes(RenderInfo& ri, Scene& scene)
 {
+    // Plinko
+    createPlinko(ri, scene, { 0.0f, 1.0f, -10.0f }, -20.0f);
+
     // Plane
     btQuaternion q = quatFromYawPitchRoll(0.0f, 0.0f, 0.0f);
     btCollisionShape* groundShape = new btStaticPlaneShape(btVector3(0, 1, 0), 0);
@@ -372,6 +486,7 @@ void testBulletShapes(RenderInfo& ri, Scene& scene)
 
     Shape* plane = new Plane(100, 100);
     plane->useTexture(ri.texture["grass"]);
+    plane->castShadow(false);
     plane->setPBody(planeRigidBody);
     scene.addPhongShape(plane);
 
@@ -386,7 +501,9 @@ void testBulletShapes(RenderInfo& ri, Scene& scene)
     btScalar friction = 0.8f;
 
     btRigidBody* sphereRigidBody = createMarbleRigidBody(
-        mass, radius, { 0.0f, 11.0f, 0.0f }, restitution, friction);
+        mass, radius, { 0.0f, 2.0f, -14.0f }, restitution, friction);
+
+    sphereRigidBody->setLinearVelocity(btVector3(10.0f, 0.0f, 0.0f)); // temp
 
     ri.bullet.pWorld->addRigidBody(sphereRigidBody);
     ri.camera->setPBody(sphereRigidBody);
@@ -394,18 +511,17 @@ void testBulletShapes(RenderInfo& ri, Scene& scene)
     Shape* sphere = new Sphere(radius, 40, 40);
     sphere->setMaterial(material.brass);
     sphere->useTexture(ri.texture["wood"]);
-    sphere->castShadow();
     sphere->setPBody(sphereRigidBody);
     scene.addPhongShape(sphere);
 
     // Emitters
-    Emitter* flameEmitter = new FlameEmitter(400, 0.7f, radius * 1.2, radius * 0.2f, ri.texture["particle"]);
-    flameEmitter->setPBody(sphereRigidBody);
-    scene.addEmitter(flameEmitter);
+    //Emitter* flameEmitter = new FlameEmitter(400, 0.7f, radius * 1.2, radius * 0.2f, ri.texture["particle"]);
+    //flameEmitter->setPBody(sphereRigidBody);
+    //scene.addEmitter(flameEmitter);
 
-    /*Emitter* smokeEmitter = new SmokeEmitter(200, 3.0f, radius * 1.2, radius * 0.3f, ri.texture["particle"]);
-    smokeEmitter->setPBody(sphereRigidBody);
-    scene.addEmitter(smokeEmitter);*/
+    //Emitter* smokeEmitter = new SmokeEmitter(200, 3.0f, radius * 1.2, radius * 0.3f, ri.texture["particle"]);
+    //smokeEmitter->setPBody(sphereRigidBody);
+    //scene.addEmitter(smokeEmitter);
 
     Emitter* trailEmitter = new TrailEmitter(0.1f, 10.0f, radius * 0.5f, ri.texture["particle_star1"]);
     trailEmitter->setPBody(sphereRigidBody);
@@ -419,13 +535,12 @@ void testBulletShapes(RenderInfo& ri, Scene& scene)
     q = quatFromYawPitchRoll(0.0f, 30.0f, 0.0f);
     btTriangleMesh* pyramidMesh = createBtTriangleMesh(pyramid);
     btRigidBody* pyramidRigidBody = createStaticRigidBody(
-        pyramidMesh, { 21.0, 1.0f, 0.4 }, q, 0.6f, 0.5f);
+        pyramidMesh, { 25.0, 1.0f, 0.4 }, q, 0.6f, 0.5f);
 
     ri.bullet.pWorld->addRigidBody(pyramidRigidBody);
 
     pyramid->setMaterial(material.ruby);
     pyramid->useTexture(ri.texture["gray_brick"]);
-    pyramid->castShadow();
     pyramid->setPBody(pyramidRigidBody);
     scene.addPhongShape(pyramid);
 
@@ -438,56 +553,54 @@ void testBulletShapes(RenderInfo& ri, Scene& scene)
     q = quatFromYawPitchRoll(0.0f, 90.0f, 2.0f);
     btTriangleMesh* halfPipeMesh = createBtTriangleMesh(halfPipe);
     btRigidBody* halfPipeRigidBody = createStaticRigidBody(
-        halfPipeMesh, { 10.0, 2.3f, 0.4 }, q, 0.6f, 0.5f);
+        halfPipeMesh, { 13.0, 2.3f, 0.4 }, q, 0.6f, 0.5f);
 
     ri.bullet.pWorld->addRigidBody(halfPipeRigidBody);
 
     halfPipe->useTexture(ri.texture["wood"]);
-    halfPipe->castShadow();
     halfPipe->setPBody(halfPipeRigidBody);
     scene.addPhongShape(halfPipe);
 
 
 
     // Test half pipe track
-    std::vector<TrackSupport> supports;
+    //std::vector<TrackSupport> supports;
 
-    TrackSupportGenerator trackGenerator = TrackSupportGenerator();
-    trackGenerator.newTrack(0.0f, 10.0f, -1.0f, 0.0f);
-    trackGenerator.forward(4.0f, -1.0f);
-    trackGenerator.turn(-45.0f, 4.0f, 0.0f, 4);
+    //TrackSupportGenerator trackGenerator = TrackSupportGenerator();
+    //trackGenerator.newTrack(0.0f, 12.0f, -1.0f, 0.0f);
+    //trackGenerator.forward(4.0f, -1.0f);
+    //trackGenerator.turn(-45.0f, 4.0f, 0.0f, 4);
 
-    trackGenerator.forward(1.0f, 0.0f);
-    trackGenerator.forward(3.0f, -0.5f, 0.6f, 1.0f);
-    trackGenerator.forward(3.0f, -0.5f, 0.8f, 1.0f);
-    trackGenerator.forward(1.0f, 0.0f, 0.9f, 1.0f);
-    trackGenerator.turn(180.0f, 4.0f, 0.0f, 8);
+    //trackGenerator.forward(1.0f, 0.0f);
+    //trackGenerator.forward(3.0f, -0.5f, 0.6f, 1.0f);
+    //trackGenerator.forward(3.0f, -0.5f, 0.8f, 1.0f);
+    //trackGenerator.forward(1.0f, 0.0f, 0.9f, 1.0f);
+    //trackGenerator.turn(180.0f, 4.0f, 0.0f, 8);
 
-    trackGenerator.forward(4.0f, -0.5f);
-    trackGenerator.turn(765.0f, 4.0f, -6.0f, 50);
+    //trackGenerator.forward(4.0f, -0.5f);
+    //trackGenerator.turn(765.0f, 4.0f, -6.0f, 50);
 
-    trackGenerator.forward(15.0f, 0.0f);
-    trackGenerator.forward(2.0f, 0.5f);
-    trackGenerator.forward(0.1f, -0.5f);
-    trackGenerator.forward(6.0f, 0.0f);
-    trackGenerator.turn(-180.0f, 10.0f, 0.0f, 16);
+    //trackGenerator.forward(15.0f, 0.0f);
+    //trackGenerator.forward(2.0f, 0.5f);
+    //trackGenerator.forward(0.1f, -0.5f);
+    //trackGenerator.forward(6.0f, 0.0f);
+    //trackGenerator.turn(-180.0f, 10.0f, 0.0f, 16);
 
-    trackGenerator.forward(8.0f, -0.4f, 0.5f, 0.6f);
+    //trackGenerator.forward(8.0f, -0.4f, 0.5f, 0.6f);
 
-    supports = trackGenerator.getSupports();
-    Shape* track = new HalfPipeTrack(supports);
+    //supports = trackGenerator.getSupports();
+    //Shape* track = new HalfPipeTrack(supports);
 
-    q = quatFromYawPitchRoll(0.0f, 0.0f, 0.0f);
-    btTriangleMesh* trackMesh = createBtTriangleMesh(track);
-    btRigidBody* trackRigidBody = createStaticRigidBody(
-        trackMesh, { 0, 0, 0 }, q, 0.6f, 0.5f);
+    //q = quatFromYawPitchRoll(0.0f, 0.0f, 0.0f);
+    //btTriangleMesh* trackMesh = createBtTriangleMesh(track);
+    //btRigidBody* trackRigidBody = createStaticRigidBody(
+    //    trackMesh, { 0, 0, 0 }, q, 0.6f, 0.5f);
 
-    ri.bullet.pWorld->addRigidBody(trackRigidBody);
+    //ri.bullet.pWorld->addRigidBody(trackRigidBody);
 
-    track->useTexture(ri.texture["wood"]);
-    track->castShadow();
-    track->setPBody(trackRigidBody);
-    scene.addPhongShape(track);
+    //track->useTexture(ri.texture["wood"]);
+    //track->setPBody(trackRigidBody);
+    //scene.addPhongShape(track);
 
 }
 

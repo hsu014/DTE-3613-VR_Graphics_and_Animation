@@ -58,7 +58,8 @@ btRigidBody* createMarbleRigidBody(btScalar mass, btScalar radius, btVector3 ori
     rigidBody->setRestitution(rest);
     rigidBody->setFriction(fric);
     rigidBody->setActivationState(DISABLE_DEACTIVATION);
-    //rigidBody->setAngularVelocity(btVector3(0.0f, 0.0f, -3.0f)); // temp
+    // rigidBody->setAngularVelocity(btVector3(0.0f, 0.0f, -3.0f)); // temp
+    // rigidBody->setLinearVelocity(btVector3(10.0f, 0.0f, 0.0f)); // temp
 
     return rigidBody;
 }
@@ -93,6 +94,24 @@ btRigidBody* createStaticRigidBody(btCollisionShape* shape, btVector3 origin, bt
         0,
         motionState,
         shape,
+        btVector3(0, 0, 0));
+
+    btRigidBody* rigidBody = new btRigidBody(rigidBodyCI);
+    rigidBody->setRestitution(rest);
+    rigidBody->setFriction(fric);
+
+    return rigidBody;
+}
+
+btRigidBody* createStaticRigidBody(btCompoundShape* compound, btVector3 origin, btQuaternion rotation, btScalar rest, btScalar fric)
+{
+    btDefaultMotionState* motionState =
+        new btDefaultMotionState(btTransform(rotation, origin));
+
+    btRigidBody::btRigidBodyConstructionInfo rigidBodyCI(
+        0,
+        motionState,
+        compound,
         btVector3(0, 0, 0));
 
     btRigidBody* rigidBody = new btRigidBody(rigidBodyCI);

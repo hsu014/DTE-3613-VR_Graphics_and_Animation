@@ -31,9 +31,8 @@ void Scene::initShadowMap()
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-		std::cout << "Framebuffer problem" << std::endl;
+		std::cout << "Shadow framebuffer problem" << std::endl;
 	}
-	else std::cout << "Framebuffer ok" << std::endl;
 }
 
 void Scene::updateLightSpaceMatrix()
@@ -67,7 +66,6 @@ void Scene::update(Camera& camera, double dt)
 	mCameraPos = camera.getCameraPos();
 	mDt = dt;
 
-	// if dir light moves:
 	updateLightSpaceMatrix();
 }
 
@@ -105,6 +103,7 @@ void Scene::addPointLight(PointLight light, bool visualize)
 		glm::mat4 modelMatrix = glm::mat4(1.0f);
 		modelMatrix = glm::translate(modelMatrix, light.position);
 		sphere->setModelMatrix(modelMatrix);
+		sphere->castShadow(false);
 
 		addBaseShape(sphere);
 	}
