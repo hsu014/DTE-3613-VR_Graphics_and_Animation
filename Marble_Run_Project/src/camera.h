@@ -59,6 +59,7 @@ public:
 	double mLastY = 0.0;
 	bool mFirstMouse = true;
 	bool mMouseLocked = false;
+	bool mEscPressedLastFrame = false;
 
 	Mode mCameraMode = FREE;
 

@@ -6,6 +6,7 @@ Camera::Camera(GLFWwindow* window, glm::vec3 pos, glm::vec3 front, glm::vec3 up)
 {
     updatePitchYaw();
     updateViewMatrix();
+    captureMouse();
 
 }
 
@@ -56,12 +57,19 @@ void Camera::processInput()
         }
     }
 
-    // Release mouse
-    if (glfwGetKey(mWindow, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
-        mMouseLocked = false;
-        mFirstMouse = true;
-        glfwSetInputMode(mWindow, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+    // Capture / release mouse
+    int escState = glfwGetKey(mWindow, GLFW_KEY_ESCAPE);
+    if (escState == GLFW_PRESS && !mEscPressedLastFrame) {
+        if (mMouseLocked) {
+            mMouseLocked = false;
+            mFirstMouse = true;
+            glfwSetInputMode(mWindow, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+        }
+        else {
+            captureMouse();
+        }
     }
+    mEscPressedLastFrame = (escState == GLFW_PRESS);
 
     // Select camera mode
     if (glfwGetKey(mWindow, GLFW_KEY_1) == GLFW_PRESS) {
@@ -114,7 +122,6 @@ void Camera::processMouseInput()
     //if (glfwGetMouseButton(mWindow, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
     //    //captureMouse();
     //}
-
 }
 
 void Camera::captureMouse()
