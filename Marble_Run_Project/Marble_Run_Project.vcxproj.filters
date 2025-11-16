@@ -244,6 +244,36 @@
     <Image Include="src\textures\particle_star1.png">
       <Filter>Resource Files\textures</Filter>
     </Image>
+    <Image Include="src\textures\earth_day.png">
+      <Filter>Resource Files\textures</Filter>
+    </Image>
+    <Image Include="src\textures\moon.png">
+      <Filter>Resource Files\textures</Filter>
+    </Image>
+    <Image Include="src\textures\mercury.png">
+      <Filter>Resource Files\textures</Filter>
+    </Image>
+    <Image Include="src\textures\venus.png">
+      <Filter>Resource Files\textures</Filter>
+    </Image>
+    <Image Include="src\textures\mars.png">
+      <Filter>Resource Files\textures</Filter>
+    </Image>
+    <Image Include="src\textures\jupiter.png">
+      <Filter>Resource Files\textures</Filter>
+    </Image>
+    <Image Include="src\textures\saturn.png">
+      <Filter>Resource Files\textures</Filter>
+    </Image>
+    <Image Include="src\textures\uranus.png">
+      <Filter>Resource Files\textures</Filter>
+    </Image>
+    <Image Include="src\textures\neptune.png">
+      <Filter>Resource Files\textures</Filter>
+    </Image>
+    <Image Include="src\textures\sun.png">
+      <Filter>Resource Files\textures</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\shader\fragmentShaderBase.glsl">

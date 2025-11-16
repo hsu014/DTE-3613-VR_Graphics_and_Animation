@@ -175,6 +175,7 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="src\textures\bark.png" />
+    <Image Include="src\textures\earth_day.png" />
     <Image Include="src\textures\fire.png" />
     <Image Include="src\textures\galvanized_blue.jpg" />
     <Image Include="src\textures\grass.png" />
@@ -185,9 +186,14 @@
     <Image Include="src\textures\heightmaps\heightmap_4.png" />
     <Image Include="src\textures\ice.jpg" />
     <Image Include="src\textures\ivy.png" />
+    <Image Include="src\textures\jupiter.png" />
     <Image Include="src\textures\lava.png" />
     <Image Include="src\textures\leaf.png" />
+    <Image Include="src\textures\mars.png" />
     <Image Include="src\textures\mc_chicken.jpeg" />
+    <Image Include="src\textures\mercury.png" />
+    <Image Include="src\textures\moon.png" />
+    <Image Include="src\textures\neptune.png" />
     <Image Include="src\textures\particle.png" />
     <Image Include="src\textures\particle_star1.png" />
     <Image Include="src\textures\particle_star2.png" />
@@ -195,6 +201,7 @@
     <Image Include="src\textures\pebbles.png" />
     <Image Include="src\textures\pebbles2.png" />
     <Image Include="src\textures\rock.png" />
+    <Image Include="src\textures\saturn.png" />
     <Image Include="src\textures\skybox\sky_22\nx.png" />
     <Image Include="src\textures\skybox\sky_22\ny.png" />
     <Image Include="src\textures\skybox\sky_22\nz.png" />
@@ -213,8 +220,11 @@
     <Image Include="src\textures\skybox\sky_42\px.png" />
     <Image Include="src\textures\skybox\sky_42\py.png" />
     <Image Include="src\textures\skybox\sky_42\pz.png" />
+    <Image Include="src\textures\sun.png" />
     <Image Include="src\textures\tile.png" />
     <Image Include="src\textures\tile2.png" />
+    <Image Include="src\textures\uranus.png" />
+    <Image Include="src\textures\venus.png" />
     <Image Include="src\textures\water.png" />
     <Image Include="src\textures\wood.png" />
   </ItemGroup>
