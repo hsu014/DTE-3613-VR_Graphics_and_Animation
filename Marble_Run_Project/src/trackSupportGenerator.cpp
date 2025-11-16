@@ -97,3 +97,9 @@ glm::vec3 TrackSupportGenerator::nextModuleCenter(float moduleLength, float modu
 
 	return glm::vec3(x, y, z);
 }
+
+glm::vec3 TrackSupportGenerator::getLastPos()
+{
+	TrackSupport& last = mSupports.back();
+	return glm::vec3{last.x, last.y, last.z};
+}

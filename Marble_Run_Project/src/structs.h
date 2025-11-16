@@ -68,13 +68,6 @@ struct MaterialType {
     float shininess = 10.0f;
 };
 
-//struct MaterialType {
-//    glm::vec4 ambient;
-//    glm::vec4 diffuse;
-//    glm::vec4 specular;
-//    float shininess;
-//};
-
 struct Material {
     MaterialType brass = { 
         {0.329412f, 0.223529f, 0.027451f, 1.0f},
@@ -171,9 +164,9 @@ struct Material {
 struct SphereInfo {
     MaterialType material;
     GLuint texture;
+    bool player = false;
     float radius = 0.1f;
     float mass = 1.0f;
     float restitution = 0.6f;
-    float friction = 0.8f;
-    bool player = false;
+    float friction = 0.8f; 
 };

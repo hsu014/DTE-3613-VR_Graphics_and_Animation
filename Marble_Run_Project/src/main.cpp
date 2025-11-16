@@ -2,6 +2,8 @@
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include <map>
+#include <algorithm>
+#include <random>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -33,8 +35,8 @@ void createLights(Scene& scene);
 
 void createTorch(RenderInfo& ri, Scene& scene, glm::vec3 pos);
 void createGround(RenderInfo& ri, Scene& scene);
-void createSpheres(RenderInfo& ri, Scene& scene);
-void createHaltPipeTrack(RenderInfo& ri, Scene& scene, std::vector<TrackSupport>& supports);
+void createSpheres(RenderInfo& ri, Scene& scene, glm::vec3 pos);
+void createHalfPipeTrack(RenderInfo& ri, Scene& scene, std::vector<TrackSupport>& supports);
 void createPlinko(RenderInfo& ri, Scene& scene, glm::vec3 pos, float angle);
 void createWorld(RenderInfo& ri, Scene& scene);
 
@@ -84,7 +86,7 @@ int main()
     initRenderInfo(ri);
 
     Camera camera(window, 
-        glm::vec3(0.0f, 1.0f, -10.0f),  // Pos
+        glm::vec3(0.0f, 20.0f, -10.0f),  // Pos
         glm::vec3(0.0f, 0.1f, 1.0f),    // Front
         glm::vec3(0.0f, 1.0f, 0.0f));   // Up
     ri.camera = &camera;
@@ -120,7 +122,7 @@ int main()
 
     // Create shapes
     createShapes(ri, scene);
-    //testBulletShapes(ri, scene);
+    // testBulletShapes(ri, scene);
     createWorld(ri, scene);
 
     // Setup Dear ImGui context
@@ -220,7 +222,17 @@ void loadTextures(RenderInfo& ri)
     ri.texture["tile2"] = Utils::loadTexture("src/textures/tile2.png");
     ri.texture["water"] = Utils::loadTexture("src/textures/water.png");
     ri.texture["wood"] = Utils::loadTexture("src/textures/wood.png");
-    
+
+    ri.texture["sun"] = Utils::loadTexture("src/textures/sun.png");
+    ri.texture["mercury"] = Utils::loadTexture("src/textures/mercury.png");
+    ri.texture["venus"] = Utils::loadTexture("src/textures/venus.png");
+    ri.texture["earth_day"] = Utils::loadTexture("src/textures/earth_day.png");
+    ri.texture["moon"] = Utils::loadTexture("src/textures/moon.png");
+    ri.texture["mars"] = Utils::loadTexture("src/textures/mars.png");
+    ri.texture["jupiter"] = Utils::loadTexture("src/textures/jupiter.png");
+    ri.texture["saturn"] = Utils::loadTexture("src/textures/saturn.png");
+    ri.texture["uranus"] = Utils::loadTexture("src/textures/uranus.png");
+    ri.texture["neptune"] = Utils::loadTexture("src/textures/neptune.png");  
 }
 
 void loadSkyboxTextures(RenderInfo& ri)
@@ -278,6 +290,7 @@ void createLights(Scene& scene)
 
 void createTorch(RenderInfo& ri, Scene& scene, glm::vec3 pos)
 {
+
 }
 
 void createGround(RenderInfo& ri, Scene& scene)
@@ -296,37 +309,123 @@ void createGround(RenderInfo& ri, Scene& scene)
     scene.addPhongShape(plane);
 }
 
-void createSpheres(RenderInfo& ri, Scene& scene)
+void createSpheres(RenderInfo& ri, Scene& scene, glm::vec3 pos)
 {
-    SphereInfo info = SphereInfo();
+    std::vector<GLuint> tex = {
+        ri.texture["bark"],
+        ri.texture["fire"],
+        ri.texture["galvanized_blue"],
+        ri.texture["gray_brick"],
+        ri.texture["ice"],
+        ri.texture["ivy"],
+        ri.texture["lava"],
+        ri.texture["leaf"],
+        ri.texture["pebbles"],
+        ri.texture["pebbles2"],
+        ri.texture["rock"],
+        ri.texture["tile"],
+        ri.texture["tile2"],
+        ri.texture["water"],
 
-    if (info.texture) {
-        std::cout << "Texture" << std::endl;
+        ri.texture["sun"],
+        ri.texture["mercury"],
+        ri.texture["venus"],
+        ri.texture["earth_day"],
+        ri.texture["moon"],
+        ri.texture["mars"],
+        ri.texture["jupiter"],
+        ri.texture["saturn"],
+        ri.texture["uranus"],
+        ri.texture["neptune"],
+    };
+
+    std::vector<MaterialType> materials = {
+        material.brass,
+        material.bronze,
+        material.chrome,
+        material.copper,
+        material.emerald,
+        material.gold,
+        material.obsidian,
+        material.perl,
+        material.polished_bronze,
+        material.polished_copper,
+        material.polished_gold,
+        material.polished_silver,
+        material.ruby,
+        material.silver,
+        material.tin
+    };
+
+    // generate sphere infos:
+    std::vector<SphereInfo> sphereinfo;
+    for (int i = 0; i < tex.size(); i++) {
+        sphereinfo.push_back({
+            MaterialType(),
+            tex[i]
+        });
+    }
+    for (int i = 0; i < materials.size(); i++) {
+        sphereinfo.push_back({
+            materials[i]
+            });
     }
 
-    btScalar mass = 1.0f;
-    btScalar radius = 0.1f;
-    btScalar restitution = 0.6f;
-    btScalar friction = 0.8f;
+    // Shuffle spheres
+    std::random_device rd;
+    std::mt19937 g(rd());
+    std::shuffle(std::begin(sphereinfo), std::end(sphereinfo), g);
 
-    btRigidBody* sphereRigidBody = createMarbleRigidBody(
-        mass, radius, { 0.0f, 13.0f, 0.0f }, restitution, friction);
+    sphereinfo[0].player = true;
+    std::shuffle(std::begin(sphereinfo), std::end(sphereinfo), g);
 
-    // sphereRigidBody->setLinearVelocity(btVector3(10.0f, 0.0f, 0.0f)); // temp
+    int numSpheres = sphereinfo.size();
+    int numX = 3;
+    int numY = 5;
+    int numZ = 3;
+    float sphereDist = 0.5;
+    float xOffset = -(sphereDist * (numX - 1)) / 2.0f;
+    float zOffset = -(sphereDist * (numZ - 1)) / 2.0f;
+    float xPos, yPos, zPos;
 
-    ri.bullet.pWorld->addRigidBody(sphereRigidBody);
-    ri.camera->setPBody(sphereRigidBody);
+    for (int i = 0; i < numY; i++) {
+        for (int j = 0; j < numZ; j++) {
+            for (int k = 0; k < numX; k++)
+            {
+                int sId = (i * numX * numZ) + (j * numZ) + k;
 
-    Shape* sphere = new Sphere(radius, 40, 40);
-    sphere->setMaterial(material.brass);
-    sphere->useTexture(ri.texture["lava"]);
-    sphere->setPBody(sphereRigidBody);
-    scene.addPhongShape(sphere);
+                if (sId >= numSpheres) return;
+                SphereInfo& s = sphereinfo[sId];
+
+                xPos = pos.x + xOffset + (k * sphereDist);
+                yPos = pos.y + (i * sphereDist);
+                zPos = pos.z + zOffset + (j * sphereDist);
+
+                btRigidBody* sphereRigidBody = createMarbleRigidBody(
+                    s.mass, s.radius, { xPos, yPos, zPos }, s.restitution, s.friction);
+
+                ri.bullet.pWorld->addRigidBody(sphereRigidBody);
+
+                Shape* sphere = new Sphere(s.radius, 40, 40);
+                sphere->setMaterial(s.material);
+                if (s.texture) {
+                    sphere->useTexture(s.texture);
+                }
+                if (s.player) {
+                    ri.camera->setPBody(sphereRigidBody);
+
+                    Emitter* trailEmitter = new TrailEmitter(0.1f, 10.0f, s.radius * 0.5f, ri.texture["particle_star1"]);
+                    trailEmitter->setPBody(sphereRigidBody);
+                    scene.addEmitter(trailEmitter);
+                }
+                sphere->setPBody(sphereRigidBody);
+                scene.addPhongShape(sphere);
+            }
+        }
+    }
+
 
     // Emitters
-    Emitter* trailEmitter = new TrailEmitter(0.1f, 10.0f, radius * 0.5f, ri.texture["particle_star1"]);
-    trailEmitter->setPBody(sphereRigidBody);
-    scene.addEmitter(trailEmitter);
 
     //Emitter* flameEmitter = new FlameEmitter(400, 0.7f, radius * 1.2, radius * 0.2f, ri.texture["particle"]);
     //flameEmitter->setPBody(sphereRigidBody);
@@ -338,7 +437,7 @@ void createSpheres(RenderInfo& ri, Scene& scene)
 
 }
 
-void createHaltPipeTrack(RenderInfo& ri, Scene& scene, std::vector<TrackSupport>& supports)
+void createHalfPipeTrack(RenderInfo& ri, Scene& scene, std::vector<TrackSupport>& supports)
 {
     Shape* track = new HalfPipeTrack(supports);
 
@@ -424,13 +523,13 @@ void createPlinko(RenderInfo& ri, Scene& scene, glm::vec3 pos, float angle)
     // pillar obstacles
     int numRows = 10;
     int pillarsPerRow = 7;
-    float pillarDist = 0.6;
+    float pillarDist = 0.625;
     float xOffsetEven = -(pillarDist * (pillarsPerRow - 1)) / 2.0;
     float xOffsetOdd = -(pillarDist * (pillarsPerRow - 2)) / 2.0;
     float xOffset;
     float zOffset = -(pillarDist * (numRows - 1)) / 2.0;
     float xPos, zPos;
-    float yPos = (height / 2.0f + thicknes / 2.0f);
+    float yPos = (height / 2.0f + thicknes / 2.01f);
 
     for (int i = 0; i < numRows; i++) {
         if (i % 2 == 0) {
@@ -448,7 +547,7 @@ void createPlinko(RenderInfo& ri, Scene& scene, glm::vec3 pos, float angle)
             modelMatrixLocal = glm::translate(modelMatrixLocal, { xPos, yPos, zPos });
 
             pillar->setModelMatrix(modelMatrix * modelMatrixLocal);
-            pillar->setMaterial(material.chrome);
+            pillar->setMaterial(material.silver);
             scene.addPhongShape(pillar);
 
             btCollisionShape* btPillar = new btCylinderShape({ radius, height / 2.0f , radius });
@@ -466,10 +565,17 @@ void createPlinko(RenderInfo& ri, Scene& scene, glm::vec3 pos, float angle)
 
 void createWorld(RenderInfo& ri, Scene& scene)
 {
-    createGround(ri, scene);
-    createSpheres(ri, scene);
+    // Turn: 90 deg -> 10 segments
+    glm::vec3 sphereStartPos = { 0.0f, 20.0f, 0.0f };
 
-    glm::vec3 nextPos = { 0.0f, 10.0f, -1.0f };
+    createGround(ri, scene);
+    createSpheres(ri, scene, sphereStartPos);
+
+    glm::vec3 nextPos = { 
+        sphereStartPos.x,
+        sphereStartPos.y,
+        sphereStartPos.z - 2.0f,
+    };
     float nextAngle = 0.0f;
     std::vector<TrackSupport> supports;
     TrackSupportGenerator trackGenerator = TrackSupportGenerator();
@@ -477,32 +583,82 @@ void createWorld(RenderInfo& ri, Scene& scene)
     // Track 1
     trackGenerator.newTrack(
         nextPos.x, nextPos.y, nextPos.z,
-        nextAngle);
-    trackGenerator.forward(4.0f, -1.0f);
-    trackGenerator.turn(-45.0f, 4.0f, 0.0f, 4);
+        nextAngle, 1.9f, 2.0f);
+    trackGenerator.forward(4.0f, -2.0f, 1.9f, 2.0f);
+    trackGenerator.forward(4.0f, -1.8f, 0.9f, 1.0f);
 
-    trackGenerator.forward(1.0f, 0.0f);
+    trackGenerator.turn(-180.0f, 4.0f, -1.2f, 20);
 
     supports = trackGenerator.getSupports();
-    createHaltPipeTrack(ri, scene, supports);
+    createHalfPipeTrack(ri, scene, supports);
 
-    // Plinko
+    // Plinko 1
     nextPos = trackGenerator.nextModuleCenter(8.0f, 10.0f);
     nextAngle = supports.back().angle;
     createPlinko(ri, scene, { nextPos.x, nextPos.y, nextPos.z }, nextAngle);
 
-    // Track 2
-    nextPos = trackGenerator.nextModuleCenter(16.0f, 10.0f);
+    // Track 2a & 2b
+    nextPos = trackGenerator.nextModuleCenter(16.0f, 10.0f); // After plinko
+    
+    trackGenerator.newTrack(
+        nextPos.x, nextPos.y, nextPos.z, nextAngle);
+    trackGenerator.forward(0.9f);
+
+    nextPos = trackGenerator.getLastPos(); // + offset
+
+    // Track 2a
+    trackGenerator.newTrack(
+        nextPos.x, nextPos.y, nextPos.z,
+        nextAngle + 90.0f,
+        0.9f, 1.0f);
+    trackGenerator.forward(2.0f, -0.1f, 0.9f, 1.0f);
+    trackGenerator.turn(-135.0f, 3.0f, -1.0f, 13);
+    
+    trackGenerator.forward(3.0f, -1.0f, 0.4f, 0.5f);
+    trackGenerator.turn(720.0f, 3.0f, -4.0f, 80, 0.4f, 0.5f);
+    
+    trackGenerator.forward(1.0f, -0.2f, 0.4f, 0.5f);
+
+    supports = trackGenerator.getSupports();
+    createHalfPipeTrack(ri, scene, supports);
+
+    glm::vec3 pos2a = trackGenerator.getLastPos();
+
+    // Track 2b
+    trackGenerator.newTrack(
+        nextPos.x, nextPos.y, nextPos.z,
+        nextAngle - 90.0f,
+        0.9f, 1.0f);
+    trackGenerator.forward(2.0f, -0.1f, 0.9f, 1.0f);
+    trackGenerator.turn(135.0f, 3.0f, -1.0f, 13);
+
+    trackGenerator.forward(3.0f, -1.0f, 0.4f, 0.5f);
+    trackGenerator.turn(-720.0f, 3.0f, -4.0f, 80, 0.4f, 0.5f);
+
+    trackGenerator.forward(1.0f, -0.2f, 0.4f, 0.5f);
+
+    supports = trackGenerator.getSupports();
+    createHalfPipeTrack(ri, scene, supports);
+
+    glm::vec3 pos2b = trackGenerator.getLastPos();
+
+    // Track 3
+    nextPos = (pos2a + pos2b) * 0.5f;
+    nextPos.y -= 0.5f;
     trackGenerator.newTrack(
         nextPos.x, nextPos.y, nextPos.z,
         nextAngle,
-        1.9f, 2.0f);
-    trackGenerator.forward(4.0f, -1.0f, 0.9f, 1.0f);
-    trackGenerator.turn(45.0f, 3.0f, 0.0f, 4);
-    trackGenerator.turn(180.0f, 5.0f, -2.0f, 16);
+        0.9f, 1.0f);
+    trackGenerator.forward(6.0f, -1.0f, 0.9f, 1.0f);
+    trackGenerator.turn(-180.0f, 8, -2.0f, 20, 0.9f, 1.0f);
+
+    trackGenerator.forward(8.0f, -0.5f, 0.4f, 0.5f);
+    trackGenerator.forward(0.5f, 0.1f, 0.4f, 0.5f);
+    trackGenerator.forward(0.5f, 0.2f, 0.4f, 0.5f);
+    //trackGenerator.turn(-90.0f, 10, -0.5f, 10, 0.4f, 0.5f);
 
     supports = trackGenerator.getSupports();
-    createHaltPipeTrack(ri, scene, supports);
+    createHalfPipeTrack(ri, scene, supports);
 }
 
 
@@ -516,7 +672,7 @@ void createShapes(RenderInfo& ri, Scene& scene)
     int num_y;
 
     // Boxes:
-    middle_pos = { 0.0f, 5.0f, -4.0f };
+    middle_pos = { -10.0f, 5.0f, -4.0f };
     std::vector<GLuint> tex = {
         ri.texture["bark"],
         ri.texture["fire"],
@@ -532,6 +688,17 @@ void createShapes(RenderInfo& ri, Scene& scene)
         ri.texture["tile"],
         ri.texture["tile2"],
         ri.texture["water"],
+
+        ri.texture["sun"],
+        ri.texture["mercury"],
+        ri.texture["venus"],
+        ri.texture["earth_day"],
+        ri.texture["moon"],
+        ri.texture["mars"],
+        ri.texture["jupiter"],
+        ri.texture["saturn"],
+        ri.texture["uranus"],
+        ri.texture["neptune"], 
     };
     num_x = tex.size();
     for (int i = 0; i < num_x; i++) {
@@ -565,7 +732,7 @@ void createShapes(RenderInfo& ri, Scene& scene)
         material.silver,
         material.tin
     };
-    middle_pos = { 0.0f, 5.0f, -1.0f };
+    middle_pos = { -10.0f, 5.0f, -1.0f };
     num_x = materials.size();
     for (int i = 0; i < num_x; i++) {
         float x = middle_pos.x - (num_x / 2.0f) + i;
