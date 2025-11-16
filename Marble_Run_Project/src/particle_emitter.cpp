@@ -201,7 +201,7 @@ void FlameEmitter::updateParticles(float dt)
 
         p.velocity = {
             glm::linearRand(-0.2f, 0.2f), // x
-            glm::linearRand(0.2f, 2.0f),  // y
+            glm::linearRand(0.2f, 1.0f),  // y
             glm::linearRand(-0.2f, 0.2f)  // z
         };
 
@@ -260,7 +260,7 @@ void SmokeEmitter::updateParticles(float dt)
 
         p.velocity = {
             glm::linearRand(-0.1f, 0.1f), // x
-            glm::linearRand(1.0f, 1.8f),  // y
+            glm::linearRand(1.0f, 0.8f),  // y
             glm::linearRand(-0.1f, 0.1f)  // z
         };
 

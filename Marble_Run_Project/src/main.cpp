@@ -290,7 +290,53 @@ void createLights(Scene& scene)
 
 void createTorch(RenderInfo& ri, Scene& scene, glm::vec3 pos)
 {
+    float height = 0.35f;
+    float radius = 0.03f;
+    glm::vec4 color = glm::vec4(1.0f, 0.65f, 0.25f, 1.0f);
 
+    PointLight torchLight{
+        {pos.x, pos.y + height, pos.z},
+        glm::vec4(0.0f, 0.0f, 0.0f, 1.0f),
+        color * 0.4f,
+        glm::vec4(0.5f, 0.45f, 0.35f, 1.0f),
+        1.0f, 0.09f, 0.032f
+    };
+
+    MaterialType mat = {
+        color,
+        glm::vec4(1.0f),
+        glm::vec4(1.0f),
+        10.0f
+    };
+
+    glm::mat4 modelMatrix = glm::mat4(1.0f);
+    glm::mat4 modelMatrixLocal = glm::mat4(1.0f);
+    modelMatrix = glm::translate(modelMatrix, pos);
+
+    Shape* pillar = new Cylinder(radius, height, 20);
+    modelMatrixLocal = glm::mat4(1.0f);
+    modelMatrixLocal = glm::translate(modelMatrixLocal, {0.0f, height * 0.5f, 0.0f});
+    pillar->setModelMatrix(modelMatrix * modelMatrixLocal);
+    pillar->useTexture(ri.texture["bark"]);
+    scene.addPhongShape(pillar);
+
+    Shape* sphere = new Sphere(radius * 1.1, 20, 20);
+    modelMatrixLocal = glm::mat4(1.0f);
+    modelMatrixLocal = glm::translate(modelMatrixLocal, { 0.0f, height * 1.0f, 0.0f });
+    sphere->setModelMatrix(modelMatrix * modelMatrixLocal);
+    sphere->setMaterial(mat);
+    sphere->castShadow(false);
+    scene.addBaseShape(sphere);
+
+    scene.addPointLight(torchLight, false);
+
+    Emitter* flameEmitter = new FlameEmitter(400, 0.7f, radius * 1.2, radius * 0.4f, ri.texture["particle"]);
+    flameEmitter->setPosition({ pos.x, pos.y + height, pos.z });
+    scene.addEmitter(flameEmitter);
+
+    Emitter* smokeEmitter = new SmokeEmitter(100, 2.0f, radius * 1.2, radius * 0.3f, ri.texture["particle"]);
+    smokeEmitter->setPosition({ pos.x, pos.y + height, pos.z });
+    scene.addEmitter(smokeEmitter);
 }
 
 void createGround(RenderInfo& ri, Scene& scene)
@@ -581,6 +627,17 @@ void createWorld(RenderInfo& ri, Scene& scene)
     TrackSupportGenerator trackGenerator = TrackSupportGenerator();
 
     // Track 1
+    createTorch(ri, scene, { 
+        nextPos.x + 1.95f, 
+        nextPos.y - 0.05f, 
+        nextPos.z + 0.05f
+        });
+    createTorch(ri, scene, {
+        nextPos.x - 1.95f,
+        nextPos.y - 0.05f,
+        nextPos.z + 0.05f
+        });
+
     trackGenerator.newTrack(
         nextPos.x, nextPos.y, nextPos.z,
         nextAngle, 1.9f, 2.0f);
@@ -645,6 +702,13 @@ void createWorld(RenderInfo& ri, Scene& scene)
     // Track 3
     nextPos = (pos2a + pos2b) * 0.5f;
     nextPos.y -= 0.5f;
+
+    createTorch(ri, scene, {
+        nextPos.x,
+        nextPos.y + 0.5f,
+        nextPos.z + 1.5f
+        });
+
     trackGenerator.newTrack(
         nextPos.x, nextPos.y, nextPos.z,
         nextAngle,
