@@ -39,6 +39,7 @@ btTriangleMesh* createBtTriangleMesh(Shape* shape)
 btRigidBody* createMarbleRigidBody(btScalar mass, btScalar radius, btVector3 origin, btScalar rest, btScalar fric)
 {
     btCollisionShape* shape = new btSphereShape(radius);
+    //shape->setMargin(0.08f);
 
     btVector3 inertia(0, 0, 0);
     shape->calculateLocalInertia(mass, inertia);
@@ -60,6 +61,9 @@ btRigidBody* createMarbleRigidBody(btScalar mass, btScalar radius, btVector3 ori
     rigidBody->setActivationState(DISABLE_DEACTIVATION);
     // rigidBody->setAngularVelocity(btVector3(0.0f, 0.0f, -3.0f)); // temp
     // rigidBody->setLinearVelocity(btVector3(10.0f, 0.0f, 0.0f)); // temp
+
+    rigidBody->setCcdMotionThreshold(0.5f * radius);
+    rigidBody->setCcdSweptSphereRadius(0.9f * radius);
 
     return rigidBody;
 }
