@@ -57,6 +57,16 @@ void Scene::updateLightSpaceMatrix()
 	mLightSpaceMatrix = lightProjection * lightView;
 }
 
+void Scene::updateDirLight()
+{
+	glm::vec3 dir = {
+		cos(glm::radians(mLightYaw)) * cos(glm::radians(mLightPitch)),
+		sin(glm::radians(mLightPitch)),
+		sin(glm::radians(mLightYaw)) * cos(glm::radians(mLightPitch))
+	};
+	mLights.directional.front().direction = dir;
+}
+
 void Scene::update(Camera& camera, double dt)
 {
 	mViewMatrix = camera.getViewMatrix();
@@ -67,6 +77,7 @@ void Scene::update(Camera& camera, double dt)
 	mDt = dt;
 
 	updateLightSpaceMatrix();
+	updateDirLight();
 }
 
 
@@ -91,7 +102,11 @@ void Scene::setAmbientLight(glm::vec4 color)
 
 void Scene::addDirectionLight(DirectionalLight light)
 {
+	light.direction = glm::normalize(light.direction);
 	mLights.directional.push_back(light);
+
+	mLightPitch = glm::degrees(asin(light.direction.y));
+	mLightYaw = glm::degrees(atan2(light.direction.z, light.direction.x));
 }
 
 void Scene::addPointLight(PointLight light, bool visualize)
@@ -230,6 +245,7 @@ void Scene::drawPhongShapes()
 	glViewport(0, 0, mSHADOW_WIDTH, mSHADOW_HEIGHT);
 	glBindFramebuffer(GL_FRAMEBUFFER, FBO);
 	glClear(GL_DEPTH_BUFFER_BIT);
+	//glCullFace(GL_FRONT);
 
 	for (Shape* shape : mPhongShapes) {
 		if (shape->mCastShadow) {
@@ -243,6 +259,7 @@ void Scene::drawPhongShapes()
 	glfwGetWindowSize(mWindow, &width, &height);
 	glViewport(0, 0, width, height);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glCullFace(GL_BACK);
 
 	// Render scene
 	prepareShaderPhong();

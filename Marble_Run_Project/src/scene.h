@@ -21,6 +21,7 @@ public:
 	void initShadowMap();
 
 	void updateLightSpaceMatrix();
+	void updateDirLight();
 	void update(Camera& camera, double dt);
 
 	void setShaders(GLuint basicShader, GLuint phongShader, GLuint skyboxShader, GLuint shadowMapShader);
@@ -64,6 +65,8 @@ public:
 	glm::vec3 mCameraPos;
 
 	Light mLights;
+	float mLightYaw = 0.0f;
+	float mLightPitch = 0.0f;
 	std::vector<Shape*> mBasicShapes;
 	std::vector<Shape*> mPhongShapes;
 	std::vector<Emitter*> mEmitters;
@@ -71,8 +74,9 @@ public:
 
 	// Shadow map
 	float mShadowAreaSize = 100;
-	const GLuint mSHADOW_WIDTH = 8192;
-	const GLuint mSHADOW_HEIGHT = 8192;
+	// 8192 16384
+	const GLuint mSHADOW_WIDTH = 16384;
+	const GLuint mSHADOW_HEIGHT = 16384;
 	GLuint FBO;
 	GLuint mShadowMap;
 	glm::mat4 mLightSpaceMatrix;

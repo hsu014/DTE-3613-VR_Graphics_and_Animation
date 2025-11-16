@@ -262,7 +262,7 @@ void createLights(Scene& scene)
     // Directional
     DirectionalLight dirLight{};
     //dirLight.direction = glm::vec3(0.0f, -5.0f, 3.0f);
-    dirLight.direction = glm::vec3(0.2f, -1.0f, 0.8f);
+    dirLight.direction = glm::vec3(1.0f, -1.0f, 0.0f);
 
     dirLight.ambient = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
     dirLight.diffuse = glm::vec4(0.6f, 0.6f, 0.6f, 1.0f);
@@ -271,7 +271,7 @@ void createLights(Scene& scene)
     scene.addDirectionLight(dirLight);
 
     // Point
-    PointLight pointLight{};
+    /*PointLight pointLight{};
     pointLight.position = glm::vec3(-4.0f, 2.0f, 6.0f);
 
     pointLight.ambient = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
@@ -282,10 +282,7 @@ void createLights(Scene& scene)
     pointLight.linear = 0.09f;
     pointLight.quadratic = 0.032f;
 
-    scene.addPointLight(pointLight, true);
-
-    // pointLight.position = glm::vec3(-1.0f, 0.1f, 2.0f);
-    // scene.addPointLight(pointLight, true);
+    scene.addPointLight(pointLight, true);*/
 }
 
 void createTorch(RenderInfo& ri, Scene& scene, glm::vec3 pos)
@@ -934,6 +931,15 @@ void animate(GLFWwindow* window, RenderInfo& ri, Scene& scene)
             ImGuiWindowFlags_NoNav);
         ImGui::Text("FPS: %.1f", fps);
         ImGui::End();
+
+        // Direction light 
+        float* lightYaw = &scene.mLightYaw;
+        float* lightPitch = &scene.mLightPitch; // -90 -> -10 ??
+        ImGui::Begin("Light", nullptr);
+        ImGui::SliderFloat("Yaw", lightYaw, -180.0f, 360.0f);
+        ImGui::SliderFloat("Pitch", lightPitch, -89.9f, -10.0f);
+        ImGui::End();
+
 
         // Render ImGui
         ImGui::Render();

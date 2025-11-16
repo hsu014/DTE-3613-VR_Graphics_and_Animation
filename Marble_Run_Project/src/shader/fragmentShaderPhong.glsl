@@ -153,7 +153,7 @@ float ShadowCalculation(vec3 normal, vec3 lightDir)
     float currentDepth = projCoords.z;
 
     // Bias to reduce shadow acne
-    float bias = max(0.005 * (1.0 - dot(normal, lightDir)), 0.0005);
+    float bias = max(0.0005 * (1.0 - dot(normal, lightDir)), 0.0005);
 
     // --- PCF (3x3 soft shadows) ---
     float shadow = 0.0;
