@@ -30,7 +30,6 @@ void processInput(GLFWwindow* window, RenderInfo& ri);
 void initRenderInfo(RenderInfo& ri);
 void loadTextures(RenderInfo& ri);
 void loadSkyboxTextures(RenderInfo& ri);
-void loadHeightmaps(RenderInfo& ri);
 void createLights(Scene& scene);
 
 void createTorch(RenderInfo& ri, Scene& scene, glm::vec3 pos);
@@ -38,6 +37,7 @@ void createGround(RenderInfo& ri, Scene& scene);
 void createSpheres(RenderInfo& ri, Scene& scene, glm::vec3 pos);
 void createHalfPipeTrack(RenderInfo& ri, Scene& scene, std::vector<TrackSupport>& supports);
 void createPlinko(RenderInfo& ri, Scene& scene, glm::vec3 pos, float angle);
+
 void createWorld(RenderInfo& ri, Scene& scene);
 
 void createShapes(RenderInfo& ri, Scene& scene);
@@ -86,8 +86,8 @@ int main()
     initRenderInfo(ri);
 
     Camera camera(window, 
-        glm::vec3(0.0f, 20.0f, -10.0f),  // Pos
-        glm::vec3(0.0f, 0.1f, 1.0f),    // Front
+        glm::vec3(0.0f, 24.0f, -10.0f), // Pos
+        glm::vec3(0.0f, -0.3f, 1.0f),   // Front
         glm::vec3(0.0f, 1.0f, 0.0f));   // Up
     ri.camera = &camera;
 
@@ -190,7 +190,6 @@ void initRenderInfo(RenderInfo& ri)
 
     loadTextures(ri);
     loadSkyboxTextures(ri);
-    loadHeightmaps(ri);
 }
 
 void loadTextures(RenderInfo& ri)
@@ -223,6 +222,12 @@ void loadTextures(RenderInfo& ri)
     ri.texture["water"] = Utils::loadTexture("src/textures/water.png");
     ri.texture["wood"] = Utils::loadTexture("src/textures/wood.png");
 
+    ri.texture["metal"] = Utils::loadTexture("src/textures/metal.png");
+    ri.texture["metal2"] = Utils::loadTexture("src/textures/metal2.png");
+    ri.texture["stone"] = Utils::loadTexture("src/textures/stone.png");
+    ri.texture["stone"] = Utils::loadTexture("src/textures/stone2.png");
+    ri.texture["tile3"] = Utils::loadTexture("src/textures/tile3.png");
+
     ri.texture["sun"] = Utils::loadTexture("src/textures/sun.png");
     ri.texture["mercury"] = Utils::loadTexture("src/textures/mercury.png");
     ri.texture["venus"] = Utils::loadTexture("src/textures/venus.png");
@@ -240,18 +245,6 @@ void loadSkyboxTextures(RenderInfo& ri)
     ri.skyboxTexture["sky_22"] = Utils::loadCubeMap("src/textures/skybox/sky_22");
     ri.skyboxTexture["sky_27"] = Utils::loadCubeMap("src/textures/skybox/sky_27");
     ri.skyboxTexture["sky_42"] = Utils::loadCubeMap("src/textures/skybox/sky_42");
-}
-
-void loadHeightmaps(RenderInfo& ri)
-{
-    ri.heightMap["heightmap_1"] =
-        std::make_shared<std::vector<std::vector<float>>>(Utils::loadHeightMap("src/textures/heightmaps/heightmap_1.png"));
-    ri.heightMap["heightmap_2"] =
-        std::make_shared<std::vector<std::vector<float>>>(Utils::loadHeightMap("src/textures/heightmaps/heightmap_2.png"));
-    ri.heightMap["heightmap_3"] =
-        std::make_shared<std::vector<std::vector<float>>>(Utils::loadHeightMap("src/textures/heightmaps/heightmap_3.png"));
-    ri.heightMap["heightmap_4"] =
-        std::make_shared<std::vector<std::vector<float>>>(Utils::loadHeightMap("src/textures/heightmaps/heightmap_4.png"));
 }
 
 void createLights(Scene& scene)
@@ -357,18 +350,23 @@ void createSpheres(RenderInfo& ri, Scene& scene, glm::vec3 pos)
     std::vector<GLuint> tex = {
         ri.texture["bark"],
         ri.texture["fire"],
-        ri.texture["galvanized_blue"],
-        ri.texture["gray_brick"],
         ri.texture["ice"],
-        ri.texture["ivy"],
         ri.texture["lava"],
+        ri.texture["ivy"],
         ri.texture["leaf"],
+        ri.texture["gray_brick"],
         ri.texture["pebbles"],
         ri.texture["pebbles2"],
         ri.texture["rock"],
+        ri.texture["stone"],
+        ri.texture["stone2"],
         ri.texture["tile"],
         ri.texture["tile2"],
+        ri.texture["tile3"],
         ri.texture["water"],
+        ri.texture["galvanized_blue"],
+        ri.texture["metal"],
+        ri.texture["metal2"],
 
         ri.texture["sun"],
         ri.texture["mercury"],
@@ -384,20 +382,20 @@ void createSpheres(RenderInfo& ri, Scene& scene, glm::vec3 pos)
 
     std::vector<MaterialType> materials = {
         material.brass,
-        material.bronze,
-        material.chrome,
-        material.copper,
-        material.emerald,
+        //material.bronze,
+        //material.polished_bronze,
+        //material.chrome,
+        material.tin,
+        //material.copper,
+        //material.polished_copper,
+        //material.silver,
+        //material.polished_silver,
         material.gold,
+        //material.polished_gold,
+        material.emerald,
         material.obsidian,
         material.perl,
-        material.polished_bronze,
-        material.polished_copper,
-        material.polished_gold,
-        material.polished_silver,
         material.ruby,
-        material.silver,
-        material.tin
     };
 
     // generate sphere infos:
@@ -466,18 +464,6 @@ void createSpheres(RenderInfo& ri, Scene& scene, glm::vec3 pos)
             }
         }
     }
-
-
-    // Emitters
-
-    //Emitter* flameEmitter = new FlameEmitter(400, 0.7f, radius * 1.2, radius * 0.2f, ri.texture["particle"]);
-    //flameEmitter->setPBody(sphereRigidBody);
-    //scene.addEmitter(flameEmitter);
-
-    //Emitter* smokeEmitter = new SmokeEmitter(200, 3.0f, radius * 1.2, radius * 0.3f, ri.texture["particle"]);
-    //smokeEmitter->setPBody(sphereRigidBody);
-    //scene.addEmitter(smokeEmitter);
-
 }
 
 void createHalfPipeTrack(RenderInfo& ri, Scene& scene, std::vector<TrackSupport>& supports)
@@ -602,7 +588,7 @@ void createPlinko(RenderInfo& ri, Scene& scene, glm::vec3 pos, float angle)
 
     // Add to bullet world
     btQuaternion q = quatFromYawPitchRoll(0.0f, -angle, tilt);
-    btRigidBody* body = createStaticRigidBody(compound, { pos.x, pos.y, pos.z }, q, 0.6f, 0.5f);
+    btRigidBody* body = createStaticRigidBody(compound, { pos.x, pos.y, pos.z }, q, 0.9f, 0.5f);
     ri.bullet.pWorld->addRigidBody(body);
 }
 
@@ -779,20 +765,21 @@ void createShapes(RenderInfo& ri, Scene& scene)
     std::vector<MaterialType> materials = {
         material.brass,
         material.bronze,
+        material.polished_bronze,
         material.chrome,
+        material.tin,
         material.copper,
-        material.emerald,
+        material.polished_copper,
+        material.silver,
+        material.polished_silver,
         material.gold,
+        material.polished_gold,
+        material.emerald,
         material.obsidian,
         material.perl,
-        material.polished_bronze,
-        material.polished_copper,
-        material.polished_gold,
-        material.polished_silver,
         material.ruby,
-        material.silver,
-        material.tin
     };
+
     middle_pos = { -10.0f, 5.0f, -1.0f };
     num_x = materials.size();
     for (int i = 0; i < num_x; i++) {
@@ -808,45 +795,6 @@ void createShapes(RenderInfo& ri, Scene& scene)
         sphere->setModelMatrix(modelMatrix);
         scene.addPhongShape(sphere);
     }
-
-  
-    //Shape* box = new Box(2.0, 2.0, 2.0);
-    //box->setMaterial(material.chrome);
-    //box->useTexture(ri.texture["gray_brick"]);
-    //modelMatrix = glm::mat4(1.0f);
-    //modelMatrix = glm::translate(modelMatrix, glm::vec3(-10.0f, 1.0f, 5.0f));
-    //box->setModelMatrix(modelMatrix);
-    //scene.addPhongShape(box);
-   
-    //Shape* pyramid = new Pyramid(2.0, 2.0, 2.0);
-    //pyramid->setMaterial(material.ruby);
-    //pyramid->useTexture(ri.texture["gray_brick"]);
-    //modelMatrix = glm::mat4(1.0f);
-    //modelMatrix = glm::translate(modelMatrix, glm::vec3(-3.0f, 1.3f, -5.0f));
-    //pyramid->setModelMatrix(modelMatrix);
-    //scene.addPhongShape(pyramid);
-
-    //Shape* sphere = new Sphere(1.2);
-    ////sphere->setMaterial(material.brass);
-    //sphere->useTexture(ri.texture["lava"]);
-    //modelMatrix = glm::mat4(1.0f);
-    //modelMatrix = glm::translate(modelMatrix, glm::vec3(-10.0, 5.0, -2.2));
-    //sphere->setModelMatrix(modelMatrix);
-    //scene.addPhongShape(sphere);
-
-    //Shape* cylinder = new Cylinder(0.5f, 2.0f, 20);
-    //cylinder->useTexture(ri.texture["gray_brick"]);
-    //modelMatrix = glm::mat4(1.0f);
-    //modelMatrix = glm::translate(modelMatrix, glm::vec3(6.0f, 5.0f, 0.0f));
-    //cylinder->setModelMatrix(modelMatrix);
-    //scene.addPhongShape(cylinder);
-
-    //Shape* halfPipe = new HalfPipe(0.9f, 1.0f, 5.0f, 10);
-    //halfPipe->useTexture(ri.texture["wood"]);
-    //modelMatrix = glm::mat4(1.0f);
-    //modelMatrix = glm::translate(modelMatrix, glm::vec3(0.0f, 5.0f, 0.0f));
-    //halfPipe->setModelMatrix(modelMatrix);
-    //scene.addPhongShape(halfPipe);
 
 }
 
@@ -934,9 +882,9 @@ void animate(GLFWwindow* window, RenderInfo& ri, Scene& scene)
 
         // Direction light 
         float* lightYaw = &scene.mLightYaw;
-        float* lightPitch = &scene.mLightPitch; // -90 -> -10 ??
+        float* lightPitch = &scene.mLightPitch;
         ImGui::Begin("Light", nullptr);
-        ImGui::SliderFloat("Yaw", lightYaw, -180.0f, 360.0f);
+        ImGui::SliderFloat("Yaw", lightYaw, -360.0f, 360.0f);
         ImGui::SliderFloat("Pitch", lightPitch, -89.9f, -10.0f);
         ImGui::End();
 
@@ -953,9 +901,7 @@ void animate(GLFWwindow* window, RenderInfo& ri, Scene& scene)
 
 void drawScene(Scene& scene, Camera& camera, double dt)
 {
-    // Draw shapes in scene
     scene.update(camera, dt);
     scene.draw();
-
 }
 

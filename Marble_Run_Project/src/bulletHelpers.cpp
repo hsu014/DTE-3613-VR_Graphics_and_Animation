@@ -65,6 +65,10 @@ btRigidBody* createMarbleRigidBody(btScalar mass, btScalar radius, btVector3 ori
     rigidBody->setCcdMotionThreshold(0.5f * radius);
     rigidBody->setCcdSweptSphereRadius(0.9f * radius);
 
+    float linearDamping = 0.0f;
+    float angularDamping = 0.1f;
+    rigidBody->setDamping(linearDamping, angularDamping);
+
     return rigidBody;
 }
 

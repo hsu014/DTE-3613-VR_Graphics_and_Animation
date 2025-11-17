@@ -59,6 +59,13 @@ void Scene::updateLightSpaceMatrix()
 
 void Scene::updateDirLight()
 {
+	if (mLightYaw > 180.0f) {
+		mLightYaw -= 360.0f;
+	}
+	if (mLightYaw < -180.0f) {
+		mLightYaw += 360.0f;
+	}
+
 	glm::vec3 dir = {
 		cos(glm::radians(mLightYaw)) * cos(glm::radians(mLightPitch)),
 		sin(glm::radians(mLightPitch)),
@@ -259,7 +266,7 @@ void Scene::drawPhongShapes()
 	glfwGetWindowSize(mWindow, &width, &height);
 	glViewport(0, 0, width, height);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glCullFace(GL_BACK);
+	//glCullFace(GL_BACK);
 
 	// Render scene
 	prepareShaderPhong();
