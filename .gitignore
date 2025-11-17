@@ -427,7 +427,10 @@ FodyWeavers.xsd
 *.msm
 *.msp
 
+# ImGui settings
+*imgui.ini
 
 # Other files
 C2E_AncillaryFiles/
 bulletOpenGL/
+

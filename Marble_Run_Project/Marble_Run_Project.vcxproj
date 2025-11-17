@@ -192,6 +192,8 @@
     <Image Include="src\textures\mars.png" />
     <Image Include="src\textures\mc_chicken.jpeg" />
     <Image Include="src\textures\mercury.png" />
+    <Image Include="src\textures\metal.png" />
+    <Image Include="src\textures\metal2.png" />
     <Image Include="src\textures\moon.png" />
     <Image Include="src\textures\neptune.png" />
     <Image Include="src\textures\particle.png" />
@@ -220,9 +222,12 @@
     <Image Include="src\textures\skybox\sky_42\px.png" />
     <Image Include="src\textures\skybox\sky_42\py.png" />
     <Image Include="src\textures\skybox\sky_42\pz.png" />
+    <Image Include="src\textures\stone.png" />
+    <Image Include="src\textures\stone2.png" />
     <Image Include="src\textures\sun.png" />
     <Image Include="src\textures\tile.png" />
     <Image Include="src\textures\tile2.png" />
+    <Image Include="src\textures\tile3.png" />
     <Image Include="src\textures\uranus.png" />
     <Image Include="src\textures\venus.png" />
     <Image Include="src\textures\water.png" />
