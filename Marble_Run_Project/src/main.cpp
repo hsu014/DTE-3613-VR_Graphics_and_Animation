@@ -53,6 +53,8 @@ unsigned int SCR_HEIGHT = 1600;
 bool paused = true;
 bool pPressedLastFrame = false;
 
+bool inMenu = true;
+
 Utils util = Utils();
 Material material{};
 
@@ -657,7 +659,7 @@ void createWorld(RenderInfo& ri, Scene& scene)
     trackGenerator.forward(3.0f, -1.0f, 0.4f, 0.5f);
     trackGenerator.turn(720.0f, 3.0f, -4.0f, 80, 0.4f, 0.5f);
     
-    trackGenerator.forward(1.0f, -0.2f, 0.4f, 0.5f);
+    trackGenerator.forward(1.0f, -0.2f, 0.3f, 0.4f);
 
     supports = trackGenerator.getSupports();
     createHalfPipeTrack(ri, scene, supports);
@@ -675,7 +677,7 @@ void createWorld(RenderInfo& ri, Scene& scene)
     trackGenerator.forward(3.0f, -1.0f, 0.4f, 0.5f);
     trackGenerator.turn(-720.0f, 3.0f, -4.0f, 80, 0.4f, 0.5f);
 
-    trackGenerator.forward(1.0f, -0.2f, 0.4f, 0.5f);
+    trackGenerator.forward(1.0f, -0.2f, 0.3f, 0.4f);
 
     supports = trackGenerator.getSupports();
     createHalfPipeTrack(ri, scene, supports);
@@ -868,26 +870,67 @@ void animate(GLFWwindow* window, RenderInfo& ri, Scene& scene)
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
-        ImGui::SetNextWindowPos(ImVec2(SCR_WIDTH - 90, 10));
-        ImGui::SetNextWindowBgAlpha(0.3f);
 
+        // Show fps
+        ImGui::SetNextWindowPos(ImVec2(SCR_WIDTH - 90 * 1.7f, 10));
+        ImGui::SetNextWindowBgAlpha(0.3f);
         ImGui::Begin("FPS Overlay", nullptr,
             ImGuiWindowFlags_NoDecoration |
             ImGuiWindowFlags_AlwaysAutoResize |
             ImGuiWindowFlags_NoSavedSettings |
             ImGuiWindowFlags_NoFocusOnAppearing |
+            ImGuiWindowFlags_NoBringToFrontOnFocus |
             ImGuiWindowFlags_NoNav);
         ImGui::Text("FPS: %.1f", fps);
+        ImGui::SetWindowFontScale(1.7f);
         ImGui::End();
 
-        // Direction light 
+        // Direction light controls
         float* lightYaw = &scene.mLightYaw;
         float* lightPitch = &scene.mLightPitch;
-        ImGui::Begin("Light", nullptr);
-        ImGui::SliderFloat("Yaw", lightYaw, -360.0f, 360.0f);
-        ImGui::SliderFloat("Pitch", lightPitch, -89.9f, -10.0f);
+        ImGui::SetNextWindowSize(
+            ImVec2(SCR_WIDTH * 0.2f, SCR_HEIGHT * 0.3),
+            ImGuiCond_FirstUseEver);
+
+        ImGui::Begin("ImGui", nullptr,
+            ImGuiWindowFlags_NoSavedSettings);
+        
+        if (ImGui::CollapsingHeader("Direction Light", ImGuiTreeNodeFlags_DefaultOpen)) {
+            ImGui::SliderFloat("Yaw", lightYaw, -360.0f, 360.0f);
+            ImGui::SliderFloat("Pitch", lightPitch, -89.9f, -10.0f);
+        }
+        inMenu = false;
+        if (!inMenu) {
+            if (ImGui::CollapsingHeader("Controls", ImGuiTreeNodeFlags_DefaultOpen)) {
+                ImGui::SeparatorText("General");
+                ImGui::Text("[esc] - - - Free/lock mouse cursor");
+                ImGui::Text("[p] - - - - Pause/unpause game");
+                ImGui::Text("[backspace] Close application");
+                ImGui::Spacing();
+                ImGui::SeparatorText("Free cam");
+                ImGui::Text("[1]- - - - - - Activate freecam");
+                ImGui::Text("[mouse]- - - - Camera direction ");
+                ImGui::Text("[W, A, S, D] - Camera position ");
+                ImGui::Text("[space, shift] Camera height ");
+                ImGui::Spacing();
+                ImGui::SeparatorText("Follow cam");
+                ImGui::Text("[2]- - - - - - Activate followcam");
+                ImGui::Text("[mouse]- - - - Camera direction ");
+                ImGui::Text("[W, S] - - - - Camera zoom ");
+                ImGui::Text("[space]- - - - Disable followcam ");
+            }
+        }
+
+        if (inMenu) {
+            if (ImGui::CollapsingHeader("Select marble", ImGuiTreeNodeFlags_DefaultOpen)) {
+                ImGui::Text("Select player marble");
+            }
+        }
+        
+        ImGui::SetWindowFontScale(1.5f);
         ImGui::End();
 
+        ImGui::ShowDemoWindow();
 
         // Render ImGui
         ImGui::Render();
