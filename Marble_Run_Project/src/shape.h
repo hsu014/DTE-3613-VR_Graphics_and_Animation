@@ -44,7 +44,6 @@ public:
     GLsizei mIndexCount;
     GLuint mTexture;
     bool mCastShadow = true;
-    bool mRecieveShadow = true; // unused?
     std::vector<float> mVertices;
     std::vector<unsigned int> mIndices;
 

@@ -162,12 +162,10 @@ void Camera::updateProjectionMatrix()
 
 void Camera::updateViewMatrix()
 {
-    if (mCameraMode == FOLLOW)
-    {
+    if (mCameraMode == FOLLOW) {
         mViewMatrix = glm::lookAt(mPos, mLookAt, mUp);
     }
-    else 
-    {
+    else {
         mViewMatrix = glm::lookAt(mPos, mPos + mFront, mUp);
     }
 }

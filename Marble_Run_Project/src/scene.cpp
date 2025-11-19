@@ -5,8 +5,6 @@ Scene::Scene(GLFWwindow* window) : mWindow(window)
 	initShadowMap();
 }
 
-Scene::~Scene() {}
-
 void Scene::initShadowMap()
 {
 	glGenFramebuffers(1, &FBO);
@@ -23,7 +21,7 @@ void Scene::initShadowMap()
 	float borderColor[] = { 1.0, 1.0, 1.0, 1.0 };
 	glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
 
-	// attach depth texture as FBO's depth buffer
+	// Attach depth texture as FBO's depth buffer
 	glBindFramebuffer(GL_FRAMEBUFFER, FBO);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, mShadowMap, 0);
 	glDrawBuffer(GL_NONE);
@@ -154,7 +152,7 @@ void Scene::addEmitter(Emitter* emitter)
 
 void Scene::prepareShaderSkybox()
 {
-	glm::mat4 view = glm::mat4(glm::mat3(mViewMatrix)); // remove translation from the view matrix
+	glm::mat4 view = glm::mat4(glm::mat3(mViewMatrix));
 
 	GLuint shaderProgram = mSkyboxShader;
 	glUseProgram(shaderProgram);
@@ -232,9 +230,6 @@ void Scene::drawSkybox()
 		prepareShaderSkybox();
 		mSkybox[0]->draw(mSkyboxShader);
 	}
-	else {
-		// std::cout << "Skybox doesn't exist\n";
-	}
 }
 
 void Scene::drawBaseShapes()
@@ -293,5 +288,4 @@ void Scene::draw()
 	drawBaseShapes();
 	drawSkybox();
 	drawEmitters();
-	
 }

@@ -39,7 +39,6 @@ public:
 
 	void setPBody(btRigidBody* pBody);
 
-	
 	// Variables
 	GLFWwindow* mWindow;
 	float mCameraSpeed = 7.0f;

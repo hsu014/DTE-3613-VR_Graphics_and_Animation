@@ -16,7 +16,6 @@
 class Scene {
 public:
 	Scene(GLFWwindow* window);
-	~Scene();
 
 	void initShadowMap();
 
@@ -49,6 +48,7 @@ public:
 
 	void draw();
 
+	// Variables
 	GLFWwindow* mWindow;
 	double mDt = 0.0;
 

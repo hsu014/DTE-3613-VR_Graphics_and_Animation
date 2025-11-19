@@ -344,7 +344,6 @@ void Box::fillBuffers()
         22, 23, 20,
     };
 
-
     glBindVertexArray(VAO);
 
     fillVertexBuffer(vertices);

@@ -50,13 +50,12 @@ void createMenuWorld(RenderInfo& ri, Scene& scene);
 void createWorld(RenderInfo& ri, Scene& scene);
 
 void createShapes(RenderInfo& ri, Scene& scene);
-void testBulletShapes(RenderInfo& ri, Scene& scene);
 
 void animate(GLFWwindow* window, RenderInfo& ri, Scene& scene, Scene& menuScene);
 void drawScene(Scene& scene, Camera& camera, double dt);
 
 
-// settings 
+// Settings 
 unsigned int SCR_WIDTH = 3000;
 unsigned int SCR_HEIGHT = 1600;
 bool paused = true;
@@ -136,10 +135,7 @@ int main()
     // Create shapes
     createSphereInfo(ri, scene);
     createMenuWorld(ri, menuScene);
-
-    // Test shapes?
     // createShapes(ri, scene);
-    // testBulletShapes(ri, scene);
 
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
@@ -859,43 +855,6 @@ void createShapes(RenderInfo& ri, Scene& scene)
 
 }
 
-void testBulletShapes(RenderInfo& ri, Scene& scene)
-{
-    // Test pyramid: 
-    //Shape* pyramid = new Pyramid(10.0, 2.5, 10.0);
-    
-    //// Rotate around z, y, x
-    //q = quatFromYawPitchRoll(0.0f, 30.0f, 0.0f);
-    //btTriangleMesh* pyramidMesh = createBtTriangleMesh(pyramid);
-    //btRigidBody* pyramidRigidBody = createStaticRigidBody(
-    //    pyramidMesh, { 25.0, 1.0f, 0.4 }, q, 0.6f, 0.5f);
-
-    //ri.bullet.pWorld->addRigidBody(pyramidRigidBody);
-
-    //pyramid->setMaterial(material.ruby);
-    //pyramid->useTexture(ri.texture["gray_brick"]);
-    //pyramid->setPBody(pyramidRigidBody);
-    //scene.addPhongShape(pyramid);
-
-
-
-    // Test half pipe
-    //Shape* halfPipe = new HalfPipe(0.6f, 1.0f, 20.5f, 10);
-
-    //// Rotate around z, y, x
-    //q = quatFromYawPitchRoll(0.0f, 90.0f, 2.0f);
-    //btTriangleMesh* halfPipeMesh = createBtTriangleMesh(halfPipe);
-    //btRigidBody* halfPipeRigidBody = createStaticRigidBody(
-    //    halfPipeMesh, { 13.0, 2.3f, 0.4 }, q, 0.6f, 0.5f);
-
-    //ri.bullet.pWorld->addRigidBody(halfPipeRigidBody);
-
-    //halfPipe->useTexture(ri.texture["wood"]);
-    //halfPipe->setPBody(halfPipeRigidBody);
-    //scene.addPhongShape(halfPipe);
-}
-
-
 void animate(GLFWwindow* window, RenderInfo& ri, Scene& scene, Scene& menuScene)
 {
     double lastTime = glfwGetTime();
@@ -998,14 +957,14 @@ void animate(GLFWwindow* window, RenderInfo& ri, Scene& scene, Scene& menuScene)
         if (inMenu) {
             Shape* menuSphere = menuScene.mPhongShapes.front();
 
-            // Rotating
             static float sphereAngle = 0.0f;
             static float sphereRadius = 0.1f;
             static float sphereDensity = 1.0f;
+
+            // Rotating
             sphereAngle += 0.2f;
             if (sphereAngle > 360.0f) sphereAngle -= 360.0f;
 
-            /*glm::mat4 modelMatrix = menuSphere->mModelMatrix;*/
             glm::mat4 modelMatrix = menuSphereModelMatrix(sphereAngle, sphereRadius);
             menuSphere->setModelMatrix(modelMatrix);
 
@@ -1036,7 +995,6 @@ void animate(GLFWwindow* window, RenderInfo& ri, Scene& scene, Scene& menuScene)
 
                     ImGui::Spacing();
                     if (ImGui::Button("Confirm marble selection")) {
-                        std::cout << "Marble choosen: " << selectedSphereIdx << std::endl;
                         inMenu = false;
                         ri.sphereinfo[selectedSphereIdx].player = true;
                         ri.sphereinfo[selectedSphereIdx].radius = sphereRadius;
@@ -1047,7 +1005,6 @@ void animate(GLFWwindow* window, RenderInfo& ri, Scene& scene, Scene& menuScene)
                     }
                 }
             }
-            
         }
         
         ImGui::End();

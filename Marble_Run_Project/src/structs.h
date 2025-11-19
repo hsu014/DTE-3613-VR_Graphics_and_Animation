@@ -17,7 +17,7 @@ struct Time {
 
 struct TrackSupport {
     float x, y, z;
-    // Degrees of rotation around y-axis. Starting along x-axis?
+    // Degrees of rotation clockwise around y-axis. 0.0 along z-axis
     float angle; 
     float innerRadius;
     float outerRadius;
@@ -162,7 +162,7 @@ struct Material {
 };
 
 struct SphereInfo {
-    std::string description = "No desc...";
+    std::string description = "No description";
     MaterialType material;
     GLuint texture;
     bool player = false;
