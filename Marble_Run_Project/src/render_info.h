@@ -17,11 +17,10 @@ struct RenderInfo {
     std::map<std::string, GLuint> texture;
     std::map<std::string, GLuint> skyboxTexture;
     std::map<std::string, std::shared_ptr<std::vector<std::vector<float>>>> heightMap;
+    std::vector<SphereInfo> sphereinfo;
     
     Bullet bullet;
 
     Camera* camera = nullptr;
-    // Scene scene;
-    // Move to scene:
-    // Emitter emitter;
+
 };

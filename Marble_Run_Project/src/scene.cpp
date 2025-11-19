@@ -233,7 +233,7 @@ void Scene::drawSkybox()
 		mSkybox[0]->draw(mSkyboxShader);
 	}
 	else {
-		std::cout << "Skybox doesn't exist\n";
+		// std::cout << "Skybox doesn't exist\n";
 	}
 }
 
@@ -252,7 +252,6 @@ void Scene::drawPhongShapes()
 	glViewport(0, 0, mSHADOW_WIDTH, mSHADOW_HEIGHT);
 	glBindFramebuffer(GL_FRAMEBUFFER, FBO);
 	glClear(GL_DEPTH_BUFFER_BIT);
-	//glCullFace(GL_FRONT);
 
 	for (Shape* shape : mPhongShapes) {
 		if (shape->mCastShadow) {
@@ -266,7 +265,6 @@ void Scene::drawPhongShapes()
 	glfwGetWindowSize(mWindow, &width, &height);
 	glViewport(0, 0, width, height);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	//glCullFace(GL_BACK);
 
 	// Render scene
 	prepareShaderPhong();

@@ -4,14 +4,15 @@
 Camera::Camera(GLFWwindow* window, glm::vec3 pos, glm::vec3 front, glm::vec3 up) :
 	mWindow(window), mPos(pos), mFront(front), mUp(up)
 {
+    mLookAt = pos;
     updatePitchYaw();
     updateViewMatrix();
-    captureMouse();
-
 }
 
 void Camera::processInput()
 {
+    if (!mAcceptInput) return;
+
     float moveAmount = static_cast<float>(mCameraSpeed * mDt);
     float zoomAmount = static_cast<float>(mZoomSensitivity * mDt);
 
@@ -89,6 +90,7 @@ void Camera::processInput()
 
 void Camera::processMouseMovement()
 {
+    if (!mAcceptInput) return;
     if (!mMouseLocked) return;
 
     double xpos, ypos;

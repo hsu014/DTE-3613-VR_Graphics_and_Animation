@@ -1,9 +1,14 @@
+#define _USE_MATH_DEFINES
+
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include <map>
 #include <algorithm>
 #include <random>
+#include <cmath>
+#include <string>
+#include <tuple>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -31,19 +36,23 @@ void initRenderInfo(RenderInfo& ri);
 void loadTextures(RenderInfo& ri);
 void loadSkyboxTextures(RenderInfo& ri);
 void createLights(Scene& scene);
+glm::mat4 menuSphereModelMatrix(float angle, float radius);
+void ImGuiHelpMarker(const char* desc);
 
 void createTorch(RenderInfo& ri, Scene& scene, glm::vec3 pos);
 void createGround(RenderInfo& ri, Scene& scene);
+void createSphereInfo(RenderInfo& ri, Scene& scene);
 void createSpheres(RenderInfo& ri, Scene& scene, glm::vec3 pos);
 void createHalfPipeTrack(RenderInfo& ri, Scene& scene, std::vector<TrackSupport>& supports);
 void createPlinko(RenderInfo& ri, Scene& scene, glm::vec3 pos, float angle);
 
+void createMenuWorld(RenderInfo& ri, Scene& scene);
 void createWorld(RenderInfo& ri, Scene& scene);
 
 void createShapes(RenderInfo& ri, Scene& scene);
 void testBulletShapes(RenderInfo& ri, Scene& scene);
 
-void animate(GLFWwindow* window, RenderInfo& ri, Scene& scene);
+void animate(GLFWwindow* window, RenderInfo& ri, Scene& scene, Scene& menuScene);
 void drawScene(Scene& scene, Camera& camera, double dt);
 
 
@@ -93,6 +102,7 @@ int main()
         glm::vec3(0.0f, 1.0f, 0.0f));   // Up
     ri.camera = &camera;
 
+    Scene menuScene = Scene(window);
     Scene scene = Scene(window);
     
     glEnable(GL_DEPTH_TEST);
@@ -105,6 +115,7 @@ int main()
     GLuint shaderProgramShadowMap = Utils::createShaderProgram("src/shader/vertexShaderShadow.glsl", "src/shader/fragmentShaderShadow.glsl");
     GLuint shaderProgramParticle = Utils::createShaderProgram("src/shader/vertexShaderParticle.glsl", "src/shader/fragmentShaderParticle.glsl");
     
+    menuScene.setShaders(shaderProgramBase, shaderProgramPhong, shaderProgramSkybox, shaderProgramShadowMap);
     scene.setShaders(shaderProgramBase, shaderProgramPhong, shaderProgramSkybox, shaderProgramShadowMap);
     scene.setParticleShader(shaderProgramParticle);
 
@@ -123,9 +134,12 @@ int main()
     ri.bullet.pWorld->setGravity(btVector3(0, -9.81f, 0));
 
     // Create shapes
-    createShapes(ri, scene);
+    createSphereInfo(ri, scene);
+    createMenuWorld(ri, menuScene);
+
+    // Test shapes?
+    // createShapes(ri, scene);
     // testBulletShapes(ri, scene);
-    createWorld(ri, scene);
 
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
@@ -133,12 +147,14 @@ int main()
     ImGuiIO& io = ImGui::GetIO(); (void)io;
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
     ImGui::StyleColorsDark();
+    ImFont* myFont = io.Fonts->AddFontFromFileTTF("src/ImGui/misc/fonts/ProggyClean.ttf", 20.0f);
+    ImGui::PushFont(myFont);
 
     // Initialize ImGui for GLFW + OpenGL3
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 330");
 
-    animate(window, ri, scene);
+    animate(window, ri, scene, menuScene);
 
     // Delete used resources
     glDeleteProgram(shaderProgramBase);
@@ -280,6 +296,32 @@ void createLights(Scene& scene)
     scene.addPointLight(pointLight, true);*/
 }
 
+glm::mat4 menuSphereModelMatrix(float angle, float radius)
+{
+    glm::mat4 modelMatrix = glm::mat4(1.0f);
+    float size = 20.0f;
+
+    modelMatrix = glm::translate(modelMatrix, glm::vec3(0.0f, 22.5f, -6.0f));
+    modelMatrix = glm::rotate(modelMatrix, glm::radians(90.0f), { 1, 0, 0 });
+    modelMatrix = glm::rotate(modelMatrix, glm::radians(angle), { 0, 0, 1 });
+
+    modelMatrix = glm::scale(modelMatrix, glm::vec3(size * radius));
+
+    return modelMatrix;
+}
+
+void ImGuiHelpMarker(const char* desc)
+{
+    ImGui::TextDisabled("(?)");
+    if (ImGui::BeginItemTooltip())
+    {
+        ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+        ImGui::TextUnformatted(desc);
+        ImGui::PopTextWrapPos();
+        ImGui::EndTooltip();
+    }
+}
+
 void createTorch(RenderInfo& ri, Scene& scene, glm::vec3 pos)
 {
     float height = 0.35f;
@@ -347,81 +389,77 @@ void createGround(RenderInfo& ri, Scene& scene)
     scene.addPhongShape(plane);
 }
 
-void createSpheres(RenderInfo& ri, Scene& scene, glm::vec3 pos)
+void createSphereInfo(RenderInfo& ri, Scene& scene)
 {
-    std::vector<GLuint> tex = {
-        ri.texture["bark"],
-        ri.texture["fire"],
-        ri.texture["ice"],
-        ri.texture["lava"],
-        ri.texture["ivy"],
-        ri.texture["leaf"],
-        ri.texture["gray_brick"],
-        ri.texture["pebbles"],
-        ri.texture["pebbles2"],
-        ri.texture["rock"],
-        ri.texture["stone"],
-        ri.texture["stone2"],
-        ri.texture["tile"],
-        ri.texture["tile2"],
-        ri.texture["tile3"],
-        ri.texture["water"],
-        ri.texture["galvanized_blue"],
-        ri.texture["metal"],
-        ri.texture["metal2"],
+    std::vector<std::tuple<std::string, GLuint>> tex = {
+        {"Bark", ri.texture["bark"]},
+        {"Fire", ri.texture["fire"]},
+        {"Ice", ri.texture["ice"]},
+        {"Lava", ri.texture["lava"]},
+        {"Ivy", ri.texture["ivy"]},
+        {"Leaf", ri.texture["leaf"]},
+        {"Gray brick", ri.texture["gray_brick"]},
+        {"Pebbles", ri.texture["pebbles"]},
+        {"Pebbles 2", ri.texture["pebbles2"]},
+        {"Rock", ri.texture["rock"]},
+        {"Stones", ri.texture["stone"]},
+        {"Stones 2", ri.texture["stone2"]},
+        {"Tile", ri.texture["tile"]},
+        {"Tile 2", ri.texture["tile2"]},
+        {"Tile 3", ri.texture["tile3"]},
+        {"Water", ri.texture["water"]},
+        {"Galvanized metal", ri.texture["galvanized_blue"]},
+        {"Metal", ri.texture["metal"]},
+        {"Metal 2", ri.texture["metal2"]},
 
-        ri.texture["sun"],
-        ri.texture["mercury"],
-        ri.texture["venus"],
-        ri.texture["earth_day"],
-        ri.texture["moon"],
-        ri.texture["mars"],
-        ri.texture["jupiter"],
-        ri.texture["saturn"],
-        ri.texture["uranus"],
-        ri.texture["neptune"],
+        {"The Sun", ri.texture["sun"]},
+        {"Mercury", ri.texture["mercury"]},
+        {"Venus", ri.texture["venus"]},
+        {"The Earth", ri.texture["earth_day"]},
+        {"The Moon", ri.texture["moon"]},
+        {"Mars", ri.texture["mars"]},
+        {"Jupiter", ri.texture["jupiter"]},
+        {"Saturn", ri.texture["saturn"]},
+        {"Uranus", ri.texture["uranus"]},
+        {"Neptune", ri.texture["neptune"]},
     };
 
-    std::vector<MaterialType> materials = {
-        material.brass,
-        //material.bronze,
-        //material.polished_bronze,
-        //material.chrome,
-        material.tin,
-        //material.copper,
-        //material.polished_copper,
-        //material.silver,
-        //material.polished_silver,
-        material.gold,
-        //material.polished_gold,
-        material.emerald,
-        material.obsidian,
-        material.perl,
-        material.ruby,
+    std::vector<std::tuple<std::string, MaterialType>> materials = {
+        {"Material Brass", material.brass},
+        {"Material Tin", material.tin},
+        {"Material Gold", material.gold},
+        {"Material Emerald", material.emerald},
+        {"Material Obsidian", material.obsidian},
+        {"Material Perl", material.perl},
+        {"Material Ruby", material.ruby},
     };
 
-    // generate sphere infos:
     std::vector<SphereInfo> sphereinfo;
     for (int i = 0; i < tex.size(); i++) {
-        sphereinfo.push_back({
+        ri.sphereinfo.push_back({
+            std::get<0>(tex[i]),
             MaterialType(),
-            tex[i]
-        });
-    }
-    for (int i = 0; i < materials.size(); i++) {
-        sphereinfo.push_back({
-            materials[i]
+            std::get<1>(tex[i])
             });
     }
+    for (int i = 0; i < materials.size(); i++) {
+        ri.sphereinfo.push_back({
+            std::get<0>(materials[i]),
+            std::get<1>(materials[i]),
+            });
+    }
+}
+
+void createSpheres(RenderInfo& ri, Scene& scene, glm::vec3 pos)
+{
+    std::vector<SphereInfo>& sphereinfo = ri.sphereinfo;
 
     // Shuffle spheres
     std::random_device rd;
     std::mt19937 g(rd());
     std::shuffle(std::begin(sphereinfo), std::end(sphereinfo), g);
 
-    sphereinfo[0].player = true;
-    std::shuffle(std::begin(sphereinfo), std::end(sphereinfo), g);
-
+    // Place spheres in world
     int numSpheres = sphereinfo.size();
     int numX = 3;
     int numY = 5;
@@ -444,8 +482,10 @@ void createSpheres(RenderInfo& ri, Scene& scene, glm::vec3 pos)
                 yPos = pos.y + (i * sphereDist);
                 zPos = pos.z + zOffset + (j * sphereDist);
 
+                float mass = s.density * (4.0 / 3.0) * M_PI * std::pow(s.radius, 3.0);
+
                 btRigidBody* sphereRigidBody = createMarbleRigidBody(
-                    s.mass, s.radius, { xPos, yPos, zPos }, s.restitution, s.friction);
+                    mass, s.radius, { xPos, yPos, zPos }, s.restitution, s.friction);
 
                 ri.bullet.pWorld->addRigidBody(sphereRigidBody);
 
@@ -594,6 +634,26 @@ void createPlinko(RenderInfo& ri, Scene& scene, glm::vec3 pos, float angle)
     ri.bullet.pWorld->addRigidBody(body);
 }
 
+void createMenuWorld(RenderInfo& ri, Scene& scene)
+{
+    glm::mat4 modelMatrix = glm::mat4(1.0f);
+
+    Shape* sphere = new Sphere(0.4f);
+    sphere->setMaterial(material.brass);
+    scene.addPhongShape(sphere);
+
+    // Light
+    scene.setAmbientLight(glm::vec4(0.05f, 0.05f, 0.05f, 1.0f));
+
+    DirectionalLight dirLight{};
+    dirLight.direction = glm::vec3(1.0f, -1.0f, 1.0f);
+    dirLight.ambient = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+    dirLight.diffuse = glm::vec4(0.6f, 0.6f, 0.6f, 1.0f);
+    dirLight.specular = glm::vec4(0.5f, 0.5f, 0.5f, 1.0f);
+
+    scene.addDirectionLight(dirLight);
+}
+
 void createWorld(RenderInfo& ri, Scene& scene)
 {
     // Turn: 90 deg -> 10 segments
@@ -704,7 +764,6 @@ void createWorld(RenderInfo& ri, Scene& scene)
     trackGenerator.forward(8.0f, -0.5f, 0.4f, 0.5f);
     trackGenerator.forward(0.5f, 0.1f, 0.4f, 0.5f);
     trackGenerator.forward(0.5f, 0.2f, 0.4f, 0.5f);
-    //trackGenerator.turn(-90.0f, 10, -0.5f, 10, 0.4f, 0.5f);
 
     supports = trackGenerator.getSupports();
     createHalfPipeTrack(ri, scene, supports);
@@ -837,7 +896,7 @@ void testBulletShapes(RenderInfo& ri, Scene& scene)
 }
 
 
-void animate(GLFWwindow* window, RenderInfo& ri, Scene& scene)
+void animate(GLFWwindow* window, RenderInfo& ri, Scene& scene, Scene& menuScene)
 {
     double lastTime = glfwGetTime();
     int frameCount = 0;
@@ -855,8 +914,16 @@ void animate(GLFWwindow* window, RenderInfo& ri, Scene& scene)
         if (paused) {
             ri.time.dt = 0.0;
         }
-        drawScene(scene, *ri.camera, ri.time.dt);
-        ri.bullet.pWorld->stepSimulation(float(ri.time.dt));
+
+        if (inMenu) {
+            ri.camera->mAcceptInput = false;
+            drawScene(menuScene, *ri.camera, ri.time.dt);
+        }
+        else {
+            ri.camera->mAcceptInput = true;
+            drawScene(scene, *ri.camera, ri.time.dt);
+            ri.bullet.pWorld->stepSimulation(float(ri.time.dt));
+        }
 
         // FPS 
         frameCount++;
@@ -882,14 +949,19 @@ void animate(GLFWwindow* window, RenderInfo& ri, Scene& scene)
             ImGuiWindowFlags_NoBringToFrontOnFocus |
             ImGuiWindowFlags_NoNav);
         ImGui::Text("FPS: %.1f", fps);
-        ImGui::SetWindowFontScale(1.7f);
+        ImGui::SetWindowFontScale(1.2f);
         ImGui::End();
 
         // Direction light controls
         float* lightYaw = &scene.mLightYaw;
         float* lightPitch = &scene.mLightPitch;
+        if (inMenu) {
+            lightYaw = &menuScene.mLightYaw;
+            lightPitch = &menuScene.mLightPitch;
+        }
+
         ImGui::SetNextWindowSize(
-            ImVec2(SCR_WIDTH * 0.2f, SCR_HEIGHT * 0.3),
+            ImVec2(SCR_WIDTH * 0.2f, SCR_HEIGHT * 0.4),
             ImGuiCond_FirstUseEver);
 
         ImGui::Begin("ImGui", nullptr,
@@ -899,7 +971,8 @@ void animate(GLFWwindow* window, RenderInfo& ri, Scene& scene)
             ImGui::SliderFloat("Yaw", lightYaw, -360.0f, 360.0f);
             ImGui::SliderFloat("Pitch", lightPitch, -89.9f, -10.0f);
         }
-        inMenu = false;
+        
+        // Controlls
         if (!inMenu) {
             if (ImGui::CollapsingHeader("Controls", ImGuiTreeNodeFlags_DefaultOpen)) {
                 ImGui::SeparatorText("General");
@@ -921,16 +994,65 @@ void animate(GLFWwindow* window, RenderInfo& ri, Scene& scene)
             }
         }
 
+        // Menu
         if (inMenu) {
-            if (ImGui::CollapsingHeader("Select marble", ImGuiTreeNodeFlags_DefaultOpen)) {
-                ImGui::Text("Select player marble");
+            Shape* menuSphere = menuScene.mPhongShapes.front();
+
+            // Rotating
+            static float sphereAngle = 0.0f;
+            static float sphereRadius = 0.1f;
+            static float sphereDensity = 1.0f;
+            sphereAngle += 0.2f;
+            if (sphereAngle > 360.0f) sphereAngle -= 360.0f;
+
+            /*glm::mat4 modelMatrix = menuSphere->mModelMatrix;*/
+            glm::mat4 modelMatrix = menuSphereModelMatrix(sphereAngle, sphereRadius);
+            menuSphere->setModelMatrix(modelMatrix);
+
+            ImGui::Spacing();
+            if (ImGui::CollapsingHeader("Edit marble", ImGuiTreeNodeFlags_DefaultOpen)) {
+                ImGui::SliderFloat("Radius", &sphereRadius, 0.08f, 0.12f);
+                ImGui::SameLine(); ImGuiHelpMarker("Default radius = 0.1");
+                ImGui::SliderFloat("Density", &sphereDensity, 0.1f, 10.0f);
+                ImGui::SameLine(); ImGuiHelpMarker("Default density = 1.0");
+
+                ImGui::Spacing();
+                ImGui::Text("Select marble");
+                if (ImGui::BeginListBox("##Select marble", ImVec2(0, 300))) {
+                    static int selectedSphereIdx = 0;
+
+                    for (int i = 0; i < ri.sphereinfo.size(); i++) {
+                        const bool isSelected = (selectedSphereIdx == i);
+                        if (ImGui::Selectable(ri.sphereinfo[i].description.c_str(), isSelected)) {
+                            selectedSphereIdx = i;
+                        }
+
+                        if (isSelected) ImGui::SetItemDefaultFocus();
+                    }
+                    ImGui::EndListBox();
+
+                    menuSphere->setMaterial(ri.sphereinfo[selectedSphereIdx].material);
+                    menuSphere->useTexture(ri.sphereinfo[selectedSphereIdx].texture);
+
+                    ImGui::Spacing();
+                    if (ImGui::Button("Confirm marble selection")) {
+                        std::cout << "Marble choosen: " << selectedSphereIdx << std::endl;
+                        inMenu = false;
+                        ri.sphereinfo[selectedSphereIdx].player = true;
+                        ri.sphereinfo[selectedSphereIdx].radius = sphereRadius;
+                        ri.sphereinfo[selectedSphereIdx].density = sphereDensity;
+                        ri.camera->captureMouse();
+
+                        createWorld(ri, scene);
+                    }
+                }
             }
+            
         }
         
-        ImGui::SetWindowFontScale(1.5f);
         ImGui::End();
 
-        ImGui::ShowDemoWindow();
+        //ImGui::ShowDemoWindow();
 
         // Render ImGui
         ImGui::Render();

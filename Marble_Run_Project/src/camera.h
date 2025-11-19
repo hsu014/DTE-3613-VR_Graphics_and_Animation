@@ -45,11 +45,12 @@ public:
 	float mCameraSpeed = 7.0f;
 	float mMouseSensitivity = 0.1f;
 	float mZoomSensitivity = 3.0f;
+	bool mAcceptInput = true;
 
 	glm::vec3 mPos;
 	glm::vec3 mFront;
 	glm::vec3 mUp;
-	glm::vec3 mLookAt = glm::vec3{0.0f, 2.0f, 0.0f};
+	glm::vec3 mLookAt = glm::vec3{0.0f, 0.0f, 0.0f};
 	float mYaw = 0.0f;
 	float mPitch = 0.0f;
 	float mCameraDistance = 3.0f;

@@ -11,8 +11,6 @@
 #include "structs.h"
 #include "Utils.h"
 
-//const float PI = acos(-1.0f);
-
 class Shape {  	
 public:
     const float PI = acos(-1.0f);

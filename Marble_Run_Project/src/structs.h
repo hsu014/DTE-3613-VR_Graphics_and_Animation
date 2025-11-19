@@ -162,11 +162,12 @@ struct Material {
 };
 
 struct SphereInfo {
+    std::string description = "No desc...";
     MaterialType material;
     GLuint texture;
     bool player = false;
     float radius = 0.1f;
-    float mass = 1.0f;
+    float density = 1.0f;
     float restitution = 0.6f;
     float friction = 0.8f; 
 };
