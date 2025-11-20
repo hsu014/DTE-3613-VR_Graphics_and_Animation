@@ -166,6 +166,8 @@ struct SphereInfo {
     MaterialType material;
     GLuint texture;
     bool player = false;
+    btRigidBody* pBody = nullptr;
+    int placement = 0;
     float radius = 0.1f;
     float density = 1.0f;
     float restitution = 0.6f;

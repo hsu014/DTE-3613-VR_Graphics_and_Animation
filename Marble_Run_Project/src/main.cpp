@@ -15,6 +15,7 @@
 
 #include <BulletDynamics/Dynamics/btDynamicsWorld.h>
 #include <btBulletDynamicsCommon.h>
+#include <BulletCollision/CollisionDispatch/btGhostObject.h>
 
 #include "Utils.h"
 #include "shape.h"
@@ -45,6 +46,7 @@ void createSphereInfo(RenderInfo& ri, Scene& scene);
 void createSpheres(RenderInfo& ri, Scene& scene, glm::vec3 pos);
 void createHalfPipeTrack(RenderInfo& ri, Scene& scene, std::vector<TrackSupport>& supports);
 void createPlinko(RenderInfo& ri, Scene& scene, glm::vec3 pos, float angle);
+void createFinishLine(RenderInfo& ri, Scene& scene, glm::vec3 pos, float angle, float halfSize, bool visualize);
 
 void createMenuWorld(RenderInfo& ri, Scene& scene);
 void createWorld(RenderInfo& ri, Scene& scene);
@@ -60,8 +62,9 @@ unsigned int SCR_WIDTH = 3000;
 unsigned int SCR_HEIGHT = 1600;
 bool paused = true;
 bool pPressedLastFrame = false;
-
 bool inMenu = true;
+
+std::vector<std::string> leaderboard;
 
 Utils util = Utils();
 Material material{};
@@ -484,6 +487,7 @@ void createSpheres(RenderInfo& ri, Scene& scene, glm::vec3 pos)
                     mass, s.radius, { xPos, yPos, zPos }, s.restitution, s.friction);
 
                 ri.bullet.pWorld->addRigidBody(sphereRigidBody);
+                s.pBody = sphereRigidBody;
 
                 Shape* sphere = new Sphere(s.radius, 40, 40);
                 sphere->setMaterial(s.material);
@@ -630,6 +634,36 @@ void createPlinko(RenderInfo& ri, Scene& scene, glm::vec3 pos, float angle)
     ri.bullet.pWorld->addRigidBody(body);
 }
 
+void createFinishLine(RenderInfo& ri, Scene& scene, glm::vec3 pos, float angle, float halfSize, bool visualize)
+{
+    // test box
+    if (visualize) {
+        Shape* testBox = new Box(halfSize * 2, halfSize * 2, halfSize * 2);
+        glm::mat4 modelMatrix = glm::mat4(1.0f);
+        modelMatrix = glm::translate(modelMatrix, pos);
+        modelMatrix = glm::rotate(modelMatrix, glm::radians(-angle), { 0.0f, 1.0f, 0.0f });
+
+        testBox->setModelMatrix(modelMatrix);
+        testBox->useTexture(ri.texture["rock"]);
+        scene.addPhongShape(testBox);
+    }
+
+    btQuaternion q = quatFromYawPitchRoll(0.0f, -angle, 0.0f);
+    btVector3 finishLinePos = btVector3(pos.x, pos.y, pos.z);
+
+    btGhostObject* ghostObject = new btGhostObject();
+
+    ghostObject->setCollisionShape(new btBoxShape(btVector3(halfSize, halfSize, halfSize)));
+    ghostObject->setWorldTransform(btTransform(q, finishLinePos));
+    ghostObject->setCollisionFlags(ghostObject->getCollisionFlags() | btCollisionObject::CF_NO_CONTACT_RESPONSE);
+
+    ri.bullet.pWorld->addCollisionObject(ghostObject, btBroadphaseProxy::SensorTrigger, btBroadphaseProxy::DefaultFilter);
+
+    ri.bullet.pWorld->getBroadphase()->getOverlappingPairCache()->setInternalGhostPairCallback(new btGhostPairCallback());
+
+    ri.finishLine = ghostObject;
+}
+
 void createMenuWorld(RenderInfo& ri, Scene& scene)
 {
     glm::mat4 modelMatrix = glm::mat4(1.0f);
@@ -656,7 +690,9 @@ void createWorld(RenderInfo& ri, Scene& scene)
     glm::vec3 sphereStartPos = { 0.0f, 20.0f, 0.0f };
 
     createGround(ri, scene);
-    createSpheres(ri, scene, sphereStartPos);
+    //createSpheres(ri, scene, sphereStartPos);
+    glm::vec3 testPos = { 8, 6, -12 };
+    createSpheres(ri, scene, testPos);
 
     glm::vec3 nextPos = { 
         sphereStartPos.x,
@@ -758,11 +794,37 @@ void createWorld(RenderInfo& ri, Scene& scene)
     trackGenerator.turn(-180.0f, 8, -2.0f, 20, 0.9f, 1.0f);
 
     trackGenerator.forward(8.0f, -0.5f, 0.4f, 0.5f);
+    //trackGenerator.turn(-30.0f, 3, 0.0f, 4, 0.4f, 0.5f); // test
     trackGenerator.forward(0.5f, 0.1f, 0.4f, 0.5f);
     trackGenerator.forward(0.5f, 0.2f, 0.4f, 0.5f);
 
     supports = trackGenerator.getSupports();
     createHalfPipeTrack(ri, scene, supports);
+
+    // Finish line
+    float lastRadius = 0.5f;
+    float finishAngle = supports.back().angle;
+
+    trackGenerator.forward(lastRadius + 0.1f);
+    glm::vec3 finishPos = trackGenerator.getLastPos();
+
+    createFinishLine(ri, scene, finishPos, finishAngle, lastRadius, true);
+
+    // Landing area after race
+    trackGenerator.forward(0.0f, -0.5f);
+    nextPos = trackGenerator.getLastPos();
+    nextAngle = finishAngle;
+
+    trackGenerator.newTrack(
+        nextPos.x, nextPos.y, nextPos.z,
+        nextAngle, 0.9f, 1.0f);
+    trackGenerator.forward(10.0f, -0.8f, 0.3f, 0.4f);
+    trackGenerator.forward(20.0f, 0.0f, 0.3f, 0.4f);
+    trackGenerator.forward(2.0f, 0.6f, 0.3f, 0.4f);
+
+    supports = trackGenerator.getSupports();
+    createHalfPipeTrack(ri, scene, supports);
+
 }
 
 
@@ -882,6 +944,35 @@ void animate(GLFWwindow* window, RenderInfo& ri, Scene& scene, Scene& menuScene)
             ri.camera->mAcceptInput = true;
             drawScene(scene, *ri.camera, ri.time.dt);
             ri.bullet.pWorld->stepSimulation(float(ri.time.dt));
+            static int placement = 1;
+
+            int numOverlapping = ri.finishLine->getNumOverlappingObjects();
+            for (int i = 0; i < numOverlapping; i++) {
+                btCollisionObject* otherObject = ri.finishLine->getOverlappingObject(i);
+                btRigidBody* otherBody = btRigidBody::upcast(otherObject);
+                if (!otherBody) continue;
+
+                // Find iterator to current sphere
+                auto it = std::find_if(
+                    ri.sphereinfo.begin(),
+                    ri.sphereinfo.end(),
+                    [otherBody](const SphereInfo& info) {
+                        return info.pBody == otherBody;
+                    }
+                );
+                if (it == ri.sphereinfo.end()) continue;
+
+                SphereInfo& sphere = *it;
+
+                if (sphere.placement == 0) {
+                    sphere.placement = placement++;
+                    std::cout <<
+                       (sphere.player ? "Player" : sphere.description) <<
+                       " finished " << sphere.placement << std::endl;
+
+                    leaderboard.push_back(sphere.player ? "**Player**" : sphere.description);
+                }
+            }
         }
 
         // FPS 
@@ -1008,6 +1099,38 @@ void animate(GLFWwindow* window, RenderInfo& ri, Scene& scene, Scene& menuScene)
         }
         
         ImGui::End();
+
+        // Leaderboard window
+        if (!inMenu) {
+            
+
+            ImGui::SetNextWindowSize(
+                ImVec2(SCR_WIDTH * 0.1f, SCR_HEIGHT * 0.4),
+                ImGuiCond_FirstUseEver);
+
+
+            ImGui::SetNextWindowPos(ImVec2(
+                SCR_WIDTH * 0.9f - 20.0f, 80.0f));
+
+            ImGui::Begin("Leaderboard", nullptr,
+                ImGuiWindowFlags_NoSavedSettings);
+
+            if (ImGui::BeginTable("Placement", 2)) {
+                ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthFixed, SCR_WIDTH * 0.07f);
+                ImGui::TableSetupColumn("Position", ImGuiTableColumnFlags_WidthStretch, 1.0f);
+
+                for (int i = 0; i < leaderboard.size(); i++) {
+                    ImGui::TableNextRow();
+                    ImGui::TableNextColumn();
+                    ImGui::Text("%s", leaderboard[i].c_str());
+                    ImGui::TableNextColumn();
+                    ImGui::Text("%d", i+1);
+
+                }
+                ImGui::EndTable();
+            } 
+            ImGui::End();
+        }
 
         //ImGui::ShowDemoWindow();
 

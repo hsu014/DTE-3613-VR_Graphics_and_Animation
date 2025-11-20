@@ -6,6 +6,10 @@
 #include <map>
 #include <vector>
 
+#include <BulletDynamics/Dynamics/btDynamicsWorld.h>
+#include <btBulletDynamicsCommon.h>
+#include <BulletCollision/CollisionDispatch/btGhostObject.h>
+
 #include "structs.h"
 #include "shape.h"
 #include "particle_emitter.h"
@@ -20,4 +24,5 @@ struct RenderInfo {
     std::map<std::string, GLuint> skyboxTexture;
     std::map<std::string, std::shared_ptr<std::vector<std::vector<float>>>> heightMap;
     std::vector<SphereInfo> sphereinfo;
+    btGhostObject* finishLine = nullptr;
 };
