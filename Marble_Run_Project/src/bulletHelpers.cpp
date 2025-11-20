@@ -59,14 +59,12 @@ btRigidBody* createMarbleRigidBody(btScalar mass, btScalar radius, btVector3 ori
     rigidBody->setRestitution(rest);
     rigidBody->setFriction(fric);
     rigidBody->setActivationState(DISABLE_DEACTIVATION);
-    // rigidBody->setAngularVelocity(btVector3(0.0f, 0.0f, -3.0f)); // temp
-    // rigidBody->setLinearVelocity(btVector3(10.0f, 0.0f, 0.0f)); // temp
 
     rigidBody->setCcdMotionThreshold(0.5f * radius);
     rigidBody->setCcdSweptSphereRadius(0.9f * radius);
 
     float linearDamping = 0.0f;
-    float angularDamping = 0.1f;
+    float angularDamping = 0.05f;
     rigidBody->setDamping(linearDamping, angularDamping);
 
     return rigidBody;

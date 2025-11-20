@@ -41,6 +41,7 @@ glm::mat4 menuSphereModelMatrix(float angle, float radius);
 void ImGuiHelpMarker(const char* desc);
 
 void createTorch(RenderInfo& ri, Scene& scene, glm::vec3 pos);
+void createSupportPillar(RenderInfo& ri, Scene& scene, glm::vec3 topPos, float radius);
 void createGround(RenderInfo& ri, Scene& scene);
 void createSphereInfo(RenderInfo& ri, Scene& scene);
 void createSpheres(RenderInfo& ri, Scene& scene, glm::vec3 pos);
@@ -372,6 +373,19 @@ void createTorch(RenderInfo& ri, Scene& scene, glm::vec3 pos)
     scene.addEmitter(smokeEmitter);
 }
 
+void createSupportPillar(RenderInfo& ri, Scene& scene, glm::vec3 topPos, float radius)
+{
+    if (topPos.y <= 0.0f) return;
+
+    glm::mat4 modelMatrix = glm::mat4(1.0f);
+    modelMatrix = glm::translate(modelMatrix, { topPos.x, topPos.y/2.0f, topPos.z });
+
+    Shape* pillar = new Cylinder(radius, topPos.y, 20);
+    pillar->setModelMatrix(modelMatrix);
+    pillar->useTexture(ri.texture["wood"]);
+    scene.addPhongShape(pillar);
+}
+
 void createGround(RenderInfo& ri, Scene& scene)
 {
     btQuaternion q = quatFromYawPitchRoll(0.0f, 0.0f, 0.0f);
@@ -688,11 +702,12 @@ void createWorld(RenderInfo& ri, Scene& scene)
 {
     // Turn: 90 deg -> 10 segments
     glm::vec3 sphereStartPos = { 0.0f, 20.0f, 0.0f };
+    glm::vec3 pillarPos;
 
     createGround(ri, scene);
-    //createSpheres(ri, scene, sphereStartPos);
-    glm::vec3 testPos = { 8, 6, -12 };
-    createSpheres(ri, scene, testPos);
+    createSpheres(ri, scene, sphereStartPos);
+    //glm::vec3 testPos = { 8, 6, -12 };
+    //createSpheres(ri, scene, testPos);
 
     glm::vec3 nextPos = { 
         sphereStartPos.x,
@@ -719,12 +734,20 @@ void createWorld(RenderInfo& ri, Scene& scene)
         nextPos.x, nextPos.y, nextPos.z,
         nextAngle, 1.9f, 2.0f);
     trackGenerator.forward(4.0f, -2.0f, 1.9f, 2.0f);
+    pillarPos = trackGenerator.getLastPos();
+    pillarPos.y -= 1.95f;
+    createSupportPillar(ri, scene, pillarPos, 0.2f);
     trackGenerator.forward(4.0f, -1.8f, 0.9f, 1.0f);
 
     trackGenerator.turn(-180.0f, 4.0f, -1.2f, 20);
 
     supports = trackGenerator.getSupports();
     createHalfPipeTrack(ri, scene, supports);
+
+    pillarPos = trackGenerator.getLastPos();
+    pillarPos.y -= 0.95f;
+    pillarPos.z += 0.2f;
+    createSupportPillar(ri, scene, pillarPos, 0.2f);
 
     // Plinko 1
     nextPos = trackGenerator.nextModuleCenter(8.0f, 10.0f);
@@ -739,6 +762,9 @@ void createWorld(RenderInfo& ri, Scene& scene)
     trackGenerator.forward(0.9f);
 
     nextPos = trackGenerator.getLastPos(); // + offset
+    pillarPos = nextPos;
+    pillarPos.y -= 0.95f;
+    createSupportPillar(ri, scene, pillarPos, 0.2f);
 
     // Track 2a
     trackGenerator.newTrack(
@@ -747,9 +773,17 @@ void createWorld(RenderInfo& ri, Scene& scene)
         0.9f, 1.0f);
     trackGenerator.forward(2.0f, -0.1f, 0.9f, 1.0f);
     trackGenerator.turn(-135.0f, 3.0f, -1.0f, 13);
+
+    pillarPos = trackGenerator.getLastPos();
+    pillarPos.y -= 0.95f;
+    createSupportPillar(ri, scene, pillarPos, 0.2f);
     
     trackGenerator.forward(3.0f, -1.0f, 0.4f, 0.5f);
     trackGenerator.turn(720.0f, 3.0f, -4.0f, 80, 0.4f, 0.5f);
+
+    pillarPos = trackGenerator.getLastPos();
+    pillarPos.y -= 0.45f;
+    createSupportPillar(ri, scene, pillarPos, 0.2f);
     
     trackGenerator.forward(1.0f, -0.2f, 0.3f, 0.4f);
 
@@ -766,8 +800,16 @@ void createWorld(RenderInfo& ri, Scene& scene)
     trackGenerator.forward(2.0f, -0.1f, 0.9f, 1.0f);
     trackGenerator.turn(135.0f, 3.0f, -1.0f, 13);
 
+    pillarPos = trackGenerator.getLastPos();
+    pillarPos.y -= 0.95f;
+    createSupportPillar(ri, scene, pillarPos, 0.2f);
+
     trackGenerator.forward(3.0f, -1.0f, 0.4f, 0.5f);
     trackGenerator.turn(-720.0f, 3.0f, -4.0f, 80, 0.4f, 0.5f);
+
+    pillarPos = trackGenerator.getLastPos();
+    pillarPos.y -= 0.45f;
+    createSupportPillar(ri, scene, pillarPos, 0.2f);
 
     trackGenerator.forward(1.0f, -0.2f, 0.3f, 0.4f);
 
@@ -780,26 +822,30 @@ void createWorld(RenderInfo& ri, Scene& scene)
     nextPos = (pos2a + pos2b) * 0.5f;
     nextPos.y -= 0.5f;
 
-    createTorch(ri, scene, {
-        nextPos.x,
-        nextPos.y + 0.5f,
-        nextPos.z + 1.5f
-        });
-
     trackGenerator.newTrack(
         nextPos.x, nextPos.y, nextPos.z,
         nextAngle,
         0.9f, 1.0f);
     trackGenerator.forward(6.0f, -1.0f, 0.9f, 1.0f);
+
+    pillarPos = trackGenerator.getLastPos();
+    pillarPos.y -= 0.95f;
+    createSupportPillar(ri, scene, pillarPos, 0.2f);
+
     trackGenerator.turn(-180.0f, 8, -2.0f, 20, 0.9f, 1.0f);
 
+    pillarPos = trackGenerator.getLastPos();
+    pillarPos.y -= 0.95f;
+    createSupportPillar(ri, scene, pillarPos, 0.2f);
+
     trackGenerator.forward(8.0f, -0.5f, 0.4f, 0.5f);
-    //trackGenerator.turn(-30.0f, 3, 0.0f, 4, 0.4f, 0.5f); // test
     trackGenerator.forward(0.5f, 0.1f, 0.4f, 0.5f);
     trackGenerator.forward(0.5f, 0.2f, 0.4f, 0.5f);
 
     supports = trackGenerator.getSupports();
     createHalfPipeTrack(ri, scene, supports);
+
+    pillarPos = trackGenerator.getLastPos();
 
     // Finish line
     float lastRadius = 0.5f;
@@ -810,6 +856,14 @@ void createWorld(RenderInfo& ri, Scene& scene)
 
     createFinishLine(ri, scene, finishPos, finishAngle, lastRadius, true);
 
+    pillarPos.x += 1.1f;
+    createTorch(ri, scene, pillarPos);
+    createSupportPillar(ri, scene, pillarPos, 0.1f);
+
+    pillarPos.x -= 2.2f;
+    createTorch(ri, scene, pillarPos);
+    createSupportPillar(ri, scene, pillarPos, 0.1f);
+
     // Landing area after race
     trackGenerator.forward(0.0f, -0.5f);
     nextPos = trackGenerator.getLastPos();
@@ -819,7 +873,17 @@ void createWorld(RenderInfo& ri, Scene& scene)
         nextPos.x, nextPos.y, nextPos.z,
         nextAngle, 0.9f, 1.0f);
     trackGenerator.forward(10.0f, -0.8f, 0.3f, 0.4f);
+
+    pillarPos = trackGenerator.getLastPos();
+    pillarPos.y -= 0.35f;
+    createSupportPillar(ri, scene, pillarPos, 0.2f);
+
     trackGenerator.forward(20.0f, 0.0f, 0.3f, 0.4f);
+
+    pillarPos = trackGenerator.getLastPos();
+    pillarPos.y -= 0.35f;
+    createSupportPillar(ri, scene, pillarPos, 0.2f);
+
     trackGenerator.forward(2.0f, 0.6f, 0.3f, 0.4f);
 
     supports = trackGenerator.getSupports();
