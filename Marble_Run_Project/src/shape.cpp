@@ -675,7 +675,7 @@ void Sphere::fillBuffers()
             u = (float)j / mSectors;
             v = (float)i / mStacks;
 
-            textureUVs.push_back(u);
+            textureUVs.push_back(1-u);
             textureUVs.push_back(v);
         }
     }

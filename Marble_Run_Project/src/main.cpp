@@ -61,7 +61,7 @@ void drawScene(Scene& scene, Camera& camera, double dt);
 // Settings 
 unsigned int SCR_WIDTH = 3000;
 unsigned int SCR_HEIGHT = 1600;
-bool paused = true;
+bool paused = false;
 bool pPressedLastFrame = false;
 bool inMenu = true;
 
@@ -243,7 +243,7 @@ void loadTextures(RenderInfo& ri)
     ri.texture["metal"] = Utils::loadTexture("src/textures/metal.png");
     ri.texture["metal2"] = Utils::loadTexture("src/textures/metal2.png");
     ri.texture["stone"] = Utils::loadTexture("src/textures/stone.png");
-    ri.texture["stone"] = Utils::loadTexture("src/textures/stone2.png");
+    ri.texture["stone2"] = Utils::loadTexture("src/textures/stone2.png");
     ri.texture["tile3"] = Utils::loadTexture("src/textures/tile3.png");
 
     ri.texture["sun"] = Utils::loadTexture("src/textures/sun.png");
@@ -326,13 +326,14 @@ void createTorch(RenderInfo& ri, Scene& scene, glm::vec3 pos)
 {
     float height = 0.35f;
     float radius = 0.03f;
+    float intensity = 0.4f;
     glm::vec4 color = glm::vec4(1.0f, 0.65f, 0.25f, 1.0f);
 
     PointLight torchLight{
         {pos.x, pos.y + height, pos.z},
         glm::vec4(0.0f, 0.0f, 0.0f, 1.0f),
-        color * 0.4f,
-        glm::vec4(0.5f, 0.45f, 0.35f, 1.0f),
+        color * intensity,
+        glm::vec4(0.5f, 0.45f, 0.35f, 1.0f) * intensity,
         1.0f, 0.09f, 0.032f
     };
 
@@ -854,7 +855,7 @@ void createWorld(RenderInfo& ri, Scene& scene)
     trackGenerator.forward(lastRadius + 0.1f);
     glm::vec3 finishPos = trackGenerator.getLastPos();
 
-    createFinishLine(ri, scene, finishPos, finishAngle, lastRadius, true);
+    createFinishLine(ri, scene, finishPos, finishAngle, lastRadius, false);
 
     pillarPos.x += 1.1f;
     createTorch(ri, scene, pillarPos);
@@ -872,19 +873,19 @@ void createWorld(RenderInfo& ri, Scene& scene)
     trackGenerator.newTrack(
         nextPos.x, nextPos.y, nextPos.z,
         nextAngle, 0.9f, 1.0f);
-    trackGenerator.forward(10.0f, -0.8f, 0.3f, 0.4f);
+    trackGenerator.forward(10.0f, -1.0f, 0.2f, 0.3f);
 
     pillarPos = trackGenerator.getLastPos();
-    pillarPos.y -= 0.35f;
+    pillarPos.y -= 0.25f;
     createSupportPillar(ri, scene, pillarPos, 0.2f);
 
-    trackGenerator.forward(20.0f, 0.0f, 0.3f, 0.4f);
+    trackGenerator.forward(20.0f, 0.0f, 0.2f, 0.3f);
 
     pillarPos = trackGenerator.getLastPos();
-    pillarPos.y -= 0.35f;
+    pillarPos.y -= 0.25f;
     createSupportPillar(ri, scene, pillarPos, 0.2f);
 
-    trackGenerator.forward(2.0f, 0.6f, 0.3f, 0.4f);
+    trackGenerator.forward(4.0f, 1.2f, 0.2f, 0.3f);
 
     supports = trackGenerator.getSupports();
     createHalfPipeTrack(ri, scene, supports);
@@ -1030,9 +1031,8 @@ void animate(GLFWwindow* window, RenderInfo& ri, Scene& scene, Scene& menuScene)
 
                 if (sphere.placement == 0) {
                     sphere.placement = placement++;
-                    std::cout <<
-                       (sphere.player ? "Player" : sphere.description) <<
-                       " finished " << sphere.placement << std::endl;
+                    //std::cout << (sphere.player ? "Player" : sphere.description) <<
+                    //   " finished " << sphere.placement << std::endl;
 
                     leaderboard.push_back(sphere.player ? "**Player**" : sphere.description);
                 }
@@ -1117,7 +1117,7 @@ void animate(GLFWwindow* window, RenderInfo& ri, Scene& scene, Scene& menuScene)
             static float sphereDensity = 1.0f;
 
             // Rotating
-            sphereAngle += 0.2f;
+            sphereAngle += ri.time.dt * 12.0f;
             if (sphereAngle > 360.0f) sphereAngle -= 360.0f;
 
             glm::mat4 modelMatrix = menuSphereModelMatrix(sphereAngle, sphereRadius);
@@ -1151,6 +1151,7 @@ void animate(GLFWwindow* window, RenderInfo& ri, Scene& scene, Scene& menuScene)
                     ImGui::Spacing();
                     if (ImGui::Button("Confirm marble selection")) {
                         inMenu = false;
+                        paused = true;
                         ri.sphereinfo[selectedSphereIdx].player = true;
                         ri.sphereinfo[selectedSphereIdx].radius = sphereRadius;
                         ri.sphereinfo[selectedSphereIdx].density = sphereDensity;
