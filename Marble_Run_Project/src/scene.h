@@ -41,6 +41,7 @@ public:
 	void prepareShaderParticle();
 	void prepareShaderShadowMap();
 	
+	void shadowPass();
 	void drawSkybox();
 	void drawBaseShapes();
 	void drawPhongShapes();

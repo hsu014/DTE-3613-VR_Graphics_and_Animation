@@ -360,7 +360,6 @@ void createTorch(RenderInfo& ri, Scene& scene, glm::vec3 pos)
     modelMatrixLocal = glm::translate(modelMatrixLocal, { 0.0f, height * 1.0f, 0.0f });
     sphere->setModelMatrix(modelMatrix * modelMatrixLocal);
     sphere->setMaterial(mat);
-    sphere->castShadow(false);
     scene.addBaseShape(sphere);
 
     scene.addPointLight(torchLight, false);
@@ -1168,11 +1167,9 @@ void animate(GLFWwindow* window, RenderInfo& ri, Scene& scene, Scene& menuScene)
         // Leaderboard window
         if (!inMenu) {
             
-
             ImGui::SetNextWindowSize(
                 ImVec2(SCR_WIDTH * 0.1f, SCR_HEIGHT * 0.4),
                 ImGuiCond_FirstUseEver);
-
 
             ImGui::SetNextWindowPos(ImVec2(
                 SCR_WIDTH * 0.9f - 20.0f, 80.0f));
@@ -1197,15 +1194,12 @@ void animate(GLFWwindow* window, RenderInfo& ri, Scene& scene, Scene& menuScene)
             ImGui::End();
         }
 
-        //ImGui::ShowDemoWindow();
-
         // Render ImGui
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
         glfwSwapBuffers(window);
         glfwPollEvents();
-
     }
 }
 

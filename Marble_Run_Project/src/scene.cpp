@@ -224,6 +224,33 @@ void Scene::prepareShaderShadowMap()
 }
 
 
+void Scene::shadowPass()
+{
+	prepareShaderShadowMap();
+	glViewport(0, 0, mSHADOW_WIDTH, mSHADOW_HEIGHT);
+	glBindFramebuffer(GL_FRAMEBUFFER, FBO);
+	glClear(GL_DEPTH_BUFFER_BIT);
+
+	for (Shape* shape : mPhongShapes) {
+		if (shape->mCastShadow) {
+			shape->draw(mShadowMapShader);
+		}
+	}
+	for (Shape* shape : mBasicShapes) {
+		if (shape->mCastShadow) {
+			shape->draw(mShadowMapShader);
+		}
+	}
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	// Reset viewPort
+	int width, height;
+	glfwGetWindowSize(mWindow, &width, &height);
+	glViewport(0, 0, width, height);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+}
+
 void Scene::drawSkybox()
 {
 	if (mSkybox.size() >= 1 ) {
@@ -242,26 +269,6 @@ void Scene::drawBaseShapes()
 
 void Scene::drawPhongShapes()
 {
-	// Shadow pass
-	prepareShaderShadowMap();
-	glViewport(0, 0, mSHADOW_WIDTH, mSHADOW_HEIGHT);
-	glBindFramebuffer(GL_FRAMEBUFFER, FBO);
-	glClear(GL_DEPTH_BUFFER_BIT);
-
-	for (Shape* shape : mPhongShapes) {
-		if (shape->mCastShadow) {
-			shape->draw(mShadowMapShader);
-		}
-	}
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-	// Reset viewPort
-	int width, height;
-	glfwGetWindowSize(mWindow, &width, &height);
-	glViewport(0, 0, width, height);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-	// Render scene
 	prepareShaderPhong();
 	for (Shape* shape : mPhongShapes) {
 		glActiveTexture(GL_TEXTURE1);
@@ -284,8 +291,9 @@ void Scene::draw()
 	glClearColor(0.2f, 0.0f, 0.3f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+	shadowPass();
+	drawSkybox();
 	drawPhongShapes();
 	drawBaseShapes();
-	drawSkybox();
 	drawEmitters();
 }
