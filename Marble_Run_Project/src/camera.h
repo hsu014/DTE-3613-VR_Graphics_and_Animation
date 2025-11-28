@@ -14,7 +14,7 @@ public:
 		FOLLOW
 	};
 
-	Camera(GLFWwindow* window, glm::vec3 pos, glm::vec3 front, glm::vec3 up);
+	Camera(GLFWwindow* window, glm::vec3 pos = {0, 0, 0}, glm::vec3 front = {0, 0, 1}, glm::vec3 up = {0, 1, 0});
 
 	void processInput();
 	void processMouseMovement();

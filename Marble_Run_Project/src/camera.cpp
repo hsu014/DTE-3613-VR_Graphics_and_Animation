@@ -151,6 +151,8 @@ void Camera::updateProjectionMatrix()
 {
     int width, height;
     glfwGetWindowSize(mWindow, &width, &height);
+    width = std::max(width, 1);
+    height = std::max(height, 1);
 
     float fov = 45.0f;
     float aspect = static_cast<float>(width) / height;

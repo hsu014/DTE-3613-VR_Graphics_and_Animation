@@ -17,8 +17,7 @@ struct Time {
 
 struct TrackSupport {
     float x, y, z;
-    // Degrees of rotation clockwise around y-axis. 0.0 along z-axis
-    float angle; 
+    float angle;        // Degrees of rotation clockwise around y-axis. 0.0 along z-axis
     float innerRadius;
     float outerRadius;
 };

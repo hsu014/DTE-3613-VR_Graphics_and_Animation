@@ -37,8 +37,10 @@ void initRenderInfo(RenderInfo& ri);
 void loadTextures(RenderInfo& ri);
 void loadSkyboxTextures(RenderInfo& ri);
 void createLights(Scene& scene);
-glm::mat4 menuSphereModelMatrix(float angle, float radius);
+glm::mat4 menuSphereModelMatrix(float angle, float radius, glm::vec3 start_pos);
 void ImGuiHelpMarker(const char* desc);
+void resetCamera(Camera& camera, glm::vec3 start_pos);
+void moveCamera(Camera& camera, glm::vec3 pos, glm::vec3 front);
 
 void createTorch(RenderInfo& ri, Scene& scene, glm::vec3 pos);
 void createSupportPillar(RenderInfo& ri, Scene& scene, glm::vec3 topPos, float radius);
@@ -59,14 +61,19 @@ void drawScene(Scene& scene, Camera& camera, double dt);
 
 
 // Settings 
-unsigned int SCR_WIDTH = 3000;
 unsigned int SCR_HEIGHT = 1600;
-bool paused = false;
-bool pPressedLastFrame = false;
-bool inMenu = true;
+unsigned int SCR_WIDTH = 3000;
+//unsigned int SCR_WIDTH = 1600;
+//unsigned int SCR_HEIGHT = 800;
+float FONT_SIZE = 17.0f;
+glm::vec3 START_POS = { 0.0f, 20.0f, 0.0f };
+
+bool PAUSED = false;
+bool P_PRESSED_LAST_FRAME = false;
+bool IN_MENU = true;
+bool DEBUG = false;
 
 std::vector<std::string> leaderboard;
-
 Utils util = Utils();
 Material material{};
 
@@ -99,10 +106,8 @@ int main()
     RenderInfo ri{};
     initRenderInfo(ri);
 
-    Camera camera(window, 
-        glm::vec3(0.0f, 24.0f, -10.0f), // Pos
-        glm::vec3(0.0f, -0.3f, 1.0f),   // Front
-        glm::vec3(0.0f, 1.0f, 0.0f));   // Up
+    Camera camera(window);
+    resetCamera(camera, START_POS);
     ri.camera = &camera;
 
     Scene menuScene = Scene(window);
@@ -147,7 +152,7 @@ int main()
     ImGuiIO& io = ImGui::GetIO(); (void)io;
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
     ImGui::StyleColorsDark();
-    ImFont* myFont = io.Fonts->AddFontFromFileTTF("src/ImGui/misc/fonts/ProggyClean.ttf", 20.0f);
+    ImFont* myFont = io.Fonts->AddFontFromFileTTF("src/ImGui/misc/fonts/ProggyClean.ttf", FONT_SIZE);
     ImGui::PushFont(myFont);
 
     // Initialize ImGui for GLFW + OpenGL3
@@ -183,9 +188,9 @@ int main()
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
-    SCR_WIDTH = width;
-    SCR_HEIGHT = height;
-    glViewport(0, 0, width, height);
+    SCR_WIDTH = std::max(width, 1);
+    SCR_HEIGHT = std::max(height, 1);
+    glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
 }
 
 void processInput(GLFWwindow* window, RenderInfo& ri)
@@ -195,10 +200,10 @@ void processInput(GLFWwindow* window, RenderInfo& ri)
     }
 
     int pState = glfwGetKey(window, GLFW_KEY_P);
-    if (pState == GLFW_PRESS && !pPressedLastFrame) {
-        paused = !paused; 
+    if (pState == GLFW_PRESS && !P_PRESSED_LAST_FRAME) {
+        PAUSED = !PAUSED;
     }
-    pPressedLastFrame = (pState == GLFW_PRESS);
+    P_PRESSED_LAST_FRAME = (pState == GLFW_PRESS);
 }
 
 void initRenderInfo(RenderInfo& ri)
@@ -296,12 +301,18 @@ void createLights(Scene& scene)
     scene.addPointLight(pointLight, true);*/
 }
 
-glm::mat4 menuSphereModelMatrix(float angle, float radius)
+glm::mat4 menuSphereModelMatrix(float angle, float radius, glm::vec3 start_pos)
 {
     glm::mat4 modelMatrix = glm::mat4(1.0f);
     float size = 20.0f;
 
-    modelMatrix = glm::translate(modelMatrix, glm::vec3(0.0f, 22.5f, -6.0f));
+    glm::vec3 pos = {
+        start_pos.x,
+        start_pos.y + 0.9f,
+        start_pos.z - 5.0f
+    };
+
+    modelMatrix = glm::translate(modelMatrix, pos);
     modelMatrix = glm::rotate(modelMatrix, glm::radians(90.0f), { 1, 0, 0 });
     modelMatrix = glm::rotate(modelMatrix, glm::radians(angle), { 0, 0, 1 });
 
@@ -320,6 +331,30 @@ void ImGuiHelpMarker(const char* desc)
         ImGui::PopTextWrapPos();
         ImGui::EndTooltip();
     }
+}
+
+void resetCamera(Camera& camera, glm::vec3 start_pos)
+{
+    glm::vec3 camera_pos = {
+    start_pos.x,
+    start_pos.y + 2,
+    start_pos.z - 8
+    };
+
+    camera.mPos = camera_pos;
+    camera.mFront = glm::vec3(0.0f, -0.3f, 1.0f);
+    camera.mUp = glm::vec3(0.0f, 1.0f, 0.0f);
+
+    camera.updatePitchYaw();
+}
+
+void moveCamera(Camera& camera, glm::vec3 pos, glm::vec3 front)
+{
+    camera.mPos = pos;
+    camera.mFront = front;
+    camera.mUp = glm::vec3(0.0f, 1.0f, 0.0f);
+
+    camera.updatePitchYaw();
 }
 
 void createTorch(RenderInfo& ri, Scene& scene, glm::vec3 pos)
@@ -658,7 +693,8 @@ void createFinishLine(RenderInfo& ri, Scene& scene, glm::vec3 pos, float angle, 
         modelMatrix = glm::rotate(modelMatrix, glm::radians(-angle), { 0.0f, 1.0f, 0.0f });
 
         testBox->setModelMatrix(modelMatrix);
-        testBox->useTexture(ri.texture["rock"]);
+        //testBox->useTexture(ri.texture["rock"]);
+        testBox->setMaterial(material.ruby);
         scene.addPhongShape(testBox);
     }
 
@@ -680,7 +716,8 @@ void createFinishLine(RenderInfo& ri, Scene& scene, glm::vec3 pos, float angle, 
 
 void createMenuWorld(RenderInfo& ri, Scene& scene)
 {
-    glm::mat4 modelMatrix = glm::mat4(1.0f);
+    //glm::mat4 modelMatrix = glm::mat4(1.0f);
+    //modelMatrix = glm::translate(modelMatrix, START_POS);
 
     Shape* sphere = new Sphere(0.4f);
     sphere->setMaterial(material.brass);
@@ -700,24 +737,23 @@ void createMenuWorld(RenderInfo& ri, Scene& scene)
 
 void createWorld(RenderInfo& ri, Scene& scene)
 {
-    // Turn: 90 deg -> 10 segments
-    glm::vec3 sphereStartPos = { 0.0f, 20.0f, 0.0f };
+    // Track turn: 90 deg -> 10 segments
+
+    glm::vec3 sphereStartPos = START_POS;
     glm::vec3 pillarPos;
-
-    createGround(ri, scene);
-    createSpheres(ri, scene, sphereStartPos);
-    //glm::vec3 testPos = { 8, 6, -12 };
-    //createSpheres(ri, scene, testPos);
-
-    glm::vec3 nextPos = { 
+    float nextAngle = 0.0f;
+    glm::vec3 nextPos = {
         sphereStartPos.x,
         sphereStartPos.y,
         sphereStartPos.z - 2.0f,
     };
-    float nextAngle = 0.0f;
+
     std::vector<TrackSupport> supports;
     TrackSupportGenerator trackGenerator = TrackSupportGenerator();
 
+    createGround(ri, scene);
+    createSpheres(ri, scene, sphereStartPos);
+    
     // Track 1
     createTorch(ri, scene, { 
         nextPos.x + 1.95f, 
@@ -888,10 +924,7 @@ void createWorld(RenderInfo& ri, Scene& scene)
 
     supports = trackGenerator.getSupports();
     createHalfPipeTrack(ri, scene, supports);
-
 }
-
-
 
 void createShapes(RenderInfo& ri, Scene& scene)
 {
@@ -996,11 +1029,11 @@ void animate(GLFWwindow* window, RenderInfo& ri, Scene& scene, Scene& menuScene)
         processInput(window, ri);
         ri.camera->update(ri.time.dt);
 
-        if (paused) {
+        if (PAUSED) {
             ri.time.dt = 0.0;
         }
 
-        if (inMenu) {
+        if (IN_MENU) {
             ri.camera->mAcceptInput = false;
             drawScene(menuScene, *ri.camera, ri.time.dt);
         }
@@ -1068,7 +1101,7 @@ void animate(GLFWwindow* window, RenderInfo& ri, Scene& scene, Scene& menuScene)
         // Direction light controls
         float* lightYaw = &scene.mLightYaw;
         float* lightPitch = &scene.mLightPitch;
-        if (inMenu) {
+        if (IN_MENU) {
             lightYaw = &menuScene.mLightYaw;
             lightPitch = &menuScene.mLightPitch;
         }
@@ -1079,14 +1112,22 @@ void animate(GLFWwindow* window, RenderInfo& ri, Scene& scene, Scene& menuScene)
 
         ImGui::Begin("ImGui", nullptr,
             ImGuiWindowFlags_NoSavedSettings);
-        
+
         if (ImGui::CollapsingHeader("Direction Light", ImGuiTreeNodeFlags_DefaultOpen)) {
             ImGui::SliderFloat("Yaw", lightYaw, -360.0f, 360.0f);
             ImGui::SliderFloat("Pitch", lightPitch, -89.9f, -10.0f);
         }
         
         // Controlls
-        if (!inMenu) {
+        if (!IN_MENU) {
+            ImGui::Spacing();
+            ImGui::Spacing();
+            if (ImGui::CollapsingHeader("Shadow", ImGuiTreeNodeFlags_DefaultOpen)) {
+                ImGui::SliderFloat("Shadow area", &scene.mShadowAreaSize, 10.0f, 100.0f);
+            }
+
+            ImGui::Spacing();
+            ImGui::Spacing();
             if (ImGui::CollapsingHeader("Controls", ImGuiTreeNodeFlags_DefaultOpen)) {
                 ImGui::SeparatorText("General");
                 ImGui::Text("[esc] - - - Free/lock mouse cursor");
@@ -1104,11 +1145,22 @@ void animate(GLFWwindow* window, RenderInfo& ri, Scene& scene, Scene& menuScene)
                 ImGui::Text("[mouse]- - - - Camera direction ");
                 ImGui::Text("[W, S] - - - - Camera zoom ");
                 ImGui::Text("[space]- - - - Disable followcam ");
+
+                if (DEBUG) {
+                    glm::vec3* pos = &ri.camera->mPos;
+                    glm::vec3* front = &ri.camera->mFront;
+
+                    ImGui::Spacing();
+                    ImGui::Spacing();
+                    ImGui::SeparatorText("Debug camera info");
+                    ImGui::Text("pos:   %.1f %.1f %.1f", pos->x, pos->y, pos->z);
+                    ImGui::Text("front: %.1f %.1f %.1f", front->x, front->y, front->z);
+                }
             }
         }
 
         // Menu
-        if (inMenu) {
+        if (IN_MENU) {
             Shape* menuSphere = menuScene.mPhongShapes.front();
 
             static float sphereAngle = 0.0f;
@@ -1119,9 +1171,10 @@ void animate(GLFWwindow* window, RenderInfo& ri, Scene& scene, Scene& menuScene)
             sphereAngle += ri.time.dt * 12.0f;
             if (sphereAngle > 360.0f) sphereAngle -= 360.0f;
 
-            glm::mat4 modelMatrix = menuSphereModelMatrix(sphereAngle, sphereRadius);
+            glm::mat4 modelMatrix = menuSphereModelMatrix(sphereAngle, sphereRadius, START_POS);
             menuSphere->setModelMatrix(modelMatrix);
 
+            ImGui::Spacing();
             ImGui::Spacing();
             if (ImGui::CollapsingHeader("Edit marble", ImGuiTreeNodeFlags_DefaultOpen)) {
                 ImGui::SliderFloat("Radius", &sphereRadius, 0.08f, 0.12f);
@@ -1130,7 +1183,9 @@ void animate(GLFWwindow* window, RenderInfo& ri, Scene& scene, Scene& menuScene)
                 ImGui::SameLine(); ImGuiHelpMarker("Default density = 1.0");
 
                 ImGui::Spacing();
+                ImGui::Spacing();
                 ImGui::Text("Select marble");
+                ImGui::Spacing();
                 if (ImGui::BeginListBox("##Select marble", ImVec2(0, 300))) {
                     static int selectedSphereIdx = 0;
 
@@ -1148,24 +1203,32 @@ void animate(GLFWwindow* window, RenderInfo& ri, Scene& scene, Scene& menuScene)
                     menuSphere->useTexture(ri.sphereinfo[selectedSphereIdx].texture);
 
                     ImGui::Spacing();
+                    ImGui::Spacing();
+                    // Start marble run
                     if (ImGui::Button("Confirm marble selection")) {
-                        inMenu = false;
-                        paused = true;
+                        IN_MENU = false;
+                        PAUSED = true;
                         ri.sphereinfo[selectedSphereIdx].player = true;
                         ri.sphereinfo[selectedSphereIdx].radius = sphereRadius;
                         ri.sphereinfo[selectedSphereIdx].density = sphereDensity;
                         ri.camera->captureMouse();
 
                         createWorld(ri, scene);
+
+                        // Set camera
+                        //moveCamera(*ri.camera,
+                        //    {-4.1, 3.8, -8.7 },
+                        //    {-0.9, -0.2, 0.4});
+                        //ri.camera->mMouseLocked = false;
+                        //glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
                     }
                 }
             }
         }
-        
         ImGui::End();
 
         // Leaderboard window
-        if (!inMenu) {
+        if (!IN_MENU) {
             
             ImGui::SetNextWindowSize(
                 ImVec2(SCR_WIDTH * 0.1f, SCR_HEIGHT * 0.4),

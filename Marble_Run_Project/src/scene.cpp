@@ -46,7 +46,7 @@ void Scene::updateLightSpaceMatrix()
 
 	float orthoSize = mShadowAreaSize / 2;
 
-	glm::mat4 lightProjection = glm::ortho(-orthoSize, orthoSize, -orthoSize, orthoSize, 1.0f, orthoSize*2.0f);
+	glm::mat4 lightProjection = glm::ortho(-orthoSize, orthoSize, -orthoSize, orthoSize, 0.0f, orthoSize * 2.0f);
 
 	glm::mat4 lightView = glm::lookAt((lightInvDir * orthoSize) + lightBoxPos,	// position
 		lightBoxPos,															// target
@@ -247,6 +247,7 @@ void Scene::shadowPass()
 	// Reset viewPort
 	int width, height;
 	glfwGetWindowSize(mWindow, &width, &height);
+
 	glViewport(0, 0, width, height);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
@@ -292,8 +293,8 @@ void Scene::draw()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	shadowPass();
-	drawSkybox();
 	drawPhongShapes();
 	drawBaseShapes();
+	drawSkybox();
 	drawEmitters();
 }
