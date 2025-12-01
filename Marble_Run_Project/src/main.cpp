@@ -17,6 +17,7 @@
 #include <btBulletDynamicsCommon.h>
 #include <BulletCollision/CollisionDispatch/btGhostObject.h>
 
+#include "settings.h"
 #include "Utils.h"
 #include "shape.h"
 #include "particle_emitter.h"
@@ -61,17 +62,16 @@ void drawScene(Scene& scene, Camera& camera, double dt);
 
 
 // Settings 
-unsigned int SCR_HEIGHT = 1600;
-unsigned int SCR_WIDTH = 3000;
-//unsigned int SCR_WIDTH = 1600;
-//unsigned int SCR_HEIGHT = 800;
-float FONT_SIZE = 17.0f;
+
+unsigned int SCR_WIDTH = SCREEN_WIDTH;
+unsigned int SCR_HEIGHT = SCREEN_HEIGHT;
+float FONT_SIZE = GUI_FONT_SIZE;
 glm::vec3 START_POS = { 0.0f, 20.0f, 0.0f };
 
 bool PAUSED = false;
 bool P_PRESSED_LAST_FRAME = false;
 bool IN_MENU = true;
-bool DEBUG = false;
+bool DEBUG = DEBUG_MODE;
 
 std::vector<std::string> leaderboard;
 Utils util = Utils();
@@ -217,12 +217,9 @@ void initRenderInfo(RenderInfo& ri)
 
 void loadTextures(RenderInfo& ri)
 {
-    ri.texture["heightmap_1"] = Utils::loadTexture("src/textures/heightmaps/heightmap_1.png");
-    ri.texture["heightmap_2"] = Utils::loadTexture("src/textures/heightmaps/heightmap_2.png");
-    ri.texture["heightmap_3"] = Utils::loadTexture("src/textures/heightmaps/heightmap_3.png");
-    ri.texture["heightmap_4"] = Utils::loadTexture("src/textures/heightmaps/heightmap_4.png");
+    //ri.texture["heightmap_1"] = Utils::loadTexture("src/textures/heightmaps/heightmap_1.png");
+    //ri.texture["heightmap_2"] = Utils::loadTexture("src/textures/heightmaps/heightmap_2.png");
 
-    ri.texture["chicken"] = Utils::loadTexture("src/textures/mc_chicken.jpeg");
     ri.texture["particle"] = Utils::loadTexture("src/textures/particle.png");
     ri.texture["particle_star1"] = Utils::loadTexture("src/textures/particle_star1.png");
     ri.texture["particle_star2"] = Utils::loadTexture("src/textures/particle_star2.png");
@@ -1063,9 +1060,6 @@ void animate(GLFWwindow* window, RenderInfo& ri, Scene& scene, Scene& menuScene)
 
                 if (sphere.placement == 0) {
                     sphere.placement = placement++;
-                    //std::cout << (sphere.player ? "Player" : sphere.description) <<
-                    //   " finished " << sphere.placement << std::endl;
-
                     leaderboard.push_back(sphere.player ? "**Player**" : sphere.description);
                 }
             }
@@ -1110,12 +1104,17 @@ void animate(GLFWwindow* window, RenderInfo& ri, Scene& scene, Scene& menuScene)
             ImVec2(SCR_WIDTH * 0.2f, SCR_HEIGHT * 0.4),
             ImGuiCond_FirstUseEver);
 
+        ImGui::SetNextWindowPos(
+            ImVec2(20.0f, 20.0f),
+            ImGuiCond_FirstUseEver);
+
         ImGui::Begin("ImGui", nullptr,
             ImGuiWindowFlags_NoSavedSettings);
 
+        // Light direction
         if (ImGui::CollapsingHeader("Direction Light", ImGuiTreeNodeFlags_DefaultOpen)) {
-            ImGui::SliderFloat("Yaw", lightYaw, -360.0f, 360.0f);
-            ImGui::SliderFloat("Pitch", lightPitch, -89.9f, -10.0f);
+            ImGui::SliderFloat("Yaw", lightYaw, -360.0f, 360.0f, "%.1f");
+            ImGui::SliderFloat("Pitch", lightPitch, -89.9f, -10.0f, "%.1f");
         }
         
         // Controlls
@@ -1130,21 +1129,21 @@ void animate(GLFWwindow* window, RenderInfo& ri, Scene& scene, Scene& menuScene)
             ImGui::Spacing();
             if (ImGui::CollapsingHeader("Controls", ImGuiTreeNodeFlags_DefaultOpen)) {
                 ImGui::SeparatorText("General");
-                ImGui::Text("[esc] - - - Free/lock mouse cursor");
-                ImGui::Text("[p] - - - - Pause/unpause game");
-                ImGui::Text("[backspace] Close application");
+                ImGui::Text("[Esc] - - - Free/lock mouse cursor");
+                ImGui::Text("[P] - - - - Pause/unpause game");
+                ImGui::Text("[Backspace] Close application");
                 ImGui::Spacing();
                 ImGui::SeparatorText("Free cam");
                 ImGui::Text("[1]- - - - - - Activate freecam");
-                ImGui::Text("[mouse]- - - - Camera direction ");
+                ImGui::Text("[Mouse]- - - - Camera direction ");
                 ImGui::Text("[W, A, S, D] - Camera position ");
-                ImGui::Text("[space, shift] Camera height ");
+                ImGui::Text("[Space, Shift] Camera height ");
                 ImGui::Spacing();
                 ImGui::SeparatorText("Follow cam");
                 ImGui::Text("[2]- - - - - - Activate followcam");
-                ImGui::Text("[mouse]- - - - Camera direction ");
+                ImGui::Text("[Mouse]- - - - Camera direction ");
                 ImGui::Text("[W, S] - - - - Camera zoom ");
-                ImGui::Text("[space]- - - - Disable followcam ");
+                ImGui::Text("[Space]- - - - Disable followcam ");
 
                 if (DEBUG) {
                     glm::vec3* pos = &ri.camera->mPos;
@@ -1177,9 +1176,9 @@ void animate(GLFWwindow* window, RenderInfo& ri, Scene& scene, Scene& menuScene)
             ImGui::Spacing();
             ImGui::Spacing();
             if (ImGui::CollapsingHeader("Edit marble", ImGuiTreeNodeFlags_DefaultOpen)) {
-                ImGui::SliderFloat("Radius", &sphereRadius, 0.08f, 0.12f);
+                ImGui::SliderFloat("Radius", &sphereRadius, 0.08f, 0.12f, "%.3f");
                 ImGui::SameLine(); ImGuiHelpMarker("Default radius = 0.1");
-                ImGui::SliderFloat("Density", &sphereDensity, 0.1f, 10.0f);
+                ImGui::SliderFloat("Density", &sphereDensity, 0.1f, 10.0f, "%.2f");
                 ImGui::SameLine(); ImGuiHelpMarker("Default density = 1.0");
 
                 ImGui::Spacing();
@@ -1234,8 +1233,9 @@ void animate(GLFWwindow* window, RenderInfo& ri, Scene& scene, Scene& menuScene)
                 ImVec2(SCR_WIDTH * 0.1f, SCR_HEIGHT * 0.4),
                 ImGuiCond_FirstUseEver);
 
-            ImGui::SetNextWindowPos(ImVec2(
-                SCR_WIDTH * 0.9f - 20.0f, 80.0f));
+            ImGui::SetNextWindowPos(
+                ImVec2( SCR_WIDTH * 0.9f - 20.0f, 80.0f),
+                ImGuiCond_FirstUseEver);
 
             ImGui::Begin("Leaderboard", nullptr,
                 ImGuiWindowFlags_NoSavedSettings);

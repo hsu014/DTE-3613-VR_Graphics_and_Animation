@@ -66,6 +66,4 @@ public:
 	glm::mat4 mViewMatrix;
 	glm::mat4 mProjectionMatrix;
 	btRigidBody* m_pBody = nullptr;
-
-	
 };

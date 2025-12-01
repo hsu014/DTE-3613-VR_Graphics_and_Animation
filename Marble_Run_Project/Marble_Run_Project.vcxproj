@@ -168,6 +168,7 @@
     <ClInclude Include="src\particle_emitter.h" />
     <ClInclude Include="src\render_info.h" />
     <ClInclude Include="src\scene.h" />
+    <ClInclude Include="src\settings.h" />
     <ClInclude Include="src\shape.h" />
     <ClInclude Include="src\structs.h" />
     <ClInclude Include="src\trackSupportGenerator.h" />
@@ -182,15 +183,12 @@
     <Image Include="src\textures\gray_brick.jpg" />
     <Image Include="src\textures\heightmaps\heightmap_1.png" />
     <Image Include="src\textures\heightmaps\heightmap_2.png" />
-    <Image Include="src\textures\heightmaps\heightmap_3.png" />
-    <Image Include="src\textures\heightmaps\heightmap_4.png" />
     <Image Include="src\textures\ice.jpg" />
     <Image Include="src\textures\ivy.png" />
     <Image Include="src\textures\jupiter.png" />
     <Image Include="src\textures\lava.png" />
     <Image Include="src\textures\leaf.png" />
     <Image Include="src\textures\mars.png" />
-    <Image Include="src\textures\mc_chicken.jpeg" />
     <Image Include="src\textures\mercury.png" />
     <Image Include="src\textures\metal.png" />
     <Image Include="src\textures\metal2.png" />

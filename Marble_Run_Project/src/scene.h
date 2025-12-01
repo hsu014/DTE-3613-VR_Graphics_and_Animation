@@ -8,6 +8,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+#include "settings.h"
 #include "shape.h"
 #include "particle_emitter.h"
 #include "Utils.h"
@@ -75,12 +76,10 @@ public:
 
 	// Shadow map
 	float mShadowAreaSize = 100;
-	// 8192 16384
-	const GLuint mSHADOW_WIDTH = 16384;
-	const GLuint mSHADOW_HEIGHT = 16384;
+	const GLuint mSHADOW_WIDTH = SHADOW_MAP_SIZE;
+	const GLuint mSHADOW_HEIGHT = SHADOW_MAP_SIZE;
 	GLuint FBO;
 	GLuint mShadowMap;
 	glm::mat4 mLightSpaceMatrix;
-
 };
 

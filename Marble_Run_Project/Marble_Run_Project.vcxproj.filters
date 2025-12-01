@@ -113,18 +113,15 @@
     <ClInclude Include="src\trackSupportGenerator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\settings.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Image Include="src\textures\heightmaps\heightmap_1.png">
       <Filter>Resource Files\textures\heightmaps</Filter>
     </Image>
     <Image Include="src\textures\heightmaps\heightmap_2.png">
-      <Filter>Resource Files\textures\heightmaps</Filter>
-    </Image>
-    <Image Include="src\textures\heightmaps\heightmap_3.png">
-      <Filter>Resource Files\textures\heightmaps</Filter>
-    </Image>
-    <Image Include="src\textures\heightmaps\heightmap_4.png">
       <Filter>Resource Files\textures\heightmaps</Filter>
     </Image>
     <Image Include="src\textures\skybox\sky_22\nx.png">
@@ -206,9 +203,6 @@
       <Filter>Resource Files\textures</Filter>
     </Image>
     <Image Include="src\textures\leaf.png">
-      <Filter>Resource Files\textures</Filter>
-    </Image>
-    <Image Include="src\textures\mc_chicken.jpeg">
       <Filter>Resource Files\textures</Filter>
     </Image>
     <Image Include="src\textures\particle.png">

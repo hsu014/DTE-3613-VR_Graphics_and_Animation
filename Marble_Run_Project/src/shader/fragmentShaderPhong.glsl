@@ -48,9 +48,7 @@ uniform DirectionalLight dirLight;
 uniform PointLight pointLight[64];
 uniform Material material;
 
-
-
-// function prototypes
+// functions
 vec3 CalcDirLight(DirectionalLight light, vec3 normal, vec3 viewDir);
 vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir);
 float ShadowCalculation(vec3 normal, vec3 lightDir);
@@ -69,7 +67,7 @@ void main() {
 	    result += CalcPointLight(pointLight[i], norm, fragPos, viewDir);
         }
 
-    // ambient light
+    // Ambient light
     result += vec3(ambientLight) * vec3(material.ambient);
 
     if (useTexture == 1) {
@@ -109,6 +107,7 @@ vec3 CalcDirLight(DirectionalLight light, vec3 normal, vec3 viewDir)
 vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
 {
     vec3 lightDir = normalize(light.position - fragPos);
+
     // diffuse shading
     float diff = max(dot(normal, lightDir), 0.0);
 
