@@ -118,12 +118,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="src\textures\heightmaps\heightmap_1.png">
-      <Filter>Resource Files\textures\heightmaps</Filter>
-    </Image>
-    <Image Include="src\textures\heightmaps\heightmap_2.png">
-      <Filter>Resource Files\textures\heightmaps</Filter>
-    </Image>
     <Image Include="src\textures\skybox\sky_22\nx.png">
       <Filter>Resource Files\textures\skybox\sky_22</Filter>
     </Image>

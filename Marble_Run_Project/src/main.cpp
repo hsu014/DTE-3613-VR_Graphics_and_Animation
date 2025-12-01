@@ -55,8 +55,6 @@ void createFinishLine(RenderInfo& ri, Scene& scene, glm::vec3 pos, float angle, 
 void createMenuWorld(RenderInfo& ri, Scene& scene);
 void createWorld(RenderInfo& ri, Scene& scene);
 
-void createShapes(RenderInfo& ri, Scene& scene);
-
 void animate(GLFWwindow* window, RenderInfo& ri, Scene& scene, Scene& menuScene);
 void drawScene(Scene& scene, Camera& camera, double dt);
 
@@ -217,9 +215,6 @@ void initRenderInfo(RenderInfo& ri)
 
 void loadTextures(RenderInfo& ri)
 {
-    //ri.texture["heightmap_1"] = Utils::loadTexture("src/textures/heightmaps/heightmap_1.png");
-    //ri.texture["heightmap_2"] = Utils::loadTexture("src/textures/heightmaps/heightmap_2.png");
-
     ri.texture["particle"] = Utils::loadTexture("src/textures/particle.png");
     ri.texture["particle_star1"] = Utils::loadTexture("src/textures/particle_star1.png");
     ri.texture["particle_star2"] = Utils::loadTexture("src/textures/particle_star2.png");
@@ -241,7 +236,6 @@ void loadTextures(RenderInfo& ri)
     ri.texture["tile2"] = Utils::loadTexture("src/textures/tile2.png");
     ri.texture["water"] = Utils::loadTexture("src/textures/water.png");
     ri.texture["wood"] = Utils::loadTexture("src/textures/wood.png");
-
     ri.texture["metal"] = Utils::loadTexture("src/textures/metal.png");
     ri.texture["metal2"] = Utils::loadTexture("src/textures/metal2.png");
     ri.texture["stone"] = Utils::loadTexture("src/textures/stone.png");
@@ -921,94 +915,6 @@ void createWorld(RenderInfo& ri, Scene& scene)
 
     supports = trackGenerator.getSupports();
     createHalfPipeTrack(ri, scene, supports);
-}
-
-void createShapes(RenderInfo& ri, Scene& scene)
-{
-    // Create shapes and put into scene
-    glm::mat4 modelMatrix = glm::mat4(1.0f);
-    glm::vec3 middle_pos = glm::vec3(1.0f);
-    int num_x;
-    int num_y;
-
-    // Boxes:
-    middle_pos = { -10.0f, 5.0f, -4.0f };
-    std::vector<GLuint> tex = {
-        ri.texture["bark"],
-        ri.texture["fire"],
-        ri.texture["galvanized_blue"], 
-        ri.texture["gray_brick"],
-        ri.texture["ice"],
-        ri.texture["ivy"],
-        ri.texture["lava"],
-        ri.texture["leaf"],
-        ri.texture["pebbles"],
-        ri.texture["pebbles2"],
-        ri.texture["rock"],
-        ri.texture["tile"],
-        ri.texture["tile2"],
-        ri.texture["water"],
-
-        ri.texture["sun"],
-        ri.texture["mercury"],
-        ri.texture["venus"],
-        ri.texture["earth_day"],
-        ri.texture["moon"],
-        ri.texture["mars"],
-        ri.texture["jupiter"],
-        ri.texture["saturn"],
-        ri.texture["uranus"],
-        ri.texture["neptune"], 
-    };
-    num_x = tex.size();
-    for (int i = 0; i < num_x; i++) {
-        float x = middle_pos.x - (num_x / 2.0f) + i;
-        float y = middle_pos.y;
-        float z = middle_pos.z;
-
-        Shape* sphere = new Sphere(0.4f);
-        sphere->useTexture(tex[i]);
-        modelMatrix = glm::mat4(1.0f);
-        modelMatrix = glm::translate(modelMatrix, glm::vec3(x, y, z));
-        modelMatrix = glm::rotate(modelMatrix, glm::radians(90.0f), { 1,0,0 });
-        sphere->setModelMatrix(modelMatrix);
-        scene.addPhongShape(sphere);
-    }
-
-    std::vector<MaterialType> materials = {
-        material.brass,
-        material.bronze,
-        material.polished_bronze,
-        material.chrome,
-        material.tin,
-        material.copper,
-        material.polished_copper,
-        material.silver,
-        material.polished_silver,
-        material.gold,
-        material.polished_gold,
-        material.emerald,
-        material.obsidian,
-        material.perl,
-        material.ruby,
-    };
-
-    middle_pos = { -10.0f, 5.0f, -1.0f };
-    num_x = materials.size();
-    for (int i = 0; i < num_x; i++) {
-        float x = middle_pos.x - (num_x / 2.0f) + i;
-        float y = middle_pos.y;
-        float z = middle_pos.z;
-
-        Shape* sphere = new Sphere(0.4f);
-        sphere->setMaterial(materials[i]);
-        modelMatrix = glm::mat4(1.0f);
-        modelMatrix = glm::translate(modelMatrix, glm::vec3(x, y, z));
-        modelMatrix = glm::rotate(modelMatrix, glm::radians(90.0f), { 1,0,0 });
-        sphere->setModelMatrix(modelMatrix);
-        scene.addPhongShape(sphere);
-    }
-
 }
 
 void animate(GLFWwindow* window, RenderInfo& ri, Scene& scene, Scene& menuScene)
