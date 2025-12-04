@@ -26,7 +26,6 @@ struct Particle {
 
 class Emitter {
 public:
-	//Emitter();
 	Emitter(int particlesPerSecond=0, float particleLifetime=0, float radius=0, float particleSize=0.1, GLuint texture=0);
 	~Emitter();
 
@@ -49,8 +48,10 @@ public:
 
 	std::vector<Particle> mParticlesContainer;
 	int mLastUsedParticle = 0;
-	int mNumParticles;
-	int mNumNewParticles;
+	int mParticlesPerSecond;
+	float mTimeBetweenParticles;
+	float mTimeSinceLast = 0.0;
+
 	float mParticleLifetime;
 	float mRadius;
 	float mSize;
@@ -78,8 +79,6 @@ public:
 	void initializeParticles() override;
 	void updateParticles(float dt) override;
 
-	float mTimeBetweenParticles;
-	float mTimeSinceLast;
 	glm::vec4 mColor;
 };
 

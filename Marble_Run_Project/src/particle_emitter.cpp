@@ -1,9 +1,12 @@
 #include "particle_emitter.h"
 
 Emitter::Emitter(int particlesPerSecond, float particleLifetime, float radius, float particleSize, GLuint texture) :
-    mNumNewParticles(particlesPerSecond), mParticleLifetime(particleLifetime),
+    mParticlesPerSecond(particlesPerSecond), mTimeBetweenParticles(1.0 / particlesPerSecond), 
+    mParticleLifetime(particleLifetime),
     mSize(particleSize), mRadius(radius), mTexture(texture)
 {
+    //mTimeBetweenParticles = 1.0 / particlesPerSecond;
+
     initializeParticles();
 }
 
@@ -16,8 +19,8 @@ Emitter::~Emitter()
 
 void Emitter::initializeParticles()
 {
-    mNumParticles = mNumNewParticles * mParticleLifetime * 1.5;
-    mParticlesContainer.resize(mNumParticles, Particle());
+    int numParticles = mParticlesPerSecond * mParticleLifetime * 1.5;
+    mParticlesContainer.resize(numParticles, Particle());
 
     fillBuffers(); 
 }
@@ -170,6 +173,8 @@ void Emitter::renderParticles(GLuint shaderProgram)
 
 void FlameEmitter::updateParticles(float dt)
 {
+    mTimeSinceLast += dt;
+
     for (Particle& p : mParticlesContainer) {
         p.life -= dt;
 
@@ -186,7 +191,9 @@ void FlameEmitter::updateParticles(float dt)
     }
 
     // Spawn new particles:
-    for (int i = 0; i < int(mNumNewParticles * dt); i++) {
+    while (mTimeSinceLast > mTimeBetweenParticles) {
+        mTimeSinceLast -= mTimeBetweenParticles;
+
         int p_idx = findUnusedParticle();
         Particle& p = mParticlesContainer[p_idx];
 
@@ -221,6 +228,8 @@ void FlameEmitter::updateParticles(float dt)
 
 void SmokeEmitter::updateParticles(float dt)
 {
+    mTimeSinceLast += dt;
+
     for (Particle& p : mParticlesContainer) {
         p.life -= dt;
 
@@ -244,7 +253,9 @@ void SmokeEmitter::updateParticles(float dt)
     }
 
     // Spawn new particles:
-    for (int i = 0; i < int(mNumNewParticles * dt); i++) {
+    while (mTimeSinceLast > mTimeBetweenParticles) {
+        mTimeSinceLast -= mTimeBetweenParticles;
+
         int p_idx = findUnusedParticle();
         Particle& p = mParticlesContainer[p_idx];
 
@@ -294,8 +305,8 @@ TrailEmitter::TrailEmitter(float timeBetween, float particleLifetime, float part
 
 void TrailEmitter::initializeParticles()
 {
-    mNumParticles = mParticleLifetime / mTimeBetweenParticles * 1.1;
-    mParticlesContainer.resize(mNumParticles, Particle());
+    int numParticles = mParticleLifetime / mTimeBetweenParticles * 1.5;
+    mParticlesContainer.resize(numParticles, Particle());
 
     fillBuffers();
 }
