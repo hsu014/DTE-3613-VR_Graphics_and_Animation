@@ -5,8 +5,6 @@ Emitter::Emitter(int particlesPerSecond, float particleLifetime, float radius, f
     mParticleLifetime(particleLifetime),
     mSize(particleSize), mRadius(radius), mTexture(texture)
 {
-    //mTimeBetweenParticles = 1.0 / particlesPerSecond;
-
     initializeParticles();
 }
 

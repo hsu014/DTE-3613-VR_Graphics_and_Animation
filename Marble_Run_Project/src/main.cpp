@@ -274,7 +274,6 @@ void createLights(Scene& scene)
 
     // Directional
     DirectionalLight dirLight{};
-    //dirLight.direction = glm::vec3(0.0f, -5.0f, 3.0f);
     dirLight.direction = glm::vec3(1.0f, -1.0f, 0.0f);
 
     dirLight.ambient = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);

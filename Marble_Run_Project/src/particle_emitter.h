@@ -19,8 +19,8 @@ struct Particle {
 	float life;
 	float size;
 
-	Particle()
-		: position(0.0f), velocity(0.0f), color(1.0f), life(0), size(1.0f) { }
+	Particle() : 
+		position(0.0f), velocity(0.0f), color(1.0f), life(0), size(1.0f) { }
 };
 
 
