@@ -42,6 +42,7 @@ glm::mat4 menuSphereModelMatrix(float angle, float radius, glm::vec3 start_pos);
 void ImGuiHelpMarker(const char* desc);
 void resetCamera(Camera& camera, glm::vec3 start_pos);
 void moveCamera(Camera& camera, glm::vec3 pos, glm::vec3 front);
+void gameLogic(RenderInfo& ri, Scene& scene, Scene& menuScene);
 
 void createTorch(RenderInfo& ri, Scene& scene, glm::vec3 pos);
 void createSupportPillar(RenderInfo& ri, Scene& scene, glm::vec3 topPos, float radius);
@@ -127,6 +128,7 @@ int main()
     scene.setShaders(shaderProgramBase, shaderProgramPhong, shaderProgramSkybox, shaderProgramShadowMap);
     scene.setParticleShader(shaderProgramParticle);
 
+    // Skybox
     Skybox* skybox = new Skybox(ri.skyboxTexture["sky_42"]);
     scene.addSkybox(skybox);
     createLights(scene);
@@ -353,6 +355,69 @@ void moveCamera(Camera& camera, glm::vec3 pos, glm::vec3 front)
     camera.updatePitchYaw();
 }
 
+void gameLogic(RenderInfo& ri, Scene& scene, Scene& menuScene)
+{
+    if (PAUSED) {
+        ri.time.dt = 0.0;
+    }
+
+    if (IN_MENU) {
+        ri.camera->mAcceptInput = false;
+        drawScene(menuScene, *ri.camera, ri.time.dt);
+    }
+    else {
+        ri.camera->mAcceptInput = true;
+        drawScene(scene, *ri.camera, ri.time.dt);
+        ri.bullet.pWorld->stepSimulation(float(ri.time.dt));
+        static int placement = 1;
+
+        // Placement
+        int numOverlapping = ri.finishLine->getNumOverlappingObjects();
+        for (int i = 0; i < numOverlapping; i++) {
+            btCollisionObject* otherObject = ri.finishLine->getOverlappingObject(i);
+            btRigidBody* otherBody = btRigidBody::upcast(otherObject);
+            if (!otherBody) continue;
+
+            // Find iterator to current sphere
+            auto it = std::find_if(
+                ri.sphereinfo.begin(),
+                ri.sphereinfo.end(),
+                [otherBody](const SphereInfo& info) {
+                    return info.pBody == otherBody;
+                }
+            );
+            if (it == ri.sphereinfo.end()) continue;
+
+            SphereInfo& sphere = *it;
+
+            if (sphere.placement == 0) {
+                sphere.placement = placement++;
+                leaderboard.push_back(sphere.player ? "**Player**" : sphere.description);
+            }
+        }
+
+        // Sphere fell off
+        for (SphereInfo& sphere : ri.sphereinfo) {
+            btRigidBody* pBody = sphere.pBody;
+            if (pBody == nullptr) continue;
+
+            btTransform trans;
+            pBody->getMotionState()->getWorldTransform(trans);
+
+            btVector3 pos = trans.getOrigin();
+            btScalar y_pos = pos.getY();
+            
+            if (y_pos < 0.2f) {
+                // Teleport back to start
+                glm::vec3 pos = START_POS;
+                trans.setOrigin({pos.x, pos.y, pos.z});
+                pBody->setWorldTransform(trans);
+                pBody->setLinearVelocity({0.0, 1.0 ,0.0});
+            }
+        }
+    }
+}
+
 void createTorch(RenderInfo& ri, Scene& scene, glm::vec3 pos)
 {
     float height = 0.35f;
@@ -561,8 +626,8 @@ void createHalfPipeTrack(RenderInfo& ri, Scene& scene, std::vector<TrackSupport>
     btTriangleMesh* trackMesh = createBtTriangleMesh(track);
     btRigidBody* trackRigidBody = createStaticRigidBody(
         trackMesh,
-        { 0, 0, 0 },
-        q, 0.6f, 0.5f);
+        { 0, 0, 0 }, q, 
+        TRACK_RESTITUTION, TRACK_FRICTION);
 
     ri.bullet.pWorld->addRigidBody(trackRigidBody);
 
@@ -675,7 +740,7 @@ void createPlinko(RenderInfo& ri, Scene& scene, glm::vec3 pos, float angle)
 
     // Add to bullet world
     btQuaternion q = quatFromYawPitchRoll(0.0f, -angle, tilt);
-    btRigidBody* body = createStaticRigidBody(compound, { pos.x, pos.y, pos.z }, q, 0.9f, 0.5f);
+    btRigidBody* body = createStaticRigidBody(compound, { pos.x, pos.y, pos.z }, q, PLINKO_RESTITUTION, PLINKO_FRICTION);
     ri.bullet.pWorld->addRigidBody(body);
 }
 
@@ -1025,44 +1090,7 @@ void animate(GLFWwindow* window, RenderInfo& ri, Scene& scene, Scene& menuScene)
         processInput(window, ri);
         ri.camera->update(ri.time.dt);
 
-        if (PAUSED) {
-            ri.time.dt = 0.0;
-        }
-
-        if (IN_MENU) {
-            ri.camera->mAcceptInput = false;
-            drawScene(menuScene, *ri.camera, ri.time.dt);
-        }
-        else {
-            ri.camera->mAcceptInput = true;
-            drawScene(scene, *ri.camera, ri.time.dt);
-            ri.bullet.pWorld->stepSimulation(float(ri.time.dt));
-            static int placement = 1;
-
-            int numOverlapping = ri.finishLine->getNumOverlappingObjects();
-            for (int i = 0; i < numOverlapping; i++) {
-                btCollisionObject* otherObject = ri.finishLine->getOverlappingObject(i);
-                btRigidBody* otherBody = btRigidBody::upcast(otherObject);
-                if (!otherBody) continue;
-
-                // Find iterator to current sphere
-                auto it = std::find_if(
-                    ri.sphereinfo.begin(),
-                    ri.sphereinfo.end(),
-                    [otherBody](const SphereInfo& info) {
-                        return info.pBody == otherBody;
-                    }
-                );
-                if (it == ri.sphereinfo.end()) continue;
-
-                SphereInfo& sphere = *it;
-
-                if (sphere.placement == 0) {
-                    sphere.placement = placement++;
-                    leaderboard.push_back(sphere.player ? "**Player**" : sphere.description);
-                }
-            }
-        }
+        gameLogic(ri, scene, menuScene);
 
         // FPS 
         frameCount++;

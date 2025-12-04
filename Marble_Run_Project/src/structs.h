@@ -7,6 +7,7 @@
 
 #include <BulletDynamics/Dynamics/btDynamicsWorld.h>
 #include <btBulletDynamicsCommon.h>
+#include "settings.h"
 
 
 struct Time {
@@ -169,6 +170,6 @@ struct SphereInfo {
     int placement = 0;
     float radius = 0.1f;
     float density = 1.0f;
-    float restitution = 0.6f;
-    float friction = 0.8f; 
+    float restitution = MARBLE_RESTITUTION;
+    float friction = MARBLE_FRICTION;
 };
